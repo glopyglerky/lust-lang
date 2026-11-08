@@ -1,0 +1,3248 @@
+{
+  "created_utc": "2026-11-08T16:38:30.987905+00:00",
+  "engine": "rustc",
+  "errors": [],
+  "excluded_warmup_sample_count": 8,
+  "fixture": {
+    "base_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+    "files": [
+      {
+        "bytes": 318,
+        "path": "Cargo.lock",
+        "sha256": "766efb4bbf851998ca7fc923da668cf3afdbeca01749db26772b2370dafbe0a7"
+      },
+      {
+        "bytes": 89,
+        "path": "Cargo.toml",
+        "sha256": "c5054733d8352fdd6c94290dfd2747294aa7d7cd1ec3ad7c4e353d5ec3522784"
+      },
+      {
+        "bytes": 174,
+        "path": "app/Cargo.toml",
+        "sha256": "94e1e54a4f4ff53e497e44ab62c0ff06c23ee56d79fcc5629c6aff8779b17ded"
+      },
+      {
+        "bytes": 1363,
+        "path": "app/src/main.rs",
+        "sha256": "73dc68907115706901bc76e7e814a31946fc182863d8a540a2c42880300aaffd"
+      },
+      {
+        "bytes": 102,
+        "path": "core/Cargo.toml",
+        "sha256": "e116e06247dc172d8bced63a72eb0481ed0e1fce66b46969791b6332bf3a71cf"
+      },
+      {
+        "bytes": 325,
+        "path": "core/build.rs",
+        "sha256": "0d5762d355fb293ab68036b1d12f55aaa4fe77f50bb696b7684fb2cfe7edecad"
+      },
+      {
+        "bytes": 2271,
+        "path": "core/src/lib.rs",
+        "sha256": "f996e957f4887f9d1eab3ed122d6a5b6f7d8d0384ae54645db094a1236686a3b"
+      },
+      {
+        "bytes": 110,
+        "path": "derive/Cargo.toml",
+        "sha256": "7dc0b5e9ff846c18a0ecdcb8f4f1d38d53c90edf63b0beadd4b2e4e000fde74d"
+      },
+      {
+        "bytes": 699,
+        "path": "derive/src/lib.rs",
+        "sha256": "7dad1cddebcc68d06a51a1bd44ff6c1fa0c6961b04adb3df6241b1da4d4f32a4"
+      }
+    ],
+    "path": "/workspace/scratch/c89b15aeae8a/lust-lang/tools/cargo-lust/fixtures/full-rust"
+  },
+  "hardware": {
+    "available_cpus": 9,
+    "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 9,
+    "machine": "x86_64",
+    "python": "3.12.14",
+    "release": "6.18.57",
+    "system": "Linux"
+  },
+  "identities": {
+    "cargo": {
+      "argv": [
+        "/workspace/scratch/83461cefdb89/toolchains/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "--version",
+        "--verbose"
+      ],
+      "cwd": "/tmp/cargo-lust-bench-u6m8dv7w",
+      "elapsed_ns": 13424056,
+      "returncode": 0,
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text": ""
+      },
+      "stdout": {
+        "bytes": 335,
+        "sha256": "4265e22043d855cb3fc78365fbf272d2b2158881fe23035a18a92f0b0743dee8",
+        "text": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]\n"
+      },
+      "timed_out": false
+    },
+    "coordinator": {
+      "argv": [
+        "/workspace/scratch/c89b15aeae8a/lust-lang/tools/cargo-lust/target/release/cargo-lust",
+        "--version"
+      ],
+      "cwd": "/tmp/cargo-lust-bench-u6m8dv7w",
+      "elapsed_ns": 1246213,
+      "executable_sha256": "7eae8447e6d254410812e2040a564c03741c7da0dab8724a506ace9fbde03833",
+      "returncode": 0,
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text": ""
+      },
+      "stdout": {
+        "bytes": 17,
+        "sha256": "fe4dcea10091834439fa8e8796086b94e182759c4230db3bde5b5e3dc90aa85b",
+        "text": "cargo-lust 0.1.0\n"
+      },
+      "timed_out": false
+    },
+    "cranelift_backend_files": [],
+    "rustc": {
+      "argv": [
+        "/workspace/scratch/83461cefdb89/toolchains/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "-vV"
+      ],
+      "cwd": "/tmp/cargo-lust-bench-u6m8dv7w",
+      "elapsed_ns": 7571210,
+      "returncode": 0,
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text": ""
+      },
+      "stdout": {
+        "bytes": 196,
+        "sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369",
+        "text": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+      },
+      "timed_out": false
+    },
+    "sysroot": {
+      "argv": [
+        "/workspace/scratch/83461cefdb89/toolchains/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--print",
+        "sysroot"
+      ],
+      "cwd": "/tmp/cargo-lust-bench-u6m8dv7w",
+      "elapsed_ns": 9517760,
+      "returncode": 0,
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text": ""
+      },
+      "stdout": {
+        "bytes": 93,
+        "sha256": "cb6d2d77842004ac84aa14d7f6553929bd6d9eec862f7e1cd27dcf722713e4a8",
+        "text": "/workspace/scratch/83461cefdb89/toolchains/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu\n"
+      },
+      "timed_out": false
+    }
+  },
+  "measured_sample_count": 60,
+  "method": {
+    "clock": "time.perf_counter_ns",
+    "cold": "empty Cargo target directory; installed sysroot and OS page cache are not cold",
+    "interleaving": "alternate the first route in each pair",
+    "limits": "small synthetic fixture; not evidence of broad full-project acceleration; no peak-memory or compiler-stage profiling",
+    "p95": "nearest-rank percentile; at small sample counts this is the maximum",
+    "source": "one shared copied source snapshot per pair, separate target directories",
+    "warm": "one excluded paired warmup; target directories retained"
+  },
+  "operation": "build",
+  "pairs": [
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 0,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 1,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 2,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 3,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 4,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 5,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": -1,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": true
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 1,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 2,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 3,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 4,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 5,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": -1,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": true
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 0,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 1,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 2,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 3,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 4,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 5,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": -1,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": true
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 0,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 1,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 2,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 3,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 4,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 5,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": -1,
+      "scenario": "rejected_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "warmup": true
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 0,
+      "scenario": "rejected_edit",
+      "source_sha256": "3226a7ba2f894ae8c7fefcd2c7f12bbbc9db5f0f8879210fab8a3f1589826131",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 1,
+      "scenario": "rejected_edit",
+      "source_sha256": "ad71339a094a7fbdef041241cd1149669023efdcfa4e28d17568c9151c7a4500",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 2,
+      "scenario": "rejected_edit",
+      "source_sha256": "6bcf45a6a68284f9d3b2ab02b923ccfccc5aca696e21ea22fdfb5cbdf94ee18b",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 3,
+      "scenario": "rejected_edit",
+      "source_sha256": "1d420b1049b76914fd3dffe1f31b91e073a232ca9432d5445efb15a6b535e906",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 4,
+      "scenario": "rejected_edit",
+      "source_sha256": "e3cb9616d4a0d5671cd7d206b3620e4109fdc27a9faf2f5606d2bccd6cacf905",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 5,
+      "scenario": "rejected_edit",
+      "source_sha256": "578e8ad55fc25367ace06cb6042deca298e7e1f02a10c4bd19d04d2ae1f4a167",
+      "warmup": false
+    }
+  ],
+  "passed": true,
+  "raw_report": "cargo-rustc-linux.json.gz",
+  "removed_environment_keys": [],
+  "samples": [
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 524461125,
+      "compile_ns": 522827960,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1108096,
+      "runtime_status": 0,
+      "sample": 0,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 506251971,
+      "compile_ns": 504746558,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1154906,
+      "runtime_status": 0,
+      "sample": 0,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 489118207,
+      "compile_ns": 487490390,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1219143,
+      "runtime_status": 0,
+      "sample": 1,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 479196074,
+      "compile_ns": 477528498,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1218561,
+      "runtime_status": 0,
+      "sample": 1,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 535729467,
+      "compile_ns": 533660787,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1703080,
+      "runtime_status": 0,
+      "sample": 2,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 571532990,
+      "compile_ns": 569664873,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1509159,
+      "runtime_status": 0,
+      "sample": 2,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 558262250,
+      "compile_ns": 555888286,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1742168,
+      "runtime_status": 0,
+      "sample": 3,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 549310885,
+      "compile_ns": 547676369,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1247225,
+      "runtime_status": 0,
+      "sample": 3,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 846585983,
+      "compile_ns": 844186376,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1715168,
+      "runtime_status": 0,
+      "sample": 4,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 727016219,
+      "compile_ns": 722308564,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1748568,
+      "runtime_status": 0,
+      "sample": 4,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 662375687,
+      "compile_ns": 660533760,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1353714,
+      "runtime_status": 0,
+      "sample": 5,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": false,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 586431408,
+      "compile_ns": 584956031,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1128326,
+      "runtime_status": 0,
+      "sample": 5,
+      "scenario": "cold",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 10262657,
+      "compile_ns": 8730790,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1044835,
+      "runtime_status": 0,
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 10538088,
+      "compile_ns": 9060301,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1081220,
+      "runtime_status": 0,
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 9301133,
+      "compile_ns": 7899146,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1036779,
+      "runtime_status": 0,
+      "sample": 1,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 9573312,
+      "compile_ns": 8319767,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 979132,
+      "runtime_status": 0,
+      "sample": 1,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 9449086,
+      "compile_ns": 8036261,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1014876,
+      "runtime_status": 0,
+      "sample": 2,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 8135871,
+      "compile_ns": 6847635,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1007545,
+      "runtime_status": 0,
+      "sample": 2,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 7522490,
+      "compile_ns": 6197497,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 945672,
+      "runtime_status": 0,
+      "sample": 3,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 8676814,
+      "compile_ns": 7290080,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1054866,
+      "runtime_status": 0,
+      "sample": 3,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 9132989,
+      "compile_ns": 7722379,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 926343,
+      "runtime_status": 0,
+      "sample": 4,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 7795650,
+      "compile_ns": 6579732,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 949508,
+      "runtime_status": 0,
+      "sample": 4,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 8379498,
+      "compile_ns": 6823409,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1153024,
+      "runtime_status": 0,
+      "sample": 5,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 10981238,
+      "compile_ns": 9476707,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1085692,
+      "runtime_status": 0,
+      "sample": 5,
+      "scenario": "warm_noop",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 143953146,
+      "compile_ns": 142212020,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1140024,
+      "runtime_status": 0,
+      "sample": 0,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 126964137,
+      "compile_ns": 125046876,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1498452,
+      "runtime_status": 0,
+      "sample": 0,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 144431236,
+      "compile_ns": 142418330,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1521808,
+      "runtime_status": 0,
+      "sample": 1,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 121035537,
+      "compile_ns": 119248241,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1337570,
+      "runtime_status": 0,
+      "sample": 1,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 148787127,
+      "compile_ns": 146852729,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1399834,
+      "runtime_status": 0,
+      "sample": 2,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 151231060,
+      "compile_ns": 149255691,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1527215,
+      "runtime_status": 0,
+      "sample": 2,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 141031241,
+      "compile_ns": 138961760,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1561287,
+      "runtime_status": 0,
+      "sample": 3,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 138197386,
+      "compile_ns": 135931932,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1635087,
+      "runtime_status": 0,
+      "sample": 3,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 136995134,
+      "compile_ns": 135162620,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1188106,
+      "runtime_status": 0,
+      "sample": 4,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 133555519,
+      "compile_ns": 131711418,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1393725,
+      "runtime_status": 0,
+      "sample": 4,
+      "scenario": "body_edit",
+      "source_sha256": "f9c53d4911706500c74a47c28a5aca456bc7fbf4571fe14b8380b45c1111889b",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 124840676,
+      "compile_ns": 123167942,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1135126,
+      "runtime_status": 0,
+      "sample": 5,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 118445485,
+      "compile_ns": 116533882,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1283589,
+      "runtime_status": 0,
+      "sample": 5,
+      "scenario": "body_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 207091687,
+      "compile_ns": 203874622,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1965003,
+      "runtime_status": 0,
+      "sample": 0,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 151427114,
+      "compile_ns": 148312738,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1505733,
+      "runtime_status": 0,
+      "sample": 0,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 147624470,
+      "compile_ns": 145494148,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1620155,
+      "runtime_status": 0,
+      "sample": 1,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 156093483,
+      "compile_ns": 154293398,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1380745,
+      "runtime_status": 0,
+      "sample": 1,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 165636797,
+      "compile_ns": 163599014,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1415197,
+      "runtime_status": 0,
+      "sample": 2,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 171180718,
+      "compile_ns": 166342362,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1818328,
+      "runtime_status": 0,
+      "sample": 2,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 190906456,
+      "compile_ns": 186974066,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 3362554,
+      "runtime_status": 0,
+      "sample": 3,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 177056470,
+      "compile_ns": 175250456,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1362047,
+      "runtime_status": 0,
+      "sample": 3,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 168848348,
+      "compile_ns": 166855683,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": 1463299,
+      "runtime_status": 0,
+      "sample": 4,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 132370844,
+      "compile_ns": 130614995,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": 1303609,
+      "runtime_status": 0,
+      "sample": 4,
+      "scenario": "signature_edit",
+      "source_sha256": "2c0ec0f7ad140fb2e37ef6e8c4e3e6c646a275af2434ece62e7441e6203dc549",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 131267861,
+      "compile_ns": 129189488,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": 1346043,
+      "runtime_status": 0,
+      "sample": 5,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "lib"
+          ],
+          "name": "fixture_core"
+        },
+        {
+          "fresh": true,
+          "kind": [
+            "proc-macro"
+          ],
+          "name": "fixture_derive"
+        },
+        {
+          "fresh": false,
+          "kind": [
+            "bin"
+          ],
+          "name": "fixture-app"
+        }
+      ],
+      "build_and_run_ns": 146116163,
+      "compile_ns": 144253102,
+      "compile_status": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": 1336208,
+      "runtime_status": 0,
+      "sample": 5,
+      "scenario": "signature_edit",
+      "source_sha256": "04e61b1be2a23ec514e10399eaf79d211c1b78e9f762c76ea97a366eec1e9290",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 43461106,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 0,
+      "scenario": "rejected_edit",
+      "source_sha256": "3226a7ba2f894ae8c7fefcd2c7f12bbbc9db5f0f8879210fab8a3f1589826131",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 49738013,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 0,
+      "scenario": "rejected_edit",
+      "source_sha256": "3226a7ba2f894ae8c7fefcd2c7f12bbbc9db5f0f8879210fab8a3f1589826131",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 43021755,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 1,
+      "scenario": "rejected_edit",
+      "source_sha256": "ad71339a094a7fbdef041241cd1149669023efdcfa4e28d17568c9151c7a4500",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 52135027,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 1,
+      "scenario": "rejected_edit",
+      "source_sha256": "ad71339a094a7fbdef041241cd1149669023efdcfa4e28d17568c9151c7a4500",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 46925138,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 2,
+      "scenario": "rejected_edit",
+      "source_sha256": "6bcf45a6a68284f9d3b2ab02b923ccfccc5aca696e21ea22fdfb5cbdf94ee18b",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 41985066,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 2,
+      "scenario": "rejected_edit",
+      "source_sha256": "6bcf45a6a68284f9d3b2ab02b923ccfccc5aca696e21ea22fdfb5cbdf94ee18b",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 40948700,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 3,
+      "scenario": "rejected_edit",
+      "source_sha256": "1d420b1049b76914fd3dffe1f31b91e073a232ca9432d5445efb15a6b535e906",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 39003930,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 3,
+      "scenario": "rejected_edit",
+      "source_sha256": "1d420b1049b76914fd3dffe1f31b91e073a232ca9432d5445efb15a6b535e906",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 38956724,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 4,
+      "scenario": "rejected_edit",
+      "source_sha256": "e3cb9616d4a0d5671cd7d206b3620e4109fdc27a9faf2f5606d2bccd6cacf905",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 46109319,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 4,
+      "scenario": "rejected_edit",
+      "source_sha256": "e3cb9616d4a0d5671cd7d206b3620e4109fdc27a9faf2f5606d2bccd6cacf905",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 42781727,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 5,
+      "scenario": "rejected_edit",
+      "source_sha256": "578e8ad55fc25367ace06cb6042deca298e7e1f02a10c4bd19d04d2ae1f4a167",
+      "source_unchanged": true
+    },
+    {
+      "artifacts": [
+        {
+          "fresh": true,
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build"
+        }
+      ],
+      "build_and_run_ns": null,
+      "compile_ns": 43223347,
+      "compile_status": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_ns": null,
+      "runtime_status": null,
+      "sample": 5,
+      "scenario": "rejected_edit",
+      "source_sha256": "578e8ad55fc25367ace06cb6042deca298e7e1f02a10c4bd19d04d2ae1f4a167",
+      "source_unchanged": true
+    }
+  ],
+  "schema_version": 1,
+  "selection": {
+    "command": {
+      "argv": [
+        "/workspace/scratch/c89b15aeae8a/lust-lang/tools/cargo-lust/target/release/cargo-lust",
+        "--engine",
+        "rustc",
+        "plan",
+        "build",
+        "--manifest-path",
+        "/tmp/cargo-lust-bench-u6m8dv7w/project/Cargo.toml",
+        "--package",
+        "fixture-app",
+        "--bin",
+        "fixture-app",
+        "--target-dir",
+        "/tmp/cargo-lust-bench-u6m8dv7w/plan-target",
+        "--jobs",
+        "1",
+        "--offline",
+        "--locked",
+        "--message-format=json"
+      ],
+      "cwd": "/tmp/cargo-lust-bench-u6m8dv7w/project",
+      "elapsed_ns": 1445273,
+      "returncode": 0,
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text": ""
+      },
+      "stdout": {
+        "bytes": 591,
+        "sha256": "6289e5de209c428852725ca0741cc63e1d5ab06e55218097cdfc890af81af063",
+        "text": "{\"format_version\":1,\"requested_engine\":\"rustc\",\"selected_engine\":\"rustc\",\"reason\":\"explicit Cargo/rustc; preserve compiler, wrappers, profiles and arguments\",\"experimental\":false,\"program\":\"/workspace/scratch/83461cefdb89/toolchains/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo\",\"args\":[\"build\",\"--manifest-path\",\"/tmp/cargo-lust-bench-u6m8dv7w/project/Cargo.toml\",\"--package\",\"fixture-app\",\"--bin\",\"fixture-app\",\"--target-dir\",\"/tmp/cargo-lust-bench-u6m8dv7w/plan-target\",\"--jobs\",\"1\",\"--offline\",\"--locked\",\"--message-format=json\"],\"environment\":{},\"environment_remove\":[]}\n"
+      },
+      "timed_out": false
+    },
+    "plan": {
+      "args": [
+        "build",
+        "--manifest-path",
+        "/tmp/cargo-lust-bench-u6m8dv7w/project/Cargo.toml",
+        "--package",
+        "fixture-app",
+        "--bin",
+        "fixture-app",
+        "--target-dir",
+        "/tmp/cargo-lust-bench-u6m8dv7w/plan-target",
+        "--jobs",
+        "1",
+        "--offline",
+        "--locked",
+        "--message-format=json"
+      ],
+      "environment": {},
+      "environment_remove": [],
+      "experimental": false,
+      "format_version": 1,
+      "program": "/workspace/scratch/83461cefdb89/toolchains/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "reason": "explicit Cargo/rustc; preserve compiler, wrappers, profiles and arguments",
+      "requested_engine": "rustc",
+      "selected_engine": "rustc"
+    }
+  },
+  "settings": {
+    "features": "fixture defaults, unchanged",
+    "jobs": 1,
+    "primary_metric": "build",
+    "profile": {
+      "CARGO_INCREMENTAL": "1",
+      "CARGO_PROFILE_DEV_DEBUG": "2",
+      "CARGO_PROFILE_DEV_DEBUG_ASSERTIONS": "true",
+      "CARGO_PROFILE_DEV_INCREMENTAL": "true",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_DEV_OVERFLOW_CHECKS": "true",
+      "CARGO_PROFILE_DEV_PANIC": "unwind"
+    },
+    "samples_per_scenario": 6,
+    "scenarios": [
+      "cold",
+      "warm_noop",
+      "body_edit",
+      "signature_edit",
+      "rejected_edit"
+    ],
+    "target": "host"
+  },
+  "statistics": {
+    "body_edit": {
+      "baseline_over_coordinator_median": 1.0015567630421067,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 146852729,
+          "median_ns": 135547276.0,
+          "min_ns": 116533882,
+          "p95_ns": 146852729,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 149255691,
+          "median_ns": 135336589.0,
+          "min_ns": 123167942,
+          "p95_ns": 149255691,
+          "samples": 6
+        }
+      }
+    },
+    "cold": {
+      "baseline_over_coordinator_median": 0.9607162019435104,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 844186376,
+          "median_ns": 540668578.0,
+          "min_ns": 477528498,
+          "p95_ns": 844186376,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 722308564,
+          "median_ns": 562776579.5,
+          "min_ns": 487490390,
+          "p95_ns": 722308564,
+          "samples": 6
+        }
+      }
+    },
+    "rejected_edit": {
+      "baseline_over_coordinator_median": 1.0102673105970221,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 52135027,
+          "median_ns": 43342226.5,
+          "min_ns": 38956724,
+          "p95_ns": 52135027,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 49738013,
+          "median_ns": 42901741.0,
+          "min_ns": 40948700,
+          "p95_ns": 49738013,
+          "samples": 6
+        }
+      }
+    },
+    "signature_edit": {
+      "baseline_over_coordinator_median": 0.8890988346278522,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 186974066,
+          "median_ns": 146903443.0,
+          "min_ns": 129189488,
+          "p95_ns": 186974066,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 203874622,
+          "median_ns": 165227348.5,
+          "min_ns": 144253102,
+          "p95_ns": 203874622,
+          "samples": 6
+        }
+      }
+    },
+    "warm_noop": {
+      "baseline_over_coordinator_median": 0.8358413179532341,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 9060301,
+          "median_ns": 6835522.0,
+          "min_ns": 6197497,
+          "p95_ns": 9060301,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 9476707,
+          "median_ns": 8178014.0,
+          "min_ns": 7290080,
+          "p95_ns": 9476707,
+          "samples": 6
+        }
+      }
+    }
+  }
+}

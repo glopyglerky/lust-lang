@@ -1,0 +1,18 @@
+[package]
+name = "cargo-lust"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+description = "Coordinate upstream Lust and full-Rust Cargo builds without changing source semantics"
+publish = false
+
+# Keep the coordinator independent of Lust's C backend and build dependencies.
+[workspace]
+
+[[bin]]
+name = "cargo-lust"
+path = "src/main.rs"
+
+[profile.release]
+strip = true

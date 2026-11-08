@@ -1,3 +1,22 @@
+# Lust compiler set
+
+This fork develops a coordinated compiler set for unchanged, complete Rust projects. It preserves upstream Lust's fast subset compiler and adds a full Rust path, with one shared semantic frontend before considering further compiler splits.
+
+**Current implementation:** [`cargo-lust`](tools/cargo-lust) is an independently installable Rust coordinator. Its default path preserves Cargo/rustc compatibility. An explicit Cranelift path experiments with faster development code generation, and an explicit Lust path uses the existing compiler for a complete supported target. Automatic Lust/rustc artifact mixing and an independent full Rust frontend are not implemented. This initial integration does not establish a general speedup.
+
+```sh
+cargo install --path tools/cargo-lust --locked
+cargo lust build --workspace
+cargo lust test --workspace
+cargo lust plan build
+```
+
+Read the [coordinator usage](tools/cargo-lust/README.md), [compiler design](docs/compiler-set/design.md), [implementation roadmap](docs/compiler-set/roadmap.md), and [verification results](docs/compiler-set/verification.md). The fork's objective stays open until full projects obtain measured acceleration without source rewrites or semantic changes.
+
+## Upstream Lust
+
+The upstream README follows. Its measurements and supported-subset statements describe upstream Lust, not the new coordinator or a general full-Rust speedup.
+
 <img src="assets/icon.svg" width="64" height="64" alt="Lust logo: a pink crab with a smiling face">
 
 # lust-lang
