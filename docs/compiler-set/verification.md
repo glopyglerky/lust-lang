@@ -6,6 +6,11 @@ Verification date: 2026-11-08.
 
 The coordinator preserves ordinary Cargo behavior for the included full Rust workspace, invokes the actual upstream Lust compiler for a supported target, and keeps an unsupported Lust program rejected. The pinned complementary backend with unwind support compiles and executes the full Rust fixture, passes its tests, and compiles and tests the coordinator itself. It also builds the unchanged upstream Lust compiler with a measured cold-development-build reduction, passes the same 391 upstream unit tests, and matches its runtime probes. These results establish the exercised Linux configuration, not an independent full Rust frontend, arbitrary Lust/rustc library interoperability, automatic fast-path selection, or a general Rust speedup.
 
+These are configuration-specific, historical results. A later run at
+`a626367` exposed a Cranelift `fcntl` declaration conflict while compiling the
+Lust client, after both unit suites passed. That failed run has no valid speed
+ratios; its evidence and the continuation work are recorded below.
+
 ## Qualified full-project result
 
 The [complete compiler-set workflow at `42ab5dc`](https://github.com/glopyglerky/lustr/actions/runs/42510335761) passed every job. Its [complementary-backend job](https://github.com/glopyglerky/lustr/actions/runs/42510335761/job/128821816027) completed both the small-workspace benchmark and the unchanged-Lust benchmark with the corrected shared command verifier.
@@ -39,7 +44,7 @@ The same job also passed 34 fixture pairs, including four excluded warmup pairs,
 
 Cold compilation took 22.3% less time on this small fixture. Edit gains remained small, and no-op and rejection cases were slower. Its [summary](evidence/cranelift-linux-42ab5dc-summary.json) and [complete report](evidence/cranelift-linux-42ab5dc.json.gz) preserve this run separately from the historical measurements below. Different runner hardware makes absolute times across separate runs unsuitable for direct comparison.
 
-## Local tools
+## Initial local tools
 
 | Item | Observed identity |
 | --- | --- |
@@ -66,7 +71,7 @@ LUST_TEST_LUST=/path/to/lust \
 
 The local run used normal Cargo development settings. Baseline and candidate source trees were copies of the same fixture and had separate target directories. Tests did not change project panic settings, features, optimization, debug information, or incremental compilation settings.
 
-The latest local ordinary test suite passes 29 tests. The separately executed actual Lust test also passes. The process-level cases verify unchanged argument bytes, raw I/O, exit status, Unix signal termination, existing compiler wrappers, no execution during planning, and exactly one execution after failure. Regression tests cover explicit rustup selection, grouped release flags, a real Cargo alias that selects release, Cargo configuration placement and precedence, and the requirement for an explicit existing backend file.
+The initial local ordinary test suite passed 29 tests. The separately executed actual Lust test also passed. The process-level cases verify unchanged argument bytes, raw I/O, exit status, Unix signal termination, existing compiler wrappers, no execution during planning, and exactly one execution after failure. Regression tests cover explicit rustup selection, grouped release flags, a real Cargo alias that selects release, Cargo configuration placement and precedence, and the requirement for an explicit existing backend file.
 
 The Cargo integration executes a workspace with a separate custom derive proc macro, a generated-source build script, a library dependency, async polling, raw-pointer operations, generic associated types, const generics, a C function calling convention, panic catching, and destruction during unwinding. It checks this output against both ordinary Cargo and the coordinator:
 
@@ -80,7 +85,7 @@ The real Lust path prints `42` for its supported program. A separate async progr
 
 ## Optional backend gates
 
-The ordinary test run explicitly ignores the actual Lust and actual Cranelift tests. The Lust test was also executed explicitly as shown above. Cranelift has not been executed locally because the required toolchain is absent.
+The ordinary test run explicitly ignores the actual Lust and actual Cranelift tests. The Lust test was also executed explicitly as shown above. At that initial checkpoint, Cranelift had not been executed locally because the required toolchain was absent. The continuation installed and tested the pinned backend as recorded below.
 
 The compiler-set workflow includes a dedicated, pinned custom Cranelift job. It compiles and runs the full Rust workspace, including `catch_unwind` and a destructor, then executes its tests. A component installation or a constructed command is not a passing backend gate. Inspect the workflow result for the commit in question before describing that backend as qualified.
 
@@ -199,3 +204,142 @@ The [qualification summary](evidence/lust-project-219b915-qualification-summary.
 ## Remaining qualification
 
 One small fixture and one substantial compiler project do not prove full compiler conformance. Open requirements include a broader workload census, macro and build-script invalidation, multiple targets and architectures, SIMD/intrinsics, inline assembly, sanitizer and coverage options, no_std/embedded targets, mixed backend ABI correctness, automatic target selection, and performance across representative large projects. Their acceptance conditions remain in the [roadmap](roadmap.md).
+
+## Continuation and bidirectional Rust ABI qualification
+
+The stopped workspace was recovered and its staged files matched the published
+commit exactly. [PR #1](https://github.com/glopyglerky/lustr/pull/1) merged the
+recovered compiler set and the first continuation changes into `next` at
+`62494e27717a64c8612b538409de27048fa6adc2`. The
+[recovery record](recovery-2026-11-08.md) identifies all eight matching blobs.
+
+The continuation passed 391 upstream unit tests locally, the 30 coordinator and
+entry-point tests, the new image-startup/child-environment regression, the actual
+Lust subset gate, and the three existing real Cranelift integration tests. The
+native startup change confines Linux's `personality` call and arena allocation
+to Linux. Native macOS's full gate remains separate from coordinator portability;
+its remaining native support is not established by this Linux run.
+
+A new dependency-free [mixed ABI fixture](../../tools/cargo-lust/fixtures/mixed-abi)
+passed the ordinary Cargo path and the real complementary backend on Linux
+x86_64 with rustc commit `2d20b42b883dcfc014f3c2c56081eeb6091c2179`, the
+`nightly-2026-11-05` pair. The backend was built from the existing pinned source
+with unwinding and has SHA-256
+`a7ba473e524496e156c6926b92d234feaad8231c6a1136b73e4884aa89e1b04d`.
+
+| Configuration | Shared type crate | Provider crate | Application and callbacks |
+| --- | --- | --- | --- |
+| Baseline | LLVM | LLVM | LLVM |
+| Cranelift consumer | LLVM | LLVM | Cranelift |
+| Cranelift provider | LLVM | Cranelift | LLVM |
+
+Every configuration used fresh build output. Actual `cargo -vv` commands
+established the backend and common rustc executable for each ordinary crate and
+each test harness. The real gate rejects a different compiler commit or host,
+missing compilation evidence, wrong backend paths, and conflicting backend
+options. Both assignments executed calls in both directions.
+
+The executable and its Cargo test checked Rust-layout aggregates returned by
+value, generic instances, const generics, trait objects and their destructors,
+nonzero/pointer niches, owned enum variants, and allocation growth or destruction
+in the other crate. Panics originating in either crate crossed the other
+backend's frames and produced the asserted destructor order. Atomic
+compare/exchange, 8,000 concurrent increments, independent thread-local state,
+and thread-exit destructors passed. The C ABI callback test used Rust-defined
+`extern "C"` functions and a `repr(C)` aggregate; it does not establish
+interoperability with a separately compiled C allocator.
+
+The [summary](evidence/mixed-abi-2026-11-08-summary.json) contains the exact tested
+source hashes. The [compressed raw report](evidence/mixed-abi-2026-11-08.json.gz)
+retains each command's stdout, stderr and exit status as base64-encoded bytes,
+compiler identity, and success receipts. Failed earlier benchmark reports remain
+unchanged. The new mixed ABI gate measures correctness, not speed, and does not
+claim native Lust rlib interoperability or general Rust/backend equivalence.
+
+
+## Checked semantic inspection
+
+The new [`lustr-semantic`](../../tools/lustr-semantic) package builds offline
+against the pinned `nightly-2026-11-05` compiler's development libraries. Its
+12 real-compiler integration tests pass on Linux x86_64. The
+[qualification summary](evidence/semantic-inspection-2026-11-08-summary.json)
+identifies every tested package file; the
+[compressed evidence](evidence/semantic-inspection-2026-11-08.json.gz) preserves
+the build/test log and a validated report from the real library fixture.
+
+The driver reads checked monomorphized items, symbols, function-call ABIs,
+layouts, niche encodings, drop requirements and unwind edges. Ordinary rustc
+still owns metadata, code generation and linking. The report is published only
+after the full invocation succeeds. Tests prove compiler and late-link failures
+publish no new success report, concurrent publication preserves complete files,
+and metadata-only compilation does not force code generation.
+
+Actual ordinary and inspected Rust artifacts link and run in both directions.
+Cargo tests cover a build script, generated source, a procedural macro, JSON
+messages and a no-op build. Additional tests exercise compiler/sysroot mismatch,
+unsupported compiler wrappers, response files, paths with spaces, non-UTF-8
+passthrough, compiler options, and timing output. Independent review found and
+closed two defects before publication: a custom compiler executable could have
+its injected flags bypassed, and the final rustc timing record was missing.
+Both have executable regressions.
+
+This closes a bounded inspection milestone, not roadmap item 5. The format does
+not serialize full MIR execution semantics, and its source/dependency
+observations are incomplete cache inputs. Native Lust-generated Rust artifacts,
+complete lowering, host/target separation and acceleration remain open.
+Inspection adds overhead and is not on the coordinator's normal compilation
+path.
+
+## Continuation CI failures retained
+
+At `a626367`, the [native macOS job](https://github.com/glopyglerky/lustr/actions/runs/42523858147/job/128863046656)
+successfully built the compiler, passed both image-startup cases, and passed all
+13 lust-port tool tests. It then stopped because the runner lacked the command
+`timeout`. The workflow now installs Homebrew coreutils and exposes its GNU
+command names before the gate. This fixes the observed runner dependency;
+passing the remaining native differential suite still requires a fresh run.
+
+The [Cranelift job](https://github.com/glopyglerky/lustr/actions/runs/42523858064/job/128863043282)
+passed the full Rust fixture, three real Cranelift tests, coordinator tests,
+small-workspace measurements and both 391-test native unit suites. The first
+measured Cranelift build then failed on conflicting two- and three-parameter
+`fcntl` declarations in the Lust client. The benchmark correctly stopped and
+withheld ratios. The [failure summary](evidence/lust-project-a626367-fcntl-failure-summary.json)
+and [unaltered report](evidence/lust-project-a626367-fcntl-failure.json.gz)
+preserve the diagnostics and complete run. The earlier `42ab5dc` measurements
+remain historical evidence for that tested source and configuration.
+
+### Variadic declaration correction
+
+The failure came from Lust's declarations in `src/client.rs`, `src/daemon.rs`
+and `src/image.rs`: each declared three fixed `fcntl` arguments. The actual C
+interface has two fixed arguments followed by a variadic argument list. The
+standard library imports that correct signature, so the conflicting declaration
+can fail when both occur in one Cranelift codegen unit. The three declarations
+now match the C interface; production call sites and their values are unchanged.
+
+A minimal real-compiler reproducer fails with the old declaration and passes
+after changing only that declaration. Both LLVM and Cranelift were exercised,
+including the compiler's default codegen settings. The new
+[`fcntl` fixture](../../tools/cargo-lust/fixtures/fcntl-variadic) checks both
+argument counts, descriptor flag restoration, file cloning, reads and standard
+library drops. The actual backend gate verifies fresh compiler commands for
+the program and test harness. No panic, debug-assertion or codegen-unit change
+is used to make the regression pass.
+
+After the correction, a fresh default-development build of both native Lust
+binaries through Cranelift succeeded. The generated compiler passed startup,
+supported-program execution and unsupported-program rejection. All 391 native
+unit tests passed under LLVM, 33 coordinator tests passed on Linux, and all four
+actual Cranelift qualification tests passed. Independent review found no
+remaining blocker in the declaration correction.
+
+The [correction summary](evidence/fcntl-correction-2026-11-08-summary.json) and
+[raw evidence](evidence/fcntl-correction-2026-11-08.json.gz) retain source hashes,
+minimal reproducer results, full native build output and validation logs.
+The local full build used Cargo's default incremental behavior, while the
+earlier failing CI command did not include incremental code generation. The
+standalone reproducer also verifies the declaration correction without
+incremental compilation. This is correctness evidence, not a new performance
+measurement. Future benchmark runs identify the corrected fork source rather
+than labeling it unchanged upstream Lust.

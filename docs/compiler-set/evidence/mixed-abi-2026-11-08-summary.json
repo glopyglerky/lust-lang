@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-08T21:21:09.661494+00:00",
+  "base_commit": "62494e27717a64c8612b538409de27048fa6adc2",
+  "source_sha256": {
+    "tools/cargo-lust/fixtures/mixed-abi/Cargo.lock": "9af0017b39e47d397a92ef7f2183e7c6aecc4fa7f4dd311f0f6ecab112058278",
+    "tools/cargo-lust/fixtures/mixed-abi/Cargo.toml": "2f218cbfd292b2273b38b06de071a6b210c05e1889e9e5ca0531780fb04c35d6",
+    "tools/cargo-lust/fixtures/mixed-abi/README.md": "6e3158fddbf38f6eec52d747ff52803c4fb76b3e1dd53c85b81cda04e8da66e9",
+    "tools/cargo-lust/fixtures/mixed-abi/app/Cargo.toml": "236c86cca07e5de55c9d7a9ca2e275bdcd945fae0dfff2e94fdd1db50da8a86a",
+    "tools/cargo-lust/fixtures/mixed-abi/app/src/main.rs": "8fc2f12f81a29f32f9dae161a44085e37c8701351a4f4cdf080a598d4d7ae864",
+    "tools/cargo-lust/fixtures/mixed-abi/contract/Cargo.toml": "8bad183a5ee6ebc36b0e76464dca47de40ee989b445449a67c7fffa2ce3a369e",
+    "tools/cargo-lust/fixtures/mixed-abi/contract/src/lib.rs": "cc2690caf61bcbc9cab1106d0410a2311d629fd5c4076d487a285e13ff6f3d30",
+    "tools/cargo-lust/fixtures/mixed-abi/provider/Cargo.toml": "fb1e533d79cb867839272f4a8bf9de1b20e01bc7a4df38b30b620aaeb20d9983",
+    "tools/cargo-lust/fixtures/mixed-abi/provider/src/lib.rs": "0891d5053d436d78eca684640621380b4b61a404ce7e75787c7ec077e36ab795",
+    "tools/cargo-lust/tests/mixed_abi.rs": "29c3ea0dbf4369752b3274c64d33fbd92ce8ed8f228e79591f529d12b2d9b7cb"
+  },
+  "backend_sha256": "a7ba473e524496e156c6926b92d234feaad8231c6a1136b73e4884aa89e1b04d",
+  "native_lust_participated": false,
+  "performance_measurement": false,
+  "raw_report": "mixed-abi-2026-11-08.json.gz",
+  "raw_report_sha256": "45cdcead2a219368a14a5c1aeadd7f269948942795ef0b1af025a256d38ee4aa",
+  "rustc_commit": "2d20b42b883dcfc014f3c2c56081eeb6091c2179",
+  "host": "x86_64-unknown-linux-gnu",
+  "configurations": [
+    {
+      "contract": "LLVM",
+      "provider": "LLVM",
+      "application": "LLVM"
+    },
+    {
+      "contract": "LLVM",
+      "provider": "LLVM",
+      "application": "Cranelift"
+    },
+    {
+      "contract": "LLVM",
+      "provider": "Cranelift",
+      "application": "LLVM"
+    }
+  ],
+  "results": {
+    "ordinary": {
+      "passed_receipt": "passed: fresh ordinary Cargo and coordinated rustc builds, direct executables and Cargo test harnesses\n",
+      "saved_file_count": 22
+    },
+    "mixed": {
+      "passed_receipt": "passed: fresh all-LLVM baseline and both mixed LLVM/Cranelift selections; direct execution and Cargo tests; complete destructor/panic contract\nrustc_commit=2d20b42b883dcfc014f3c2c56081eeb6091c2179\nhost=x86_64-unknown-linux-gnu\nbackend=/workspace/scratch/a883c04fad4b/lustr/tools/cargo-lust/target/complement/lib/a7ba473e524496e156c6926b92d234feaad8231c6a1136b73e4884aa89e1b04d/librustc_codegen_cranelift.so\n",
+      "saved_file_count": 31
+    }
+  }
+}

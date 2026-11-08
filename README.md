@@ -6,6 +6,10 @@ This fork develops a coordinated compiler set for unchanged, complete Rust proje
 
 The pinned Cranelift backend includes panic-unwinding support. On Linux x86_64, it built the unchanged upstream Lust compiler in a median **39.40 seconds**, compared with **59.54 seconds** for Cargo/LLVM: **33.8% less development-build time** in two interleaved pairs. Both variants passed all 391 upstream unit tests and matched the runtime probes. No-op builds were slightly slower. This is an initial result on one project; see the [qualified measurements and limits](docs/compiler-set/verification.md#qualified-full-project-result).
 
+Those timings describe the retained `42ab5dc` benchmark. The continuation also
+corrects native platform startup and three variadic C declarations exposed by
+later qualification; new benchmarks must identify that corrected source.
+
 To try the development backend, start in a checkout of this fork. The setup helper currently supports Linux x86_64:
 
 ```sh
@@ -14,11 +18,19 @@ bash tools/cargo-lust/scripts/build-cranelift.sh
 source tools/cargo-lust/target/complement/env.sh
 
 cd /path/to/your/rust/project
-cargo lust --engine cranelift build --workspace
-cargo lust --engine cranelift test --workspace
+cargo lustr --engine cranelift build --workspace
+cargo lustr --engine cranelift test --workspace
 ```
 
-Use `cargo lust build` for the default Cargo compatibility route. Backend setup is a one-time build, and its generated environment selects the matching installed nightly explicitly. Release/custom profiles retain the selected Cargo configuration.
+Use `lustr build` or `cargo lustr build` for the default Cargo compatibility route. The original `cargo lust` command remains compatible. Backend setup is a one-time build, and its generated environment selects the matching installed nightly explicitly. Release/custom profiles retain the selected Cargo configuration.
+
+The complementary backend also passes a [bidirectional Rust ABI fixture](tools/cargo-lust/fixtures/mixed-abi): LLVM and Cranelift crates exchange aggregates, trait objects, generic instances and owned allocations; panics unwind through both backends with the expected destructor order. The fixture also checks atomics, thread-local state and C calling conventions. Actual compiler commands establish which backend built each crate. This qualifies those cases on the pinned Linux toolchain; native Lust library interoperability is still open.
+
+The new [`lustr-semantic` development tool](tools/lustr-semantic) reads checked
+monomorphized functions, Rust ABIs, layouts and cleanup edges from the pinned
+rustc driver. Its real-compiler tests establish a first inspection interface for
+future native Lust lowering. The normal rustc backend still generates its
+artifacts; inspection does not accelerate builds or provide executable IR.
 
 Read the [coordinator usage](tools/cargo-lust/README.md), [compiler design](docs/compiler-set/design.md), [implementation roadmap](docs/compiler-set/roadmap.md), and [verification results](docs/compiler-set/verification.md). Automatic selection, native Lust/Rust artifact interoperability, and broader project and target qualification remain open.
 

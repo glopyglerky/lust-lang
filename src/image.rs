@@ -156,7 +156,8 @@ unsafe extern "C" {
     fn pwrite(fd: c_int, buf: *const c_void, count: usize, off: i64) -> isize;
     fn copy_file_range(fd_in: c_int, off_in: *mut i64, fd_out: c_int, off_out: *mut i64, len: usize, flags: u32) -> isize;
     fn flock(fd: c_int, op: c_int) -> c_int;
-    fn fcntl(fd: c_int, cmd: c_int, arg: c_int) -> c_int;
+    // The third argument is variadic even when F_SETFD supplies an integer.
+    fn fcntl(fd: c_int, cmd: c_int, ...) -> c_int;
     fn fork() -> c_int;
     fn setsid() -> c_int;
     fn setpriority(which: c_int, who: u32, prio: c_int) -> c_int;

@@ -49,6 +49,10 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Install GNU test utilities
+        run: |
+          brew install coreutils
+          echo "$(brew --prefix coreutils)/libexec/gnubin" >> "$GITHUB_PATH"
       - name: Cache pinned tcc
         id: tcc
         uses: actions/cache@v4

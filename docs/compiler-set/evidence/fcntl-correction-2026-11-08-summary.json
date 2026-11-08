@@ -1,0 +1,35 @@
+{
+  "backend_sha256": "a7ba473e524496e156c6926b92d234feaad8231c6a1136b73e4884aa89e1b04d",
+  "base_commit": "6f6ce8a5f2aafed47c8f5eaff5fd6d4a60f7c1a8",
+  "checks": {
+    "actual_cranelift_qualification_tests": 4,
+    "coordinator_tests_linux": 33,
+    "cranelift_built_lust_startup_and_subset_gate": true,
+    "fresh_native_cranelift_build_both_binaries": true,
+    "native_unit_tests_llvm": 391
+  },
+  "compiler_commit": "2d20b42b883dcfc014f3c2c56081eeb6091c2179",
+  "evidence_files": 29,
+  "evidence_sha256": "76024c1c43590c3a571c9468e4b2daa73ab9d3313676416363c1250ffde7a6dc",
+  "host": "x86_64-unknown-linux-gnu",
+  "kind": "fcntl-variadic-correction",
+  "limitations": [
+    "Native full build used default Cargo incremental behavior; original CI build did not include incremental codegen",
+    "Minimal real-compiler reproducer verifies declaration correction without incremental compilation",
+    "Native compiler source is corrected fork source, not unchanged upstream",
+    "Full native differential gates and hosted benchmark rerun are separate from these local gates"
+  ],
+  "passed": true,
+  "performance_measurement": false,
+  "schema_version": 1,
+  "source_sha256": {
+    "src/client.rs": "561b2ae1a76d02f8b2ecdf892e5570716cead008502da58e53e6f717961a8553",
+    "src/daemon.rs": "a96dfb2405881430d567c7c700722ad467c59b8e1582c826aeafc7166452e231",
+    "src/image.rs": "27ac0ba83f236299fb7515136513a14e900620a17fbb7f557ecd8b09f1607403",
+    "tools/cargo-lust/fixtures/fcntl-variadic/Cargo.lock": "71180b0e2280edaf27e89f112d0047f2785aea69898985500a5e98a6f7d9e21a",
+    "tools/cargo-lust/fixtures/fcntl-variadic/Cargo.toml": "d60037fb5cfe2e97bab8a6591539aaaba62ef89252c6805872a069113d6134cc",
+    "tools/cargo-lust/fixtures/fcntl-variadic/README.md": "d74b45f71846314ea94b49d1e54080c76d81afd598b1531099126acbdcebcfba",
+    "tools/cargo-lust/fixtures/fcntl-variadic/src/main.rs": "afd91eef7721dcf81b961ca688b0655896d21436eda05b64a041b60631e9cf1a",
+    "tools/cargo-lust/tests/qualification.rs": "55bfab039d2843e96be52e3cd4829091784d8a3fcb84d69822032ba2bc5fba1f"
+  }
+}

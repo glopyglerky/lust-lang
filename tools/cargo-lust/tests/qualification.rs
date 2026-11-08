@@ -46,11 +46,15 @@ fn copy_tree(source: &Path, destination: &Path) {
     fs::create_dir_all(destination).unwrap();
     for entry in fs::read_dir(source).unwrap() {
         let entry = entry.unwrap();
+        // Direct Cargo runs may leave build output in the source fixture.
+        // Qualification always compiles into its own fresh target directory.
+        if entry.file_name() == OsStr::new("target") {
+            continue;
+        }
         let destination = destination.join(entry.file_name());
         let kind = entry.file_type().unwrap();
         assert!(!kind.is_symlink(), "fixture must not contain symlinks");
         if kind.is_dir() {
-            assert_ne!(entry.file_name(), OsStr::new("target"), "fixture has build output");
             copy_tree(&entry.path(), &destination);
         } else {
             fs::copy(entry.path(), destination).unwrap();
@@ -488,4 +492,62 @@ fn actual_cranelift_links_an_llvm_library_with_a_cranelift_application() {
     assert_eq!(mixed.status.code(), baseline.status.code());
     assert_eq!(mixed.stdout, baseline.stdout);
     assert_eq!(mixed.stderr, baseline.stderr);
+}
+
+#[cfg(unix)]
+const FCNTL_EXPECTED: &[u8] = b"fcntl variadic passed: getfd=2-args setfd=3-args std-owned-fd-drops=2\n";
+
+#[test]
+#[cfg(unix)]
+fn fcntl_variadic_calls_and_std_file_ownership_work_through_cargo() {
+    let scratch = Scratch::new("fcntl-variadic");
+    let fixture = scratch.fixture("fcntl-variadic");
+    for (target, engine) in [("llvm", None), ("rustc", Some("rustc"))] {
+        let output = execute(command(&scratch, &fixture, target, engine).args(["run", "--offline", "--locked", "--quiet"]));
+        success_at("variadic fcntl baseline execution", &output);
+        assert_eq!(output.stdout, FCNTL_EXPECTED);
+        assert!(output.stderr.is_empty(), "unexpected fcntl fixture stderr: {}", String::from_utf8_lossy(&output.stderr));
+        let tested = execute(command(&scratch, &fixture, target, engine).args(["test", "--offline", "--locked"]));
+        success_at("variadic fcntl baseline Cargo test", &tested);
+        assert!(String::from_utf8_lossy(&tested.stdout).contains("test tests::variadic_fcntl_preserves_owned_file_lifecycle ... ok"));
+    }
+}
+
+#[test]
+#[cfg(unix)]
+#[ignore = "requires matching nightly Cargo and LUST_CRANELIFT_BACKEND built with unwinding"]
+fn actual_cranelift_fcntl_variadic_calls_share_std_file_descriptor_abi() {
+    let backend = required_cranelift_backend();
+    let backend = backend.to_str().expect("verbose qualification requires a UTF-8 backend path");
+    let scratch = Scratch::new("actual-fcntl-variadic");
+    let fixture = scratch.fixture("fcntl-variadic");
+    let mut baseline = None;
+    for (target, engine) in [("llvm", None), ("cranelift", Some("cranelift"))] {
+        let built =
+            execute(command(&scratch, &fixture, target, engine).args(["build", "--offline", "--locked", "-vv", "--color", "never"]));
+        success_at("fresh variadic fcntl fixture compilation", &built);
+        if engine.is_some() {
+            assert_verbose_backend(&built.stderr, "fixture_fcntl_variadic", backend);
+        }
+        let executable = scratch.0.join(target).join("debug").join(format!("fixture-fcntl-variadic{}", std::env::consts::EXE_SUFFIX));
+        let output = execute(&mut Command::new(executable));
+        success_at("variadic fcntl fixture execution after compilation", &output);
+        assert_eq!(output.stdout, FCNTL_EXPECTED);
+        assert!(output.stderr.is_empty(), "unexpected fcntl fixture stderr: {}", String::from_utf8_lossy(&output.stderr));
+        if let Some(baseline) = &baseline {
+            let baseline: &Output = baseline;
+            assert_eq!(output.status.code(), baseline.status.code());
+            assert_eq!(output.stdout, baseline.stdout);
+            assert_eq!(output.stderr, baseline.stderr);
+        } else {
+            baseline = Some(output);
+        }
+        let tested =
+            execute(command(&scratch, &fixture, target, engine).args(["test", "--offline", "--locked", "-vv", "--color", "never"]));
+        success_at("variadic fcntl fixture Cargo test", &tested);
+        if engine.is_some() {
+            assert_verbose_backend(&tested.stderr, "fixture_fcntl_variadic", backend);
+        }
+        assert!(String::from_utf8_lossy(&tested.stdout).contains("test tests::variadic_fcntl_preserves_owned_file_lifecycle ... ok"));
+    }
 }

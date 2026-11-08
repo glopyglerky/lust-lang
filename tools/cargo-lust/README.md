@@ -81,6 +81,19 @@ This is a manual package choice using the same rustc frontend and toolchain. Gen
 
 The optional mixed-backend gate keeps the unchanged fixture library on LLVM and its application and procedural macro on Cranelift. It checks the actual verbose rustc commands and compares the final binary's stdout, stderr, and status with an all-LLVM build. This does not exchange native Lust artifacts or establish arbitrary mixed-backend compatibility.
 
+The additional [mixed ABI contract](fixtures/mixed-abi) tests both backend
+assignments across separate application, provider, and shared-type crates. It
+checks aggregate calling conventions, generic instances, trait objects, enum
+niches, allocation ownership, destructor ordering during cross-backend panic
+unwinding, atomics, thread-local values, and C ABI callbacks. Each ordinary and
+test-harness build must supply fresh compiler commands for every crate. Run the
+real backend gate after setup:
+
+```sh
+cargo test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline \
+  --test mixed_abi actual_cranelift -- --ignored --nocapture
+```
+
 ## Use the existing Lust compiler
 
 Install or build upstream Lust as described in the root README, then use its native target interface:
