@@ -1,0 +1,1688 @@
+{
+  "created_utc": "2026-11-08T17:00:31.398333+00:00",
+  "engine": "cranelift",
+  "errors": [],
+  "excluded_warmup_sample_count": 8,
+  "fixture": {
+    "base_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+    "files": [
+      {
+        "bytes": 318,
+        "path": "Cargo.lock",
+        "sha256": "766efb4bbf851998ca7fc923da668cf3afdbeca01749db26772b2370dafbe0a7"
+      },
+      {
+        "bytes": 89,
+        "path": "Cargo.toml",
+        "sha256": "c5054733d8352fdd6c94290dfd2747294aa7d7cd1ec3ad7c4e353d5ec3522784"
+      },
+      {
+        "bytes": 174,
+        "path": "app/Cargo.toml",
+        "sha256": "94e1e54a4f4ff53e497e44ab62c0ff06c23ee56d79fcc5629c6aff8779b17ded"
+      },
+      {
+        "bytes": 1846,
+        "path": "app/src/main.rs",
+        "sha256": "bdc1e4a1b5f73a8070d89c1f11061b9ed592158a436c5b967bc940f79bf605c5"
+      },
+      {
+        "bytes": 102,
+        "path": "core/Cargo.toml",
+        "sha256": "e116e06247dc172d8bced63a72eb0481ed0e1fce66b46969791b6332bf3a71cf"
+      },
+      {
+        "bytes": 325,
+        "path": "core/build.rs",
+        "sha256": "0d5762d355fb293ab68036b1d12f55aaa4fe77f50bb696b7684fb2cfe7edecad"
+      },
+      {
+        "bytes": 2271,
+        "path": "core/src/lib.rs",
+        "sha256": "f996e957f4887f9d1eab3ed122d6a5b6f7d8d0384ae54645db094a1236686a3b"
+      },
+      {
+        "bytes": 110,
+        "path": "derive/Cargo.toml",
+        "sha256": "7dc0b5e9ff846c18a0ecdcb8f4f1d38d53c90edf63b0beadd4b2e4e000fde74d"
+      },
+      {
+        "bytes": 699,
+        "path": "derive/src/lib.rs",
+        "sha256": "7dad1cddebcc68d06a51a1bd44ff6c1fa0c6961b04adb3df6241b1da4d4f32a4"
+      }
+    ],
+    "path": "/home/runner/work/lust-lang/lust-lang/tools/cargo-lust/fixtures/full-rust"
+  },
+  "hardware": {
+    "available_cpus": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "logical_cpus": 4,
+    "machine": "x86_64",
+    "python": "3.12.3",
+    "release": "7.0.0-1017-azure",
+    "system": "Linux"
+  },
+  "identities": {
+    "cargo": {
+      "command": [
+        "/home/runner/.cargo/bin/cargo",
+        "--version",
+        "--verbose"
+      ],
+      "stdout": "cargo 1.101.0-nightly (3c747ea3e 2026-11-03)\nrelease: 1.101.0-nightly\ncommit-hash: 3c747ea3ead23951c1b43a5edfcbdb449135ddeb\ncommit-date: 2026-11-03\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]\n"
+    },
+    "coordinator": {
+      "command": [
+        "/home/runner/work/lust-lang/lust-lang/tools/cargo-lust/target/release/cargo-lust",
+        "--version"
+      ],
+      "stdout": "cargo-lust 0.1.0\n"
+    },
+    "rustc": {
+      "command": [
+        "/home/runner/.cargo/bin/rustc",
+        "-vV"
+      ],
+      "stdout": "rustc 1.101.0-nightly (2d20b42b8 2026-11-04)\nbinary: rustc\ncommit-hash: 2d20b42b883dcfc014f3c2c56081eeb6091c2179\ncommit-date: 2026-11-04\nhost: x86_64-unknown-linux-gnu\nrelease: 1.101.0-nightly\nLLVM version: 23.1.5\n"
+    },
+    "sysroot": {
+      "command": [
+        "/home/runner/.cargo/bin/rustc",
+        "--print",
+        "sysroot"
+      ],
+      "stdout": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu\n"
+    }
+  },
+  "measured_sample_count": 60,
+  "method": {
+    "clock": "time.perf_counter_ns",
+    "cold": "empty Cargo target directory; installed sysroot and OS page cache are not cold",
+    "interleaving": "alternate the first route in each pair",
+    "limits": "small synthetic fixture; not evidence of broad full-project acceleration; no peak-memory or compiler-stage profiling",
+    "p95": "nearest-rank percentile; at small sample counts this is the maximum",
+    "source": "one shared copied source snapshot per pair, separate target directories",
+    "warm": "one excluded paired warmup; target directories retained"
+  },
+  "operation": "build",
+  "pair_count": 34,
+  "pairs": [
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 0,
+      "scenario": "cold",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 1,
+      "scenario": "cold",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 2,
+      "scenario": "cold",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 3,
+      "scenario": "cold",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 4,
+      "scenario": "cold",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 5,
+      "scenario": "cold",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": -1,
+      "scenario": "warm_noop",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": true
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 1,
+      "scenario": "warm_noop",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 2,
+      "scenario": "warm_noop",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 3,
+      "scenario": "warm_noop",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 4,
+      "scenario": "warm_noop",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 5,
+      "scenario": "warm_noop",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": -1,
+      "scenario": "body_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": true
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 0,
+      "scenario": "body_edit",
+      "source_sha256": "eb2d5b4fa9825878dfda3a6029cb0032bf239f3f9ea675dc61dcaf6a2b88db87",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 1,
+      "scenario": "body_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 2,
+      "scenario": "body_edit",
+      "source_sha256": "eb2d5b4fa9825878dfda3a6029cb0032bf239f3f9ea675dc61dcaf6a2b88db87",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 3,
+      "scenario": "body_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 4,
+      "scenario": "body_edit",
+      "source_sha256": "eb2d5b4fa9825878dfda3a6029cb0032bf239f3f9ea675dc61dcaf6a2b88db87",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 5,
+      "scenario": "body_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": -1,
+      "scenario": "signature_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": true
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 0,
+      "scenario": "signature_edit",
+      "source_sha256": "474269ed9595da20db5b1cf09e6e7069c853cf70ead2664379800592b1578d07",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 1,
+      "scenario": "signature_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 2,
+      "scenario": "signature_edit",
+      "source_sha256": "474269ed9595da20db5b1cf09e6e7069c853cf70ead2664379800592b1578d07",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 3,
+      "scenario": "signature_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 4,
+      "scenario": "signature_edit",
+      "source_sha256": "474269ed9595da20db5b1cf09e6e7069c853cf70ead2664379800592b1578d07",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": 5,
+      "scenario": "signature_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": true,
+      "sample": -1,
+      "scenario": "rejected_edit",
+      "source_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+      "warmup": true
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 0,
+      "scenario": "rejected_edit",
+      "source_sha256": "94df53ad96645b39a8d825413ad787bdc81b85188e82851f1a56f4f59a313307",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 1,
+      "scenario": "rejected_edit",
+      "source_sha256": "349afa81130e3715285884e038dcce4a7ee907f87286d0d6d07f87aaabe98e51",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 2,
+      "scenario": "rejected_edit",
+      "source_sha256": "490afaa0e2b20e489b2a31de90545bccd8b782181015df141043053ff360fc4e",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 3,
+      "scenario": "rejected_edit",
+      "source_sha256": "bdf3a91bbcd6abc77a6702d8a6ba943d7d91641b048c6c17093c46c73196a8a9",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 4,
+      "scenario": "rejected_edit",
+      "source_sha256": "778d7ea300df3180f78631d6984ac98d8da639cc41eec08123830a66892d7f8d",
+      "warmup": false
+    },
+    {
+      "acceptance_parity": true,
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "reasons": [],
+      "runtime_parity": null,
+      "sample": 5,
+      "scenario": "rejected_edit",
+      "source_sha256": "4ebe9a6451f22d433ab07256981e9c5a81664ea46ac4b6967df2965b5502c5d5",
+      "warmup": false
+    }
+  ],
+  "passed": true,
+  "provenance": {
+    "artifact_id": 13626167182,
+    "artifact_zip_sha256": "69646cc175b2df20bc26950ddea222be360089874b70094e0a29d297a40e916d",
+    "commit": "ceabf7e82e85a4d9726c2a001b9e237fd8ca04ca",
+    "job": "https://github.com/glopyglerky/lust-lang/actions/runs/42502560395/job/128798273793",
+    "workflow_run": "https://github.com/glopyglerky/lust-lang/actions/runs/42502560395"
+  },
+  "raw_report": {
+    "path": "cranelift-linux.json.gz",
+    "uncompressed_bytes": 484972,
+    "uncompressed_sha256": "1b1e5147693a5e058e18cc0104bb3da80946ad34789c6baff677e72dd7bbbd80"
+  },
+  "samples": [
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 592834635,
+      "build_elapsed_ns": 591081500,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1252501,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 0,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 466183941,
+      "build_elapsed_ns": 464455992,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1364340,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 0,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 466690435,
+      "build_elapsed_ns": 465015574,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1264494,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 1,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 591822193,
+      "build_elapsed_ns": 590040283,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1407120,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 1,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 585052283,
+      "build_elapsed_ns": 583368387,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1278910,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 2,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 457212421,
+      "build_elapsed_ns": 455514668,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1305089,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 2,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 457728688,
+      "build_elapsed_ns": 455946888,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1278820,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 3,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 579935580,
+      "build_elapsed_ns": 578181973,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1391991,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 3,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 580952628,
+      "build_elapsed_ns": 579351737,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1206435,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 4,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 454175158,
+      "build_elapsed_ns": 452457458,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1305399,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 4,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 454288409,
+      "build_elapsed_ns": 452640740,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1248823,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 5,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 578899353,
+      "build_elapsed_ns": 577234150,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1304718,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 5,
+      "scenario": "cold",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 20377230,
+      "build_elapsed_ns": 18741865,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1225189,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 19613268,
+      "build_elapsed_ns": 17996537,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1268240,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 20167709,
+      "build_elapsed_ns": 18476319,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1283298,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 1,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 21046181,
+      "build_elapsed_ns": 19434619,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1262640,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 1,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 20874730,
+      "build_elapsed_ns": 19201774,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1233856,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 2,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 19860976,
+      "build_elapsed_ns": 18276615,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1236851,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 2,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 20170564,
+      "build_elapsed_ns": 18457774,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1271316,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 3,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 20812314,
+      "build_elapsed_ns": 19241148,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1225901,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 3,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 20395254,
+      "build_elapsed_ns": 18803370,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1177641,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 4,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 20377542,
+      "build_elapsed_ns": 18708893,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1297846,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 4,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 20237449,
+      "build_elapsed_ns": 18527474,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1216524,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 5,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 20542560,
+      "build_elapsed_ns": 18980761,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1190555,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 5,
+      "scenario": "warm_noop",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 148010775,
+      "build_elapsed_ns": 146319314,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1264834,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 0,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 143416481,
+      "build_elapsed_ns": 141723087,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1302264,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 0,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 148401835,
+      "build_elapsed_ns": 146589479,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1381001,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 1,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 149804023,
+      "build_elapsed_ns": 148168117,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1257310,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 1,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 145102645,
+      "build_elapsed_ns": 143409811,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1282367,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 2,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 146605777,
+      "build_elapsed_ns": 145014653,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1250377,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 2,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 144027471,
+      "build_elapsed_ns": 142345829,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1240047,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 3,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 144650444,
+      "build_elapsed_ns": 142993599,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1282447,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 3,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 147890265,
+      "build_elapsed_ns": 146146837,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1286024,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 4,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 144644196,
+      "build_elapsed_ns": 143020081,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1265645,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 4,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 145650636,
+      "build_elapsed_ns": 143882772,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1296463,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 5,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 148705584,
+      "build_elapsed_ns": 147091638,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1247311,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 5,
+      "scenario": "body_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 156842968,
+      "build_elapsed_ns": 155120028,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1307935,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 0,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 160186295,
+      "build_elapsed_ns": 158501176,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1319656,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 0,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 158100624,
+      "build_elapsed_ns": 156467339,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1233468,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 1,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 152207991,
+      "build_elapsed_ns": 150508295,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1300631,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 1,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 155704263,
+      "build_elapsed_ns": 154005448,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1265575,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 2,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 159341885,
+      "build_elapsed_ns": 157663619,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1320909,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 2,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 161014439,
+      "build_elapsed_ns": 159229604,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1331418,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 3,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 157539844,
+      "build_elapsed_ns": 155815502,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1313775,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 3,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 157237496,
+      "build_elapsed_ns": 155564199,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1262921,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 4,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 162698966,
+      "build_elapsed_ns": 160965524,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1390009,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 4,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4876672,
+      "build_and_run_ns": 160395168,
+      "build_elapsed_ns": 158642192,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_elapsed_ns": 1304839,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 5,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "artifact_bytes": 4797808,
+      "build_and_run_ns": 156666070,
+      "build_elapsed_ns": 155018772,
+      "build_returncode": 0,
+      "diagnostic_codes": [],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_elapsed_ns": 1295761,
+      "runtime_probe_matches": true,
+      "runtime_returncode": 0,
+      "sample": 5,
+      "scenario": "signature_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 53256397,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "sample": 0,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 55438871,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "sample": 0,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 54676888,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "sample": 1,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 52173205,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "sample": 1,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 52281725,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "sample": 2,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 54524973,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "sample": 2,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 54829392,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "sample": 3,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 52937948,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "sample": 3,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 52591190,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "cargo",
+      "sample": 4,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 54524084,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "sample": 4,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 54360885,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "sample": 5,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    },
+    {
+      "build_elapsed_ns": 52915266,
+      "build_returncode": 101,
+      "diagnostic_codes": [
+        "E0308"
+      ],
+      "order_in_pair": 1,
+      "route": "cargo",
+      "sample": 5,
+      "scenario": "rejected_edit",
+      "source_unchanged": true,
+      "validation_errors": []
+    }
+  ],
+  "schema_version": 1,
+  "selected_cranelift_backend": {
+    "bytes": 15412384,
+    "path": "/home/runner/work/lust-lang/lust-lang/tools/cargo-lust/target/complement/lib/1181f44fce56e19cf42ca0c38819f87ed5375f415d39d44a8081a7122042c60f/librustc_codegen_cranelift.so",
+    "sha256": "1181f44fce56e19cf42ca0c38819f87ed5375f415d39d44a8081a7122042c60f"
+  },
+  "selection": {
+    "args": [
+      "-Zcodegen-backend",
+      "build",
+      "--manifest-path",
+      "/tmp/cargo-lust-bench-ye3ut6j2/project/Cargo.toml",
+      "--package",
+      "fixture-app",
+      "--bin",
+      "fixture-app",
+      "--target-dir",
+      "/tmp/cargo-lust-bench-ye3ut6j2/plan-target",
+      "--jobs",
+      "1",
+      "--offline",
+      "--locked",
+      "--message-format=json"
+    ],
+    "environment": {
+      "CARGO_PROFILE_DEV_CODEGEN_BACKEND": "/home/runner/work/lust-lang/lust-lang/tools/cargo-lust/target/complement/lib/1181f44fce56e19cf42ca0c38819f87ed5375f415d39d44a8081a7122042c60f/librustc_codegen_cranelift.so",
+      "CARGO_PROFILE_TEST_CODEGEN_BACKEND": "/home/runner/work/lust-lang/lust-lang/tools/cargo-lust/target/complement/lib/1181f44fce56e19cf42ca0c38819f87ed5375f415d39d44a8081a7122042c60f/librustc_codegen_cranelift.so"
+    },
+    "environment_remove": [],
+    "experimental": true,
+    "format_version": 1,
+    "program": "/home/runner/.cargo/bin/cargo",
+    "reason": "experimental configured Cranelift dev/test backend; no panic or feature flags are changed, and backend correctness requires qualification",
+    "requested_engine": "cranelift",
+    "selected_engine": "cranelift"
+  },
+  "settings": {
+    "features": "fixture defaults, unchanged",
+    "jobs": 1,
+    "primary_metric": "build",
+    "profile": {
+      "CARGO_INCREMENTAL": "1",
+      "CARGO_PROFILE_DEV_DEBUG": "2",
+      "CARGO_PROFILE_DEV_DEBUG_ASSERTIONS": "true",
+      "CARGO_PROFILE_DEV_INCREMENTAL": "true",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_DEV_OVERFLOW_CHECKS": "true",
+      "CARGO_PROFILE_DEV_PANIC": "unwind"
+    },
+    "samples_per_scenario": 6,
+    "scenarios": [
+      "cold",
+      "warm_noop",
+      "body_edit",
+      "signature_edit",
+      "rejected_edit"
+    ],
+    "target": "host"
+  },
+  "statistics": {
+    "body_edit": {
+      "baseline_over_coordinator_median": 1.0193908772318832,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 148168117,
+          "median_ns": 146233075.5,
+          "min_ns": 142993599,
+          "p95_ns": 148168117,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 146589479,
+          "median_ns": 143451426.5,
+          "min_ns": 141723087,
+          "p95_ns": 146589479,
+          "samples": 6
+        }
+      }
+    },
+    "cold": {
+      "baseline_over_coordinator_median": 1.2756655684993037,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 591081500,
+          "median_ns": 581360062.0,
+          "min_ns": 577234150,
+          "p95_ns": 591081500,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 465015574,
+          "median_ns": 455730778.0,
+          "min_ns": 452457458,
+          "p95_ns": 465015574,
+          "samples": 6
+        }
+      }
+    },
+    "rejected_edit": {
+      "baseline_over_coordinator_median": 0.9661598715794779,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 53256397,
+          "median_ns": 52753228.0,
+          "min_ns": 52173205,
+          "p95_ns": 53256397,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 55438871,
+          "median_ns": 54600930.5,
+          "min_ns": 54360885,
+          "p95_ns": 55438871,
+          "samples": 6
+        }
+      }
+    },
+    "signature_edit": {
+      "baseline_over_coordinator_median": 1.022585268273431,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 160965524,
+          "median_ns": 158571684.0,
+          "min_ns": 156467339,
+          "p95_ns": 160965524,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 155815502,
+          "median_ns": 155069400.0,
+          "min_ns": 150508295,
+          "p95_ns": 155815502,
+          "samples": 6
+        }
+      }
+    },
+    "warm_noop": {
+      "baseline_over_coordinator_median": 0.9673033233649887,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 18708893,
+          "median_ns": 18467046.5,
+          "min_ns": 17996537,
+          "p95_ns": 18708893,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 19434619,
+          "median_ns": 19091267.5,
+          "min_ns": 18741865,
+          "p95_ns": 19434619,
+          "samples": 6
+        }
+      }
+    }
+  }
+}

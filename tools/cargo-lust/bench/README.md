@@ -145,3 +145,69 @@ statistics empty, so failed semantics cannot be reported as a speedup.
 This first benchmark does not measure peak memory, wide type changes, macro
 edits, the upstream Lust daemon, full test-suite time, cross compilation, or
 large workspaces. Those remain separate workload and qualification tasks.
+
+## Measure the real Lust compiler project
+
+`measure-project.py` builds the unchanged root Lust crate through ordinary Cargo
+and the configured Cranelift route. This measures a real Rust compiler build,
+including its native tcc linkage and dependencies. It is a separate workload
+from the small synthetic fixture above.
+
+Prepare the coordinator, tcc, and the pinned backend before timing:
+
+```sh
+scripts/build-tcc.sh
+bash tools/cargo-lust/scripts/build-cranelift.sh
+source tools/cargo-lust/target/complement/env.sh
+cargo build --release --manifest-path tools/cargo-lust/Cargo.toml --locked
+python3 tools/cargo-lust/bench/measure-project.py \
+  --coordinator "$PWD/tools/cargo-lust/target/release/cargo-lust" \
+  --project "$PWD" --samples 2 --jobs 1 \
+  --output /tmp/cargo-lust-real-project.json
+```
+
+The coordinator path must be absolute. The selected nightly and custom backend
+must already be installed. The script resolves Cargo, rustc, and rustdoc from
+that one installed rustup toolchain. It runs `cargo fetch --locked` before the
+timed intervals, then uses `--locked --offline` for every build and test. It
+preserves the project's normal dev profile instead of using Lust's optimized
+`gate` or `release` profile. Inherited backend selections are cleared from the
+baseline; the candidate selects the configured library. Other build settings
+are shared and relevant inherited settings are recorded. The artifact records
+must confirm the root binaries use optimization level 0, debug information 2,
+debug assertions, and overflow checks.
+
+Two scenarios are measured. Cold builds use new target directories for both
+routes, which are removed after each pair to bound disk use. Warm builds keep
+separate targets after an excluded warmup and require Cargo to report the
+unchanged binaries as fresh. The first route alternates each pair. Two samples
+are the default for an initial run of this large project; the report marks that
+sample count as low. Increase the even sample count for performance decisions.
+This does not clear the OS page cache or the installed compiler and dependency
+sources.
+
+Every successful build must produce both `lust` and `lust-core` under its owned
+target directory. Outside the timed build, the resulting Lust executable runs
+the existing supported fixture and must print `42`, then checks the async
+fixture and must reject it with `L0405`. Version and capabilities output are
+also compared. Each route gets a freshly recreated probe directory at the
+same absolute path. The daemon and Lust's disk cache are both disabled so one
+compiler cannot reuse the other compiler's answer. Only compiler/probe directory
+prefixes and the version's build ID are normalized; the report keeps the raw
+stdout, stderr, and status for every command, including failures.
+
+After the timing samples, both routes run the real root `cargo test --bins`
+suite using their retained targets. Both commands must succeed and report the
+same test counts. These test-suite runs are recorded but are not included in
+the build-time medians. This is stronger evidence than a successful compiler
+build alone; it still does not prove every Rust program or every Lust workload.
+
+The script hashes tracked working files before and after the operations, as
+well as tcc, the custom backend, and the coordinator. It does not edit project
+sources. Submodule gitlinks are recorded; untracked application source files
+are outside this inventory. Use an otherwise idle checkout. Write the report
+outside the source tree or as a new file in its root. An existing tracked file
+cannot be a report destination. File reports are checkpointed after completed
+operations; `--output -` prints one final JSON report. A failed build, compiler
+probe, source-integrity check, or test suite retains observations and receives
+no speed ratio. Commands are never retried under another backend.

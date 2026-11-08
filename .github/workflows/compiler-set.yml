@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   compatibility:
     name: Cargo compatibility (${{ matrix.os }})
@@ -81,10 +85,17 @@ jobs:
         run: cargo +nightly-2026-11-05 build --manifest-path tools/cargo-lust/Cargo.toml --release --locked --offline
       - name: Measure the selected backend
         run: python3 tools/cargo-lust/bench/measure.py --coordinator tools/cargo-lust/target/release/cargo-lust --engine cranelift --samples 6 --output compiler-set-cranelift.json
+      - name: Build native dependency for real-project qualification
+        run: scripts/build-tcc.sh
+      - name: Compile, test, and measure unchanged Lust with both backends
+        env:
+          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
+        run: python3 tools/cargo-lust/bench/measure-project.py --coordinator "$GITHUB_WORKSPACE/tools/cargo-lust/target/release/cargo-lust" --project . --samples 2 --output compiler-set-lust-project.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: compiler-set-cranelift
           path: |
             compiler-set-cranelift.json
+            compiler-set-lust-project.json
             tools/cargo-lust/target/complement/backend.json

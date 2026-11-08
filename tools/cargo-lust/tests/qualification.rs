@@ -223,15 +223,20 @@ fn actual_lust_accepts_its_subset_and_keeps_unsupported_rust_rejected() {
     );
 }
 
-#[test]
-#[ignore = "requires matching nightly Cargo and LUST_CRANELIFT_BACKEND built with unwinding"]
-fn actual_cranelift_keeps_full_rust_output_including_unwinding() {
+fn required_cranelift_backend() -> OsString {
     let backend = std::env::var_os("LUST_CRANELIFT_BACKEND")
         .expect("set LUST_CRANELIFT_BACKEND to the matching custom backend built with --features unwinding");
     assert!(
         Path::new(&backend).is_absolute() && Path::new(&backend).is_file(),
         "LUST_CRANELIFT_BACKEND must name an existing absolute backend library: {backend:?}",
     );
+    backend
+}
+
+#[test]
+#[ignore = "requires matching nightly Cargo and LUST_CRANELIFT_BACKEND built with unwinding"]
+fn actual_cranelift_keeps_full_rust_output_including_unwinding() {
+    required_cranelift_backend();
     let scratch = Scratch::new("actual-cranelift");
     let fixture = scratch.fixture("full-rust");
 
@@ -257,4 +262,107 @@ fn actual_cranelift_keeps_full_rust_output_including_unwinding() {
     let tested =
         execute(command(&scratch, &fixture, "cranelift", Some("cranelift")).args(["test", "--offline", "--locked", "--workspace"]));
     success_at("Cranelift workspace unit tests and doctests", &tested);
+}
+
+/// Read Cargo's verbose command spelling without evaluating it as a shell.
+/// Quoted source and backend paths can contain spaces and apostrophes.
+fn verbose_command_words(command: &str) -> Vec<String> {
+    let mut result = Vec::new();
+    let mut word = String::new();
+    let mut quote = None;
+    let mut started = false;
+    let mut chars = command.chars();
+    while let Some(ch) = chars.next() {
+        match (quote, ch) {
+            (Some('\''), '\'') | (Some('"'), '"') => quote = None,
+            (Some('\''), _) => word.push(ch),
+            (_, '\\') => {
+                word.push(chars.next().expect("incomplete escape in Cargo's verbose command"));
+                started = true;
+            }
+            (Some('"'), _) => word.push(ch),
+            (None, '\'' | '"') => {
+                quote = Some(ch);
+                started = true;
+            }
+            (None, ch) if ch.is_whitespace() => {
+                if started {
+                    result.push(std::mem::take(&mut word));
+                    started = false;
+                }
+            }
+            _ => {
+                word.push(ch);
+                started = true;
+            }
+        }
+    }
+    assert!(quote.is_none(), "unterminated quote in Cargo's verbose command: {command}");
+    if started {
+        result.push(word);
+    }
+    result
+}
+
+fn verbose_backend(stderr: &[u8], crate_name: &str) -> String {
+    let log = std::str::from_utf8(stderr).expect("verbose qualification requires UTF-8 Cargo diagnostics");
+    let commands: Vec<_> = log
+        .lines()
+        .filter_map(|line| line.trim_start().strip_prefix("Running `")?.strip_suffix('`'))
+        .map(verbose_command_words)
+        .filter(|words| words.windows(2).any(|pair| pair[0] == "--crate-name" && pair[1] == crate_name))
+        .collect();
+    assert_eq!(commands.len(), 1, "expected one actual rustc invocation for {crate_name}; Cargo log:\n{log}");
+    let words = &commands[0];
+    let backends: Vec<_> = words
+        .iter()
+        .enumerate()
+        .filter_map(|(index, word)| {
+            word.strip_prefix("-Zcodegen-backend=")
+                .or_else(|| if word == "-Z" { words.get(index + 1)?.strip_prefix("codegen-backend=") } else { None })
+        })
+        .collect();
+    assert_eq!(backends.len(), 1, "expected one explicit backend selection for {crate_name}; Cargo log:\n{log}");
+    backends[0].to_owned()
+}
+
+#[test]
+#[ignore = "requires matching nightly Cargo and LUST_CRANELIFT_BACKEND built with unwinding"]
+fn actual_cranelift_links_an_llvm_library_with_a_cranelift_application() {
+    let backend = required_cranelift_backend();
+    let backend = backend.to_str().expect("verbose qualification requires a UTF-8 backend path");
+    let scratch = Scratch::new("mixed-backend");
+    let fixture = scratch.fixture("full-rust");
+
+    let baseline_build = execute(command(&scratch, &fixture, "llvm", None).args(["build", "--offline", "--locked", "--workspace"]));
+    success_at("all-LLVM baseline compilation for mixed-backend qualification", &baseline_build);
+    let mixed_build = execute(command(&scratch, &fixture, "mixed", Some("cranelift")).args([
+        "build",
+        "--offline",
+        "--locked",
+        "--workspace",
+        "-vv",
+        "--color",
+        "never",
+        "--config",
+        "profile.dev.package.fixture-core.codegen-backend=\"llvm\"",
+    ]));
+    success_at("mixed LLVM/Cranelift compilation", &mixed_build);
+
+    // Runtime parity alone could also pass if every crate accidentally used
+    // LLVM. Verify Cargo's actual fresh rustc commands before claiming mixing.
+    assert_eq!(verbose_backend(&mixed_build.stderr, "fixture_core"), "llvm");
+    assert_eq!(verbose_backend(&mixed_build.stderr, "fixture_app"), backend);
+    assert_eq!(verbose_backend(&mixed_build.stderr, "fixture_derive"), backend);
+
+    let executable_name = format!("fixture-app{}", std::env::consts::EXE_SUFFIX);
+    let baseline = execute(Command::new(scratch.0.join("llvm/debug").join(&executable_name)).current_dir(&fixture));
+    success_at("all-LLVM baseline execution for mixed-backend qualification", &baseline);
+    assert_eq!(baseline.stdout, EXPECTED.as_bytes());
+    assert_eq!(baseline.stderr, EXPECTED_PANIC_TRACE.as_bytes());
+    let mixed = execute(Command::new(scratch.0.join("mixed/debug").join(&executable_name)).current_dir(&fixture));
+    success_at("mixed LLVM/Cranelift binary execution", &mixed);
+    assert_eq!(mixed.status.code(), baseline.status.code());
+    assert_eq!(mixed.stdout, baseline.stdout);
+    assert_eq!(mixed.stderr, baseline.stderr);
 }

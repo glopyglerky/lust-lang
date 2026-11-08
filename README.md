@@ -1,8 +1,10 @@
 # Lust compiler set
 
-This fork develops a coordinated compiler set for unchanged, complete Rust projects. It preserves upstream Lust's fast subset compiler and adds a full Rust path, with one shared semantic frontend before considering further compiler splits.
+This fork develops a coordinated compiler set for unchanged, complete Rust projects. It preserves upstream Lust's fast subset compiler and adds one rustc-based complement before considering more independent frontends.
 
 **Current implementation:** [`cargo-lust`](tools/cargo-lust) is an independently installable Rust coordinator. Its default path preserves Cargo/rustc compatibility. An explicit Cranelift path experiments with faster development code generation, and an explicit Lust path uses the existing compiler for a complete supported target. Automatic Lust/rustc artifact mixing and an independent full Rust frontend are not implemented. This initial integration does not establish a general speedup.
+
+The custom Cranelift backend is pinned and built with panic-unwinding support. It passes the full Rust fixture and compiles and tests the coordinator itself on Linux x86_64. In six paired measurements, the fixture's empty-target build took 581 ms with Cargo/LLVM and 456 ms with the coordinated backend (21.6% less time); no-op builds and error reporting were slightly slower. See the [measurements and limits](docs/compiler-set/verification.md#hosted-complementary-backend-measurements).
 
 ```sh
 cargo install --path tools/cargo-lust --locked

@@ -228,16 +228,27 @@ fn process_contract_preserves_arguments_io_failure_and_toolchain_routing() {
     {
         use std::os::unix::ffi::OsStringExt;
         use std::os::unix::process::ExitStatusExt;
-        let native_path = scratch.0.join(OsString::from_vec(b"cargo-\xff".to_vec()));
-        fs::copy(&executable, &native_path).unwrap();
         let native_log = scratch.0.join("native.log");
-        let native = coordinator(&native_path, &native_log)
+        let native = coordinator(&executable, &native_log)
             .args(["build", "--manifest-path"])
             .arg(OsString::from_vec(b"file-\xff/Cargo.toml".to_vec()))
             .output()
             .unwrap();
         assert_eq!(native.status.code(), Some(23));
         assert!(record(&native_log).contains(&format!("arg={}\n", hex(b"file-\xff/Cargo.toml"))));
+
+        // Linux permits these executable filename bytes. APFS rejects their
+        // creation with EILSEQ, so macOS still exercises arbitrary argument
+        // bytes above without demanding an unsupported filesystem name.
+        #[cfg(target_os = "linux")]
+        {
+            let native_path = scratch.0.join(OsString::from_vec(b"cargo-\xff".to_vec()));
+            fs::copy(&executable, &native_path).unwrap();
+            let path_log = scratch.0.join("native-executable.log");
+            let native = coordinator(&native_path, &path_log).arg("build").output().unwrap();
+            assert_eq!(native.status.code(), Some(23));
+            assert_eq!(record(&path_log).lines().filter(|line| *line == "invocation").count(), 1);
+        }
 
         let signal_log = scratch.0.join("signal.log");
         let signal = coordinator(&executable, &signal_log).env("RECORDER_SIGNAL", "1").arg("run").output().unwrap();

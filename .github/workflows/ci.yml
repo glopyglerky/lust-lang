@@ -1,7 +1,6 @@
 name: CI
 
-# There is no git remote yet, so this workflow has never run. It is kept
-# valid (actionlint) and runs the same scripts/ci.sh gate as a dev box.
+# Run the same upstream scripts/ci.sh gate as a dev box.
 on:
   push:
     branches: [next]
@@ -9,6 +8,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   linux-x86_64:

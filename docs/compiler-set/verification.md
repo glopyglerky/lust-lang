@@ -4,7 +4,7 @@ Verification date: 2026-11-08.
 
 ## What this establishes
 
-The coordinator can preserve ordinary Cargo behavior for the included full Rust workspace, invoke the actual upstream Lust compiler for a supported target, and keep an unsupported Lust program rejected. These tests establish an initial executable integration. They do not establish an independent full Rust frontend, arbitrary Lust/rustc library interoperability, automatic fast-path selection, or a speedup on production Rust projects.
+The coordinator preserves ordinary Cargo behavior for the included full Rust workspace, invokes the actual upstream Lust compiler for a supported target, and keeps an unsupported Lust program rejected. The pinned complementary backend with unwind support also compiles and executes the full Rust fixture, passes its tests, and compiles and tests the coordinator itself. These tests establish an executable integration. They do not establish an independent full Rust frontend, arbitrary Lust/rustc library interoperability, automatic fast-path selection, or a speedup on production Rust projects.
 
 ## Local tools
 
@@ -49,7 +49,7 @@ The real Lust path prints `42` for its supported program. A separate async progr
 
 The ordinary test run explicitly ignores the actual Lust and actual Cranelift tests. The Lust test was also executed explicitly as shown above. Cranelift has not been executed locally because the required toolchain is absent.
 
-The compiler-set workflow includes a dedicated, pinned custom Cranelift job. It must compile and run the full Rust workspace, including `catch_unwind` and a destructor, then execute its tests. A component installation or a constructed command is not a passing backend gate. Inspect the workflow result for the commit in question before describing that backend as qualified.
+The compiler-set workflow includes a dedicated, pinned custom Cranelift job. It compiles and runs the full Rust workspace, including `catch_unwind` and a destructor, then executes its tests. A component installation or a constructed command is not a passing backend gate. Inspect the workflow result for the commit in question before describing that backend as qualified.
 
 ### Stock backend failure and correction
 
@@ -60,6 +60,14 @@ Source inspection established that upstream's optional `unwinding` feature suppl
 The initial hosted jobs passed Cargo compatibility on Linux and Windows, the Rust 1.85 minimum, and the actual Lust gate. The macOS 14 runner was retired on 2026-11-02, so the CI configuration now uses the supported macOS 15 Arm64 image. Neither the earlier cancelled macOS job nor a failing stock backend counts as a pass.
 
 Cross-platform and minimum-toolchain workflow jobs are distinct from local Linux results. A configured CI job does not count as an executed test.
+
+### Executed custom-backend gate
+
+The [custom-backend job on commit `ceabf7e`](https://github.com/glopyglerky/lust-lang/actions/runs/42502560395/job/128798273793) passed on Linux x86_64. It built the pinned source with `unwinding`, ran the installation catch/drop probe, compared the full Rust fixture's stdout, stderr and status with ordinary Cargo, and ran the fixture's workspace tests and doctest. It then compiled the coordinator and its test binaries with that same complementary backend and passed all 27 ordinary tests. Actual Lust, ordinary Cargo on Linux and Windows, and the Rust 1.85 minimum also passed in that run.
+
+The corresponding macOS 15 run exposed a test assumption: APFS rejected an invalid UTF-8 executable filename before the coordinator ran. The test now checks arbitrary argument bytes on every Unix host and separately checks invalid UTF-8 executable filenames on Linux. Its previous failure is not counted as a macOS pass.
+
+The backend used `rustc 1.101.0-nightly (2d20b42b8 2026-11-04)` from `nightly-2026-11-05`, with the normal LLVM-built standard library. Its source, lockfile, build command, binary hash and successful setup probe are retained in [the backend record](evidence/cranelift-linux-backend.json). This qualifies the exercised Linux configuration and cases, not every feature implemented by rustc.
 
 ## Performance evidence
 
@@ -80,6 +88,24 @@ The initial release-built coordinator was compared with the same Cargo/rustc 1.9
 | Invalid type edit | 43.34 ms | 42.90 ms | 1.010 |
 
 These are small-fixture observations on a shared host. They show no useful acceleration from delegation alone and include regressions. Six samples do not establish statistical significance or production performance. Nearest-rank p95 is the largest sample at this count. Full configuration, input hashes, samples, and tail values are in [the summary](evidence/cargo-rustc-linux-summary.json); exact command output and raw timing records are in [the compressed JSON report](evidence/cargo-rustc-linux.json.gz).
+
+### Hosted complementary-backend measurements
+
+The passing custom-backend job measured six interleaved pairs per scenario using the same pinned nightly for ordinary Cargo/LLVM and the coordinator/Cranelift route. Both used one build job, optimization level 0, full debug information, overflow checks and debug assertions, incremental compilation, and panic unwinding. The host reported four available CPUs on an AMD EPYC 7763 and Ubuntu 24.04. The benchmark ran after backend installation, so installation time is excluded.
+
+All 34 pairs passed, including four excluded warmups. The 60 measured compilations included 48 successful builds with runtime parity and 12 rejected invalid edits. These records describe commit `ceabf7e82e85a4d9726c2a001b9e237fd8ca04ca` and its fixture; they are distinct from the earlier local compatibility-route run.
+
+| Scenario | Cargo/LLVM median | Coordinator/Cranelift median | Cargo / coordinator |
+| --- | ---: | ---: | ---: |
+| Empty target directory | 581.36 ms | 455.73 ms | 1.276 |
+| Warm, no source change | 18.47 ms | 19.09 ms | 0.967 |
+| Function body edit | 146.23 ms | 143.45 ms | 1.019 |
+| Function signature edit | 158.57 ms | 155.07 ms | 1.023 |
+| Invalid type edit | 52.75 ms | 54.60 ms | 0.966 |
+
+For this fixture, empty-target compilation took 21.6% less time. The edit differences are small; no-op builds and error reporting regressed. Six samples on a small fixture do not establish statistical significance, a useful warm-edit improvement, or performance on production projects. The same toolchain is used within each comparison; timings from the two different hosts and toolchains should not be compared with each other.
+
+The [summary and raw samples](evidence/cranelift-linux-summary.json), [compressed full report](evidence/cranelift-linux.json.gz), and [backend provenance](evidence/cranelift-linux-backend.json) preserve the result beyond the Actions artifact's retention period. The downloaded artifact ZIP's SHA-256 matched GitHub's reported digest before these records were saved.
 
 ## Remaining qualification
 

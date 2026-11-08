@@ -50,6 +50,28 @@ Upstream also lists incomplete `std::arch` support and panic unwinding with plat
 
 The Cranelift choice applies to development `build`, `run`, and `test`. Explicit `--release`, `-r`, grouped release flags such as `-qr`, and `--profile` requests preserve the project's existing Cargo configuration. `check`, `bench`, `doc`, `clippy`, aliases such as `b`, other Cargo commands, and unknown extensions also pass through unchanged. Cargo owns alias expansion because aliases can select a different profile or operation. In particular, this backend does not promise faster `cargo check`.
 
+For a shorter everyday command, add an explicit alias to your project's `.cargo/config.toml`:
+
+```toml
+[alias]
+fast = ["lust", "--engine", "cranelift"]
+```
+
+After sourcing the generated `env.sh`, use `cargo fast build` or `cargo fast test`. Cargo expands this alias before invoking the coordinator. The backend choice remains explicit.
+
+### Keep a package on LLVM
+
+Cargo's package profile overrides can keep a package that needs LLVM on that backend while other packages use the configured Cranelift library. Replace `your-package` with the package's actual name:
+
+```sh
+cargo lust --engine cranelift build \
+  --config 'profile.dev.package.your-package.codegen-backend="llvm"'
+```
+
+This is a manual package choice using the same rustc frontend and toolchain. Generic functions may be instantiated in a dependent crate, so a package override does not guarantee that every use of its code is compiled with LLVM. Qualify the resulting build. The coordinator never retries a failed build automatically.
+
+The optional mixed-backend gate keeps the unchanged fixture library on LLVM and its application and procedural macro on Cranelift. It checks the actual verbose rustc commands and compares the final binary's stdout, stderr, and status with an all-LLVM build. This does not exchange native Lust artifacts or establish arbitrary mixed-backend compatibility.
+
 ## Use the existing Lust compiler
 
 Install or build upstream Lust as described in the root README, then use its native target interface:
