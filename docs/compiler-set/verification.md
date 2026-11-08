@@ -199,3 +199,54 @@ The [qualification summary](evidence/lust-project-219b915-qualification-summary.
 ## Remaining qualification
 
 One small fixture and one substantial compiler project do not prove full compiler conformance. Open requirements include a broader workload census, macro and build-script invalidation, multiple targets and architectures, SIMD/intrinsics, inline assembly, sanitizer and coverage options, no_std/embedded targets, mixed backend ABI correctness, automatic target selection, and performance across representative large projects. Their acceptance conditions remain in the [roadmap](roadmap.md).
+
+## Continuation and bidirectional Rust ABI qualification
+
+The stopped workspace was recovered and its staged files matched the published
+commit exactly. [PR #1](https://github.com/glopyglerky/lustr/pull/1) merged the
+recovered compiler set and the first continuation changes into `next` at
+`62494e27717a64c8612b538409de27048fa6adc2`. The
+[recovery record](recovery-2026-11-08.md) identifies all eight matching blobs.
+
+The continuation passed 391 upstream unit tests locally, the 30 coordinator and
+entry-point tests, the new image-startup/child-environment regression, the actual
+Lust subset gate, and the three existing real Cranelift integration tests. The
+native startup change confines Linux's `personality` call and arena allocation
+to Linux. Native macOS's full gate remains separate from coordinator portability;
+its remaining native support is not established by this Linux run.
+
+A new dependency-free [mixed ABI fixture](../../tools/cargo-lust/fixtures/mixed-abi)
+passed the ordinary Cargo path and the real complementary backend on Linux
+x86_64 with rustc commit `2d20b42b883dcfc014f3c2c56081eeb6091c2179`, the
+`nightly-2026-11-05` pair. The backend was built from the existing pinned source
+with unwinding and has SHA-256
+`a7ba473e524496e156c6926b92d234feaad8231c6a1136b73e4884aa89e1b04d`.
+
+| Configuration | Shared type crate | Provider crate | Application and callbacks |
+| --- | --- | --- | --- |
+| Baseline | LLVM | LLVM | LLVM |
+| Cranelift consumer | LLVM | LLVM | Cranelift |
+| Cranelift provider | LLVM | Cranelift | LLVM |
+
+Every configuration used fresh build output. Actual `cargo -vv` commands
+established the backend and common rustc executable for each ordinary crate and
+each test harness. The real gate rejects a different compiler commit or host,
+missing compilation evidence, wrong backend paths, and conflicting backend
+options. Both assignments executed calls in both directions.
+
+The executable and its Cargo test checked Rust-layout aggregates returned by
+value, generic instances, const generics, trait objects and their destructors,
+nonzero/pointer niches, owned enum variants, and allocation growth or destruction
+in the other crate. Panics originating in either crate crossed the other
+backend's frames and produced the asserted destructor order. Atomic
+compare/exchange, 8,000 concurrent increments, independent thread-local state,
+and thread-exit destructors passed. The C ABI callback test used Rust-defined
+`extern "C"` functions and a `repr(C)` aggregate; it does not establish
+interoperability with a separately compiled C allocator.
+
+The [summary](evidence/mixed-abi-2026-11-08-summary.json) contains the exact tested
+source hashes. The [compressed raw report](evidence/mixed-abi-2026-11-08.json.gz)
+retains each command's stdout, stderr and exit status as base64-encoded bytes,
+compiler identity, and success receipts. Failed earlier benchmark reports remain
+unchanged. The new mixed ABI gate measures correctness, not speed, and does not
+claim native Lust rlib interoperability or general Rust/backend equivalence.

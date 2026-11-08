@@ -76,6 +76,10 @@ jobs:
           printf 'LUST_CRANELIFT_BACKEND=%s\n' "$LUST_CRANELIFT_BACKEND" >> "$GITHUB_ENV"
       - name: Verify full Rust, panic recovery, and tests
         run: cargo +nightly-2026-11-05 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test qualification actual_cranelift -- --ignored --nocapture
+      - name: Verify both Rust ABI directions across LLVM and Cranelift
+        env:
+          LUST_TEST_ABI_EVIDENCE: ${{ github.workspace }}/compiler-set-mixed-abi
+        run: cargo +nightly-2026-11-05 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test mixed_abi actual_cranelift -- --ignored --nocapture
       - name: Compile and test the coordinator with its complementary backend
         run: tools/cargo-lust/target/debug/cargo-lust --engine cranelift test --manifest-path tools/cargo-lust/Cargo.toml --target-dir tools/cargo-lust/target/complement-tests --locked --offline
       - name: Build coordinator for measurement
@@ -96,3 +100,4 @@ jobs:
             compiler-set-cranelift.json
             compiler-set-lust-project.json
             tools/cargo-lust/target/complement/backend.json
+            compiler-set-mixed-abi

@@ -14,11 +14,13 @@ bash tools/cargo-lust/scripts/build-cranelift.sh
 source tools/cargo-lust/target/complement/env.sh
 
 cd /path/to/your/rust/project
-cargo lust --engine cranelift build --workspace
-cargo lust --engine cranelift test --workspace
+cargo lustr --engine cranelift build --workspace
+cargo lustr --engine cranelift test --workspace
 ```
 
-Use `cargo lust build` for the default Cargo compatibility route. Backend setup is a one-time build, and its generated environment selects the matching installed nightly explicitly. Release/custom profiles retain the selected Cargo configuration.
+Use `lustr build` or `cargo lustr build` for the default Cargo compatibility route. The original `cargo lust` command remains compatible. Backend setup is a one-time build, and its generated environment selects the matching installed nightly explicitly. Release/custom profiles retain the selected Cargo configuration.
+
+The complementary backend also passes a [bidirectional Rust ABI fixture](tools/cargo-lust/fixtures/mixed-abi): LLVM and Cranelift crates exchange aggregates, trait objects, generic instances and owned allocations; panics unwind through both backends with the expected destructor order. The fixture also checks atomics, thread-local state and C calling conventions. Actual compiler commands establish which backend built each crate. This qualifies those cases on the pinned Linux toolchain; native Lust library interoperability is still open.
 
 Read the [coordinator usage](tools/cargo-lust/README.md), [compiler design](docs/compiler-set/design.md), [implementation roadmap](docs/compiler-set/roadmap.md), and [verification results](docs/compiler-set/verification.md). Automatic selection, native Lust/Rust artifact interoperability, and broader project and target qualification remain open.
 
