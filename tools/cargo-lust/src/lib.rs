@@ -1,14 +1,18 @@
 //! Cargo owns the dependency graph and all Rust artefacts. This module chooses an
 //! entire invocation, never pieces of source or incompatible library formats.
+mod doctor;
+
 use std::ffi::{OsStr, OsString};
 use std::io;
 use std::path::PathBuf;
 use std::process::Command;
 
-const HELP: &str = "cargo-lust 0.1.0
+const HELP: &str = "lustr compiler set 0.1.0
 Coordinate Lust subset compilation and full Rust projects.
 
 Usage:
+  lustr [+toolchain] [--engine ENGINE] <command> [arguments...]
+  cargo lustr [--engine ENGINE] <command> [arguments...]
   cargo lust [--engine auto|rustc|cranelift|lust] <command> [arguments...]
   cargo-lust [+toolchain] [--engine ENGINE] <command> [arguments...]
   cargo lust [--engine ENGINE] plan <command> [arguments...]
@@ -46,7 +50,18 @@ This discards inherited CARGO and cannot be combined with LUST_CARGO.
 LUST_CRANELIFT_BACKEND is required only when the Cranelift dev/test route is used.
 Its path must be valid UTF-8 for Cargo's command-scoped TOML configuration.
 Choosing a backend path does not certify its features, ABI, or program correctness.
+The lustr, cargo-lustr, and cargo-lust executables use the same coordinator.
 ";
+
+/// Shared command entry point for the direct and both Cargo extension names.
+/// Cargo adds its subcommand name to argv; remove only that leading name.
+pub fn run_cli(args: &[OsString]) -> i32 {
+    let args = if args.first().is_some_and(|arg| arg == "lust" || arg == "lustr") { &args[1..] } else { args };
+    if args == [OsString::from("doctor")] {
+        return doctor::run();
+    }
+    run(args)
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Engine {

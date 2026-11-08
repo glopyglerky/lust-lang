@@ -1,4 +1,4 @@
-# cargo-lust
+# lustr coordinator
 
 One entry point for upstream Lust and complete Rust projects. The coordinator is written in Rust, has no third-party dependencies, and installs independently of Lust's tcc backend.
 
@@ -10,10 +10,15 @@ From this repository:
 
 ```sh
 cargo install --path tools/cargo-lust --locked
-cargo lust doctor
+cargo lustr doctor
 ```
 
 The coordinator requires Rust 1.85 or later. Building the existing `lust` and `lust-core` compilers has the separate prerequisites described in the root README.
+
+Installation provides `lustr`, `cargo-lustr`, and the original `cargo-lust`.
+Use `lustr build` or `cargo lustr build` for the same coordinator. Existing
+`cargo lust` commands remain compatible. All three entry points share argument
+handling and preserve Cargo's output and the executed program's exit status.
 
 ## Compile a normal Rust project
 

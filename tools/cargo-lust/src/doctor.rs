@@ -5,7 +5,7 @@ use std::process::{Command, Output};
 /// Inspect installed tools. This never invokes a project build, installs a
 /// component, changes a toolchain, or claims that availability is qualification.
 pub fn run() -> i32 {
-    let programs = cargo_lust::Programs::from_environment();
+    let programs = crate::Programs::from_environment();
     let rustc = std::env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc"));
     let cargo = probe(&programs.cargo, &["--version"]);
     let compiler = probe(&rustc, &["--version", "--verbose"]);
