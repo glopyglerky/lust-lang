@@ -16,6 +16,8 @@ import math
 import os
 from pathlib import Path
 import platform
+import re
+import shlex
 import shutil
 import signal
 import statistics
@@ -29,6 +31,8 @@ FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "full-rust"
 PROBE_FILE = Path("core/src/lib.rs")
 PROBE = "pub fn benchmark_value() -> u32 { 41 } // BENCH_PROBE"
 SCENARIOS = ("cold", "warm_noop", "body_edit", "signature_edit", "rejected_edit")
+FIXTURE_CRATES = {"fixture_app", "fixture_core", "fixture_derive", "build_script_build"}
+ENV_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
 PROFILE = {
     "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
     "CARGO_PROFILE_DEV_DEBUG": "2",
@@ -190,6 +194,11 @@ def identify(cargo: str, rustc: str, coordinator: str, env: dict[str, str], root
 def cargo_messages(result: dict) -> list[dict]:
     messages = []
     for line in result["stdout"].get("text", "").splitlines():
+        # Cargo -vv forwards build-script stdout as prefixed text even when
+        # artifact/diagnostic messages use JSON. Keep it in the raw recording,
+        # but do not confuse those tool-owned prefixes with malformed JSON.
+        if "-vv" in result.get("argv", []) and re.match(r"^\[[A-Za-z0-9_-]+ [^\]\r\n]+\] ", line):
+            continue
         try:
             message = json.loads(line)
         except json.JSONDecodeError as error:
@@ -204,7 +213,7 @@ def cargo_arguments(project: Path, target: Path, args: argparse.Namespace) -> li
     return [
         args.operation, "--manifest-path", str(project / "Cargo.toml"),
         "--package", "fixture-app", "--bin", "fixture-app", "--target-dir", str(target),
-        "--jobs", str(args.jobs), "--offline", "--locked", "--message-format=json",
+        "--jobs", str(args.jobs), "--offline", "--locked", "--message-format=json", "-vv", "--color", "never",
     ]
 
 
@@ -226,15 +235,131 @@ def selected_plan(coordinator: str, cargo: str, project: Path, root: Path, env: 
         raise BenchmarkError("The candidate plan does not select the expected command-scoped backend for the measured operation.")
 
 
+def verify_backend_commands(build: dict, rustc: str, backend: str | None, result: dict) -> set[str]:
+    """Check Cargo's effective rustc argv, after config and flag resolution."""
+    result.update({"expected_backend": backend or "llvm", "commands": [], "artifacts": [], "passed": False})
+    output = build["stderr"]
+    stderr = output["text"] if "text" in output else base64.b64decode(output["base64"], validate=True).decode("utf-8")
+    seen = set()
+    for line in stderr.splitlines():
+        displayed = line.strip()
+        if not displayed.startswith("Running `"):
+            continue
+        if not displayed.endswith("`"):
+            raise BenchmarkError("Cargo emitted an incomplete verbose command; backend verification failed.")
+        command = displayed[len("Running `"):-1]
+        try:
+            tokens = shlex.split(command, posix=True)
+        except ValueError as error:
+            result["unparsed_command"] = command
+            raise BenchmarkError(f"Cannot parse Cargo's verbose command: {error}") from error
+        start = 0
+        while start < len(tokens) and ENV_ASSIGNMENT.match(tokens[start]):
+            start += 1
+        argv = tokens[start:]
+        names = []
+        for index, token in enumerate(argv[1:], 1):
+            if token == "--crate-name":
+                names.append(argv[index + 1] if index + 1 < len(argv) else "")
+            elif token.startswith("--crate-name="):
+                names.append(token.partition("=")[2])
+        if not FIXTURE_CRATES.intersection(names):
+            continue
+        evidence = {"displayed_command": command, "tokens": tokens, "crate_names": names, "backend_selectors": [], "passed": False}
+        result["commands"].append(evidence)
+        if len(names) != 1 or names[0] in seen:
+            raise BenchmarkError("Cargo emitted duplicate or ambiguous fixture compiler commands.")
+        crate = names[0]
+        if not argv or argv[0] != rustc:
+            raise BenchmarkError(f"{crate} did not invoke the selected rustc directly; wrapper arguments cannot prove its backend.")
+        if any(token.startswith("@") for token in argv[1:]):
+            raise BenchmarkError(f"{crate} uses a response file; its backend cannot be verified.")
+        index = 1
+        while index < len(argv):
+            token = argv[index]
+            payload = None
+            if token == "-Z":
+                index += 1
+                if index >= len(argv):
+                    raise BenchmarkError(f"{crate} has an incomplete -Z argument.")
+                payload = argv[index]
+            elif token.startswith("-Z"):
+                payload = token[2:].removeprefix("=")
+            if payload is not None:
+                key, separator, value = payload.partition("=")
+                if key.replace("_", "-") == "codegen-backend":
+                    if not separator or not value:
+                        raise BenchmarkError(f"{crate} has an incomplete backend selector.")
+                    evidence["backend_selectors"].append(value)
+                elif "codegen-backend" in payload.replace("_", "-").replace(" ", ""):
+                    raise BenchmarkError(f"{crate} has an ambiguous backend selector.")
+            index += 1
+        selectors = evidence["backend_selectors"]
+        valid = selectors == [backend] if backend is not None else selectors in ([], ["llvm"])
+        if not valid:
+            raise BenchmarkError(f"{crate} used backend selectors {selectors!r}; expected {'exactly ' + repr(backend) if backend else 'default LLVM or exactly llvm'}.")
+        seen.add(crate)
+        evidence["passed"] = True
+    return seen
+
+
+def verify_backend(build: dict, artifacts: list[dict], rustc: str, backend: str | None, target: Path,
+                   verified: dict, scenario: str, result: dict) -> None:
+    if not verified:
+        required = FIXTURE_CRATES
+    elif scenario in ("body_edit", "signature_edit"):
+        required = {"fixture_core", "fixture_app"}
+    elif scenario == "rejected_edit":
+        required = {"fixture_core"}
+    else:
+        required = set()
+    result["required_fresh_crates"] = sorted(required)
+    seen = verify_backend_commands(build, rustc, backend, result)
+    if not required.issubset(seen):
+        raise BenchmarkError(f"Missing fresh compiler commands for {sorted(required - seen)!r}.")
+    observed = set()
+    for artifact in artifacts:
+        crate = artifact["target"]["name"].replace("-", "_")
+        if crate not in FIXTURE_CRATES:
+            continue
+        proof = {"crate": crate, "fresh": artifact.get("fresh"), "files": [], "passed": False}
+        result["artifacts"].append(proof)
+        if crate in observed:
+            raise BenchmarkError(f"Cargo reported duplicate {crate} artifacts.")
+        observed.add(crate)
+        for filename in sorted(artifact.get("filenames", [])):
+            path = Path(filename)
+            if not path.is_absolute() or not path.is_file() or not path.resolve().is_relative_to(target.resolve()):
+                raise BenchmarkError(f"{crate} returned a missing or external artifact: {filename}")
+            proof["files"].append({"path": str(path), "sha256": file_digest(path)})
+        if not proof["files"]:
+            raise BenchmarkError(f"{crate} has no artifact files to verify.")
+        if artifact.get("fresh") is True:
+            prior = verified.get(crate)
+            if crate in seen or prior is None or prior["backend"] != backend or prior["files"] != proof["files"]:
+                raise BenchmarkError(f"Cached {crate} artifacts do not match an earlier backend-verified compilation.")
+            proof["mode"] = "verified_cached_artifacts"
+        elif artifact.get("fresh") is False and crate in seen:
+            proof["mode"] = "fresh_rustc_command"
+            verified[crate] = {"backend": backend, "files": proof["files"]}
+        else:
+            raise BenchmarkError(f"{crate} artifact freshness has no matching verified rustc command.")
+        proof["passed"] = True
+    if successful(build) and observed != FIXTURE_CRATES:
+        raise BenchmarkError("Successful fixture builds must report app, core, derive, and build-script artifacts.")
+    result["passed"] = True
+
+
 def sample(route: str, prefix: list[str], project: Path, target: Path, run_dir: Path, source_hash: str,
-           expected_probe: int, scenario: str, index: int, order: int, env: dict[str, str], args: argparse.Namespace) -> dict:
+           expected_probe: int, scenario: str, index: int, order: int, env: dict[str, str], args: argparse.Namespace,
+           verified: dict) -> dict:
     command = prefix + cargo_arguments(project, target, args)
     start = time.perf_counter_ns()
     build = process(command, project, env, args.timeout)
     entry = {
         "route": route, "scenario": scenario, "sample": index, "order_in_pair": order,
         "source_sha256": source_hash, "build": build, "runtime": None,
-        "artifacts": [], "diagnostic_codes": [], "validation_errors": [],
+        "artifacts": [], "diagnostic_codes": [], "validation_errors": [], "backend_verification": {"passed": False},
     }
     try:
         messages = cargo_messages(build)
@@ -244,6 +369,12 @@ def sample(route: str, prefix: list[str], project: Path, target: Path, run_dir: 
             message["message"]["code"]["code"] for message in messages
             if message.get("reason") == "compiler-message" and message.get("message", {}).get("code")
         ]
+        backend = env.get("LUST_CRANELIFT_BACKEND") if route == "coordinator" and args.engine == "cranelift" and args.operation == "build" else None
+        verification_start = time.perf_counter_ns()
+        try:
+            verify_backend(build, artifacts, env["RUSTC"], backend, target, verified, scenario, entry["backend_verification"])
+        finally:
+            entry["backend_verification_ns"] = time.perf_counter_ns() - verification_start
         if successful(build) and args.operation == "build":
             binaries = [item["executable"] for item in artifacts if item["target"]["name"] == "fixture-app" and item.get("executable")]
             if len(binaries) != 1:
@@ -253,12 +384,14 @@ def sample(route: str, prefix: list[str], project: Path, target: Path, run_dir: 
                 raise BenchmarkError("Cargo reported an executable outside the owned target directory.")
             run_dir.mkdir(parents=True)
             entry["runtime"] = process([str(binary)], run_dir, env, args.timeout)
-            entry["build_and_run_ns"] = time.perf_counter_ns() - start
+            # Backend parsing and artifact hashing are qualification overhead,
+            # outside both the build-only and optional build-plus-run metric.
+            entry["build_and_run_ns"] = time.perf_counter_ns() - start - entry["backend_verification_ns"]
             entry["runtime"]["files"] = tree_files(run_dir)
             entry["artifact_bytes"] = binary.stat().st_size
             words = entry["runtime"]["stdout"].get("text", "").split()
             entry["runtime_probe_matches"] = all(word in words for word in (f"probe={expected_probe}", "panic=1", "drops=1"))
-    except (BenchmarkError, KeyError, TypeError, OSError) as error:
+    except (BenchmarkError, KeyError, TypeError, OSError, ValueError) as error:
         # Keep the raw compiler output even when its artifact protocol is wrong.
         entry["validation_errors"].append(str(error))
     entry["source_unchanged"] = tree_digest(project) == source_hash
@@ -267,6 +400,8 @@ def sample(route: str, prefix: list[str], project: Path, target: Path, run_dir: 
 
 def pair_verdict(entries: list[dict], scenario: str, operation: str) -> dict:
     reasons = [f"{item['route']}: {error}" for item in entries for error in item["validation_errors"]]
+    if any(not item.get("backend_verification", {}).get("passed") for item in entries):
+        reasons.append("Actual compiler backend verification failed.")
     if any(not item["source_unchanged"] for item in entries):
         reasons.append("The compiler or build script changed the source snapshot.")
     if any(item["build"]["timed_out"] for item in entries):
@@ -338,6 +473,8 @@ def hardware() -> dict:
 
 
 def benchmark(args: argparse.Namespace, report: dict) -> None:
+    if sys.platform != "linux":
+        raise BenchmarkError("Backend verification currently supports Cargo's Linux verbose command display only.")
     coordinator = executable(args.coordinator, "cargo-lust")
     with tempfile.TemporaryDirectory(prefix="cargo-lust-bench-") as directory:
         root = Path(directory).resolve()
@@ -370,6 +507,7 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
         require_success(lock, "preparing the copied fixture's lockfile")
         report["fixture"] = {"path": str(FIXTURE), "files": tree_files(project), "base_sha256": tree_digest(project)}
         prefixes = {"cargo": [cargo], "coordinator": [coordinator, "--engine", args.engine]}
+        verified_artifacts = {}
 
         def run_pair(scenario: str, index: int, source: str, expected_probe: int, warmup: bool = False) -> None:
             # A no-op must preserve mtimes too: rewriting identical bytes can make
@@ -384,7 +522,8 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
                 if scenario == "cold":
                     target = target / str(index)
                 entry = sample(route, prefixes[route], project, target, root / "runs" / scenario / str(index) / route,
-                               source_hash, expected_probe, scenario, index, position, candidate_env if route == "coordinator" else env, args)
+                               source_hash, expected_probe, scenario, index, position, candidate_env if route == "coordinator" else env, args,
+                               verified_artifacts.setdefault(str(target), {}))
                 entries.append(entry)
                 report["warmups" if warmup else "samples"].append(entry)
             # A warmup starts from an empty target directory, so freshness expectations do not apply.
@@ -458,7 +597,7 @@ def main() -> int:
         "schema_version": 1, "created_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "hardware": hardware(), "engine": args.engine, "operation": args.operation,
         "settings": {"samples_per_scenario": args.samples, "jobs": args.jobs, "profile": PROFILE, "features": "fixture defaults, unchanged", "target": "host", "scenarios": args.scenarios, "primary_metric": "build_and_run" if args.build_and_run else args.operation},
-        "method": {"clock": "time.perf_counter_ns", "interleaving": "alternate the first route in each pair", "cold": "empty Cargo target directory; installed sysroot and OS page cache are not cold", "warm": "one excluded paired warmup; target directories retained", "source": "one shared copied source snapshot per pair, separate target directories", "p95": "nearest-rank percentile; at small sample counts this is the maximum", "limits": "small synthetic fixture; not evidence of broad full-project acceleration; no peak-memory or compiler-stage profiling"},
+        "method": {"clock": "time.perf_counter_ns", "backend_proof": "Cargo -vv --color never commands must select the expected backend for app, core, derive, and build script; cached artifact hashes must match earlier verified compilations; verification overhead is excluded from timing", "interleaving": "alternate the first route in each pair", "cold": "empty Cargo target directory; installed sysroot and OS page cache are not cold", "warm": "one excluded paired warmup; target directories retained", "source": "one shared copied source snapshot per pair, separate target directories", "p95": "nearest-rank percentile; at small sample counts this is the maximum", "limits": "small synthetic fixture; not evidence of broad full-project acceleration; no peak-memory or compiler-stage profiling"},
         "setup": [], "warmups": [], "samples": [], "pairs": [], "errors": [], "passed": False,
     }
     code = 0

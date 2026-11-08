@@ -44,6 +44,8 @@ The helper builds the pinned source with its `unwinding` Cargo feature and recor
 
 Cranelift uses the rustc frontend, so async, unsafe code, procedural macros, generic associated types, and other Rust semantics still go through rustc. The coordinator enables Cargo's official `-Zcodegen-backend` mechanism and selects the library with command-scoped `--config` arguments for the development and test profiles. These settings do not become environment variables inherited by applications, tests, or build scripts that launch Cargo themselves. Existing caller-provided environment settings remain inherited. The coordinator does not select a different panic strategy or alter `RUSTFLAGS`, optimization, features, source, or dependencies.
 
+The coordinator places its configuration immediately after the Cargo subcommand and before the caller's arguments. This keeps later package overrides in the same Cargo configuration list and preserves their normal precedence. A real Cargo regression test checks this ordering independently of the optional backend.
+
 The backend library path must be valid UTF-8 so Cargo can read it as a TOML configuration value. Quotes, backslashes, and control characters are escaped without changing the path. This restriction applies to the backend setting; ordinary command arguments retain their OS representation.
 
 **The stock rustup Cranelift preview is insufficient for this integration.** Our runtime gate found that it failed to catch the fixture's panic. Upstream builds unwind support behind an optional Cargo feature; passing `-Cpanic=unwind` does not add that missing implementation. The coordinator therefore requires the explicit `LUST_CRANELIFT_BACKEND` path instead of selecting the stock backend by name. Keep the matching compiler revision. The backend remains experimental even when a fixture passes.
@@ -86,6 +88,8 @@ cargo lust --engine lust capabilities --json
 ```
 
 For a Cargo target, pass Lust's existing `--manifest-path`, `--package`, `--bin`, `--lib`, feature, and target options as appropriate. This route uses Lust's daemon, adapters, runtime, and rejection rules. It does not silently fall back if Lust rejects the source. It cannot build arbitrary Rust libraries for Cargo because Lust has no rlib format.
+
+Upstream Lust targets Rust/Cargo 1.99 and currently assumes that version's build-script artifact layout. Sourcing the complementary backend's environment selects a newer nightly in that shell. When using native Lust's Cargo-target support, select the upstream-compatible installed toolchain explicitly, for example `cargo +1.99.1 lust --engine lust check --manifest-path Cargo.toml`. The coordinator does not apply the benchmark's private Cargo layout compatibility setting to user projects.
 
 `LUSTC` selects the Lust executable. Otherwise the coordinator looks beside its own executable and then on `PATH`. `LUST_CARGO` selects the Cargo executable when an embedding tool needs an explicit path; otherwise the inherited `CARGO` executable or `PATH` is used. `RUSTC`, `RUSTDOC`, Cargo wrappers and the selected rustup toolchain remain inherited.
 

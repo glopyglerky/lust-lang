@@ -148,12 +148,12 @@ fn process_contract_preserves_arguments_io_failure_and_toolchain_routing() {
     }
     let backend_literal = format!("\"{}\"", backend.to_str().unwrap().replace('\\', "\\\\").replace('"', "\\\""));
     let expected_arguments = [
+        "build".to_owned(),
         "-Zcodegen-backend".to_owned(),
         "--config".to_owned(),
         format!("profile.dev.codegen-backend={backend_literal}"),
         "--config".to_owned(),
         format!("profile.test.codegen-backend={backend_literal}"),
-        "build".to_owned(),
     ];
     let received: Vec<_> = observed.lines().filter_map(|line| line.strip_prefix("arg=")).collect();
     let expected: Vec<_> = expected_arguments.iter().map(|argument| hex(argument.as_bytes())).collect();

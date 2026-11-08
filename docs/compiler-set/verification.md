@@ -33,7 +33,7 @@ LUST_TEST_LUST=/path/to/lust \
 
 The local run used normal Cargo development settings. Baseline and candidate source trees were copies of the same fixture and had separate target directories. Tests did not change project panic settings, features, optimization, debug information, or incremental compilation settings.
 
-The latest local ordinary test suite passes 28 tests. The separately executed actual Lust test also passes. The process-level cases verify unchanged argument bytes, raw I/O, exit status, Unix signal termination, existing compiler wrappers, no execution during planning, and exactly one execution after failure. Regression tests cover explicit rustup selection, grouped release flags, a real Cargo alias that selects release, and the requirement for an explicit existing backend file.
+The latest local ordinary test suite passes 29 tests. The separately executed actual Lust test also passes. The process-level cases verify unchanged argument bytes, raw I/O, exit status, Unix signal termination, existing compiler wrappers, no execution during planning, and exactly one execution after failure. Regression tests cover explicit rustup selection, grouped release flags, a real Cargo alias that selects release, Cargo configuration placement and precedence, and the requirement for an explicit existing backend file.
 
 The Cargo integration executes a workspace with a separate custom derive proc macro, a generated-source build script, a library dependency, async polling, raw-pointer operations, generic associated types, const generics, a C function calling convention, panic catching, and destruction during unwinding. It checks this output against both ordinary Cargo and the coordinator:
 
@@ -74,6 +74,12 @@ The backend used `rustc 1.101.0-nightly (2d20b42b8 2026-11-04)` from `nightly-20
 The `821fcd9` run also passed the added mixed-backend test. It kept `fixture-core` on LLVM using Cargo's per-package profile override while compiling `fixture-app` and the procedural macro with the exact configured Cranelift library. The test inspected Cargo's actual verbose rustc commands to verify those selections, then compared the final program's stdout, stderr, panic/drop trace, and exit status with an all-LLVM build.
 
 This establishes the exercised Rust crate boundary with a shared compiler toolchain. It does not exchange native Lust artifacts. Generic code can be instantiated by a dependent crate, so selecting LLVM for a package does not guarantee that all uses of its generic code go through LLVM. The package choice remains explicit and the resulting program still needs qualification.
+
+### Command-scoped configuration regression
+
+The [follow-up run at `98139b0`](https://github.com/glopyglerky/lustr/actions/runs/42507594541/job/128813495199) caught a regression while replacing inherited backend environment variables with command-scoped Cargo configuration. Cargo discarded configuration supplied before the subcommand when the caller also supplied `--config` after it. The mixed-backend test found that the application and procedural macro had no backend flag, although the package override still selected LLVM for the library. The workflow failed before either benchmark ran; the passing output-only checks from that run do not establish the requested compiler selection.
+
+The correction places generated configuration after `build`, `run`, or `test`, before the caller's arguments. Ordinary Cargo tests reproduce the precedence rule with stable optimization settings. Optional execution tests and both benchmark runners inspect actual compiler invocations, rather than relying on a requested plan or a successful program alone. The corrected code requires a new hosted qualification.
 
 ### Inherited upstream platform failure
 

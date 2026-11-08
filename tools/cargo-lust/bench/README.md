@@ -2,7 +2,9 @@
 
 `measure.py` compares ordinary Cargo with `cargo-lust --engine rustc` or an
 explicit Cranelift build. It uses Python 3.10 or later and its standard library.
-It does not download dependencies or toolchains.
+It does not download dependencies or toolchains. Actual compiler-command
+verification currently supports Linux's Cargo command display; the benchmark
+rejects other hosts. The coordinator has separate cross-platform tests.
 
 The default run measures coordinator overhead. Selecting Cranelift measures that
 backend on the same Rust toolchain and source. Neither result establishes a
@@ -50,6 +52,13 @@ This setting is passed only to the candidate. The baseline does not receive it.
 The coordinator selects the backend with Cargo command-line configuration;
 it does not export profile backend variables into programs or nested Cargo runs.
 The rustup preview without the backend's `unwinding` feature does not qualify.
+
+The requested plan is only an initial check. Cargo's actual verbose compiler
+commands must select the expected backend for each freshly compiled fixture
+crate, including the build script and procedural macro. Cached samples must
+retain artifacts from a verified compilation. A missing, overridden, or
+ambiguous backend selection fails the measurement before any speed ratios are
+reported.
 
 Add `--build-and-run` to summarize compilation plus executable runtime. Every
 successful build executes the fixture even without this flag, because a faster

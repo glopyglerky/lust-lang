@@ -15,7 +15,7 @@ Use one additional full Rust compiler family before proposing more independent f
 - Never turn compiler errors into success. Never retry an executed program or test automatically through another compiler. Do not change panic behavior to obtain a passing or faster result.
 - The stock rustup Cranelift preview failed the real panic-recovery gate. Build the pinned complement with its `unwinding` feature and use the matching compiler plus explicit backend path. A panic flag cannot supply backend code that was not compiled in. Preserve the recovery/drop gate.
 - Keep stdout usable for Cargo JSON and program output. Pass OS arguments without a shell or lossy decoding. Preserve subprocess failures and signals.
-- Scope compiler backend settings to the current Cargo invocation. Injected `CARGO_PROFILE_*_CODEGEN_BACKEND` environment variables leak into programs and tests and can break nested Cargo commands. Use command-scoped Cargo configuration and retain the real nested-Cargo regression gate.
+- Scope compiler backend settings to the current Cargo invocation. Injected `CARGO_PROFILE_*_CODEGEN_BACKEND` environment variables leak into programs and tests and can break nested Cargo commands. Place generated Cargo configuration after the subcommand and before caller arguments so later package overrides preserve it. Retain the real configuration-precedence and nested-Cargo regression gates. Verify actual compiler flags when qualifying a backend; a requested plan or successful program alone is insufficient.
 - Key any future cache by the compiler/runtime identities, complete semantic inputs, target/profile/features, build-script observations, and transitive dependency identities. An untracked input forces recomputation.
 
 ## Work layout and validation

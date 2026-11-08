@@ -181,6 +181,65 @@ fn manifest_paths_and_cargo_subcommand_invocation_preserve_arguments() {
 }
 
 #[test]
+fn command_scoped_profile_defaults_survive_later_cargo_config_overrides() {
+    let scratch = Scratch::new("config-ordering");
+    let fixture = scratch.fixture("full-rust");
+    let request = cargo_lust::Request {
+        engine: cargo_lust::Engine::Cranelift,
+        explain: false,
+        toolchain: None,
+        args: [
+            "build",
+            "--offline",
+            "--locked",
+            "--workspace",
+            "-vv",
+            "--color",
+            "never",
+            "--config",
+            "profile.dev.package.fixture-core.opt-level=2",
+        ]
+        .map(OsString::from)
+        .to_vec(),
+    };
+    let plan = cargo_lust::plan(
+        &request,
+        cargo_lust::Programs {
+            cargo: cargo(),
+            lust: "unused-lust".into(),
+            explicit_cargo: true,
+            cranelift_backend: Some(std::env::current_exe().unwrap().into_os_string()),
+        },
+    )
+    .unwrap();
+
+    // Exercise the production argument ordering with real stable Cargo. Replace
+    // only the unstable backend values with stable profile settings and omit
+    // their feature gate; no Cranelift installation is needed for this regression.
+    let arguments: Vec<_> = plan
+        .args
+        .into_iter()
+        .filter(|arg| arg != "-Zcodegen-backend")
+        .map(|arg| match arg.to_str() {
+            Some(value) if value.starts_with("profile.dev.codegen-backend=") => OsString::from("profile.dev.opt-level=1"),
+            Some(value) if value.starts_with("profile.test.codegen-backend=") => OsString::from("profile.test.opt-level=1"),
+            _ => arg,
+        })
+        .collect();
+    let built = execute(command(&scratch, &fixture, "config-ordering", None).args(arguments));
+    success_at("real Cargo configuration ordering regression", &built);
+    for (crate_name, level) in [("fixture_app", "1"), ("fixture_core", "2")] {
+        let commands = verbose_rustc_commands(&built.stderr, crate_name);
+        assert_eq!(commands.len(), 1);
+        assert!(
+            commands[0].windows(2).any(|pair| pair[0] == "-C" && pair[1] == format!("opt-level={level}")),
+            "Cargo lost the requested profile value for {crate_name}; compiler command: {:?}",
+            commands[0]
+        );
+    }
+}
+
+#[test]
 #[ignore = "requires a built Lust compiler; set LUST_TEST_LUST to its executable"]
 fn actual_lust_accepts_its_subset_and_keeps_unsupported_rust_rejected() {
     let lust = std::env::var_os("LUST_TEST_LUST").expect("set LUST_TEST_LUST before running this qualification");
@@ -236,7 +295,8 @@ fn required_cranelift_backend() -> OsString {
 #[test]
 #[ignore = "requires matching nightly Cargo and LUST_CRANELIFT_BACKEND built with unwinding"]
 fn actual_cranelift_keeps_full_rust_output_including_unwinding() {
-    required_cranelift_backend();
+    let backend = required_cranelift_backend();
+    let backend = backend.to_str().expect("verbose qualification requires a UTF-8 backend path");
     let scratch = Scratch::new("actual-cranelift");
     let fixture = scratch.fixture("full-rust");
 
@@ -244,9 +304,19 @@ fn actual_cranelift_keeps_full_rust_output_including_unwinding() {
     // panic must not be reported as an unexplained `cargo run` compilation error.
     let baseline_build = execute(command(&scratch, &fixture, "llvm", None).args(["build", "--offline", "--locked", "--workspace"]));
     success_at("baseline Cargo compilation", &baseline_build);
-    let candidate_build =
-        execute(command(&scratch, &fixture, "cranelift", Some("cranelift")).args(["build", "--offline", "--locked", "--workspace"]));
+    let candidate_build = execute(command(&scratch, &fixture, "cranelift", Some("cranelift")).args([
+        "build",
+        "--offline",
+        "--locked",
+        "--workspace",
+        "-vv",
+        "--color",
+        "never",
+    ]));
     success_at("Cranelift Cargo compilation, before any program execution", &candidate_build);
+    for crate_name in ["fixture_app", "fixture_core", "fixture_derive", "build_script_build"] {
+        assert_verbose_backend(&candidate_build.stderr, crate_name, backend);
+    }
 
     let executable_name = format!("fixture-app{}", std::env::consts::EXE_SUFFIX);
     let baseline = execute(Command::new(scratch.0.join("llvm/debug").join(&executable_name)).current_dir(&fixture));
@@ -259,15 +329,26 @@ fn actual_cranelift_keeps_full_rust_output_including_unwinding() {
     assert_eq!(cranelift.status.code(), baseline.status.code());
     assert_eq!(cranelift.stdout, baseline.stdout);
     assert_eq!(cranelift.stderr, baseline.stderr);
-    let tested =
-        execute(command(&scratch, &fixture, "cranelift", Some("cranelift")).args(["test", "--offline", "--locked", "--workspace"]));
+    let tested = execute(command(&scratch, &fixture, "cranelift", Some("cranelift")).args([
+        "test",
+        "--offline",
+        "--locked",
+        "--workspace",
+        "-vv",
+        "--color",
+        "never",
+    ]));
     success_at("Cranelift workspace unit tests and doctests", &tested);
+    for crate_name in ["fixture_app", "fixture_core", "fixture_derive"] {
+        assert_verbose_backend(&tested.stderr, crate_name, backend);
+    }
 }
 
 #[test]
 #[ignore = "requires matching nightly Cargo and LUST_CRANELIFT_BACKEND built with unwinding"]
 fn actual_cranelift_does_not_leak_backend_configuration_into_nested_cargo() {
-    required_cranelift_backend();
+    let backend = required_cranelift_backend();
+    let backend = backend.to_str().expect("verbose qualification requires a UTF-8 backend path");
     let scratch = Scratch::new("nested-cargo");
     let fixture = scratch.fixture("nested-cargo");
     let manifest = fixture.join("child/Cargo.toml");
@@ -287,12 +368,13 @@ fn actual_cranelift_does_not_leak_backend_configuration_into_nested_cargo() {
     // The fixture does not remove or override any of that environment.
     let candidate = execute(
         command(&scratch, &fixture, "cranelift", Some("cranelift"))
-            .args(["run", "--offline", "--locked", "--quiet", "--"])
+            .args(["run", "--offline", "--locked", "-vv", "--color", "never", "--"])
             .arg(cargo())
             .arg(&manifest)
             .arg(scratch.0.join("nested-cranelift")),
     );
     success_at("Cranelift Cargo running an application that invokes ordinary nested Cargo", &candidate);
+    assert_verbose_backend(&candidate.stderr, "fixture_nested_cargo", backend);
     assert_eq!(candidate.status.code(), baseline.status.code());
     assert_eq!(candidate.stdout, baseline.stdout);
 }
@@ -337,26 +419,33 @@ fn verbose_command_words(command: &str) -> Vec<String> {
     result
 }
 
-fn verbose_backend(stderr: &[u8], crate_name: &str) -> String {
+fn verbose_rustc_commands(stderr: &[u8], crate_name: &str) -> Vec<Vec<String>> {
     let log = std::str::from_utf8(stderr).expect("verbose qualification requires UTF-8 Cargo diagnostics");
     let commands: Vec<_> = log
         .lines()
         .filter_map(|line| line.trim_start().strip_prefix("Running `")?.strip_suffix('`'))
         .map(verbose_command_words)
         .filter(|words| words.windows(2).any(|pair| pair[0] == "--crate-name" && pair[1] == crate_name))
+        // Cargo's rustc invocations specify emitted artifacts. Exclude rustdoc
+        // commands that also have --crate-name when qualifying `cargo test`.
+        .filter(|words| words.iter().any(|word| word.starts_with("--emit=")))
         .collect();
-    assert_eq!(commands.len(), 1, "expected one actual rustc invocation for {crate_name}; Cargo log:\n{log}");
-    let words = &commands[0];
-    let backends: Vec<_> = words
-        .iter()
-        .enumerate()
-        .filter_map(|(index, word)| {
-            word.strip_prefix("-Zcodegen-backend=")
-                .or_else(|| if word == "-Z" { words.get(index + 1)?.strip_prefix("codegen-backend=") } else { None })
-        })
-        .collect();
-    assert_eq!(backends.len(), 1, "expected one explicit backend selection for {crate_name}; Cargo log:\n{log}");
-    backends[0].to_owned()
+    assert!(!commands.is_empty(), "expected an actual rustc invocation for {crate_name}; Cargo log:\n{log}");
+    commands
+}
+
+fn assert_verbose_backend(stderr: &[u8], crate_name: &str, expected: &str) {
+    for words in verbose_rustc_commands(stderr, crate_name) {
+        let backends: Vec<_> = words
+            .iter()
+            .enumerate()
+            .filter_map(|(index, word)| {
+                word.strip_prefix("-Zcodegen-backend=")
+                    .or_else(|| if word == "-Z" { words.get(index + 1)?.strip_prefix("codegen-backend=") } else { None })
+            })
+            .collect();
+        assert_eq!(backends, [expected], "wrong or missing backend for {crate_name}; compiler command: {words:?}");
+    }
 }
 
 #[test]
@@ -384,9 +473,10 @@ fn actual_cranelift_links_an_llvm_library_with_a_cranelift_application() {
 
     // Runtime parity alone could also pass if every crate accidentally used
     // LLVM. Verify Cargo's actual fresh rustc commands before claiming mixing.
-    assert_eq!(verbose_backend(&mixed_build.stderr, "fixture_core"), "llvm");
-    assert_eq!(verbose_backend(&mixed_build.stderr, "fixture_app"), backend);
-    assert_eq!(verbose_backend(&mixed_build.stderr, "fixture_derive"), backend);
+    assert_verbose_backend(&mixed_build.stderr, "fixture_core", "llvm");
+    assert_verbose_backend(&mixed_build.stderr, "build_script_build", "llvm");
+    assert_verbose_backend(&mixed_build.stderr, "fixture_app", backend);
+    assert_verbose_backend(&mixed_build.stderr, "fixture_derive", backend);
 
     let executable_name = format!("fixture-app{}", std::env::consts::EXE_SUFFIX);
     let baseline = execute(Command::new(scratch.0.join("llvm/debug").join(&executable_name)).current_dir(&fixture));

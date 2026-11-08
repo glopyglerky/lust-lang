@@ -220,6 +220,7 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
     };
     let mut selected_engine = Engine::Rustc;
     let mut codegen_backend = None;
+    let mut forwarded_args = request.args.as_slice();
     let reason = match request.engine {
         Engine::Auto => {
             "full project compatibility uses the selected Cargo/rustc configuration; automatic Lust routing is not yet qualified"
@@ -233,6 +234,11 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
             } else {
                 let backend = configured_cranelift_backend(programs.cranelift_backend.as_deref())?;
                 selected_engine = Engine::Cranelift;
+                // Keep repeated options in the subcommand's argument scope.
+                // A caller's --config after `build` replaces the entire list
+                // supplied before `build`, rather than extending that list.
+                args.push(request.args[0].clone());
+                forwarded_args = &request.args[1..];
                 args.push(OsString::from("-Zcodegen-backend"));
                 // Profile environment variables would also reach applications,
                 // tests and build scripts. Their ordinary nested Cargo commands
@@ -249,7 +255,7 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
         }
         Engine::Lust => unreachable!(),
     };
-    args.extend(request.args.iter().cloned());
+    args.extend(forwarded_args.iter().cloned());
     Ok(Plan {
         requested_engine: request.engine,
         selected_engine,
@@ -535,9 +541,9 @@ mod tests {
     fn preserves_explicit_toolchain_selection() {
         let plan = prepared(&["+nightly-2026-11-07", "--engine=cranelift", "build", "--offline"]);
         assert_eq!(plan.program, OsStr::new("rustup"));
-        let mut expected = words(&["run", "--", "nightly-2026-11-07", "cargo"]);
+        let mut expected = words(&["run", "--", "nightly-2026-11-07", "cargo", "build"]);
         expected.extend(backend_config_args());
-        expected.extend(words(&["build", "--offline"]));
+        expected.extend(words(&["--offline"]));
         assert_eq!(plan.args, expected);
         assert!(plan.environment.is_empty());
         assert_eq!(plan.environment_remove, words(&["CARGO"]));
@@ -583,8 +589,9 @@ mod tests {
         for command in ["build", "run", "test"] {
             let plan = prepared(&["--engine", "cranelift", command, "--features", "a,b"]);
             assert_eq!(plan.selected_engine, Engine::Cranelift);
-            let mut expected = backend_config_args();
-            expected.extend(words(&[command, "--features", "a,b"]));
+            let mut expected = words(&[command]);
+            expected.extend(backend_config_args());
+            expected.extend(words(&["--features", "a,b"]));
             assert_eq!(plan.args, expected);
             assert!(plan.environment.is_empty());
             assert!(plan.environment_remove.is_empty());
@@ -674,8 +681,9 @@ mod tests {
     fn runtime_arguments_do_not_select_profile() {
         let plan = prepared(&["--engine", "cranelift", "run", "--", "--release", "--profile", "prod"]);
         assert_eq!(plan.selected_engine, Engine::Cranelift);
-        let mut expected = backend_config_args();
-        expected.extend(words(&["run", "--", "--release", "--profile", "prod"]));
+        let mut expected = words(&["run"]);
+        expected.extend(backend_config_args());
+        expected.extend(words(&["--", "--release", "--profile", "prod"]));
         assert_eq!(plan.args, expected);
     }
 
