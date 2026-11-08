@@ -1,0 +1,1324 @@
+{
+  "backend_recipe": {
+    "backend_build_rustflags": "-Zallow-features=rustc_private,f16,f128",
+    "pin": {
+      "cargo_lock_git_blob": "c9b921615f43009892a2b8434d190b3544da35fd",
+      "features": [
+        "unwinding"
+      ],
+      "host": "x86_64-unknown-linux-gnu",
+      "repository": "https://github.com/rust-lang/rustc_codegen_cranelift.git",
+      "revision": "8edf4d040acb77048e04b52a379e93dccae888e6",
+      "schema_version": 1,
+      "toolchain": "nightly-2026-11-05"
+    },
+    "sysroot": "the pinned toolchain's ordinary LLVM-built standard library"
+  },
+  "backend_report": {
+    "artifact_member": "tools/cargo-lust/target/complement/backend.json",
+    "bytes": 3035,
+    "copied_byte_for_byte": true,
+    "path": "lust-project-42ab5dc-backend.json",
+    "sha256": "f2593a962f47340ab94959f2c6d01787bc4be724684262cbf539a783a097d9ee"
+  },
+  "backend_verification": {
+    "cached_binary_identity_check_count": 8,
+    "fresh_root_command_count": 16,
+    "independently_replayed": true,
+    "passed": true,
+    "passed_record_count": 12,
+    "routes": {
+      "cargo": {
+        "cached_binary_identity_checks": 4,
+        "cached_record_indices": [
+          "samples[4]",
+          "samples[7]"
+        ],
+        "expected_backend": "llvm",
+        "fresh_record_indices": [
+          "test_qualification[0]",
+          "samples[0]",
+          "samples[3]",
+          "warmups[0]"
+        ],
+        "fresh_root_command_count": 8,
+        "observed_selectors_by_crate": {
+          "lust": [
+            []
+          ],
+          "lust_core": [
+            []
+          ]
+        }
+      },
+      "coordinator": {
+        "cached_binary_identity_checks": 4,
+        "cached_record_indices": [
+          "samples[5]",
+          "samples[6]"
+        ],
+        "expected_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+        "fresh_record_indices": [
+          "test_qualification[1]",
+          "samples[1]",
+          "samples[2]",
+          "warmups[1]"
+        ],
+        "fresh_root_command_count": 8,
+        "observed_selectors_by_crate": {
+          "lust": [
+            [
+              "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so"
+            ]
+          ],
+          "lust_core": [
+            [
+              "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so"
+            ]
+          ]
+        }
+      }
+    },
+    "scope": "Proof covers the two root binaries lust and lust_core in each fresh build or test; unchanged builds inherit verified warmup binary hashes.",
+    "source_record_count": 12,
+    "verifier_scripts": {
+      "measure-project.py": "0b10ad630a17825f3b4c52334836942af93986711d0ba6d20ec80e5231d00964",
+      "measure.py": "b4f095967941e2daeca378f4aea2ff9f245bc4b6766f0c5c86e01962fd74b294"
+    }
+  },
+  "created_utc": "2026-11-08T18:32:19.455633+00:00",
+  "environment": {
+    "cargo_layout_compatibility": {
+      "actual_cargo_commit": "3c747ea3ead23951c1b43a5edfcbdb449135ddeb",
+      "applied": true,
+      "environment_overrides": {
+        "__CARGO_TEMPORARY_BUILD_DIR_NEW_LAYOUT_OPT_OUT": "1"
+      },
+      "inherited_value": null,
+      "reason": "This pinned Cargo changed build-script artifact layout; unchanged Lust expects the previous layout. The private temporary Cargo opt-out restores that layout without source edits.",
+      "required_cargo_commit": "3c747ea3ead23951c1b43a5edfcbdb449135ddeb",
+      "scope": "real-project benchmark only; both routes and their subprocesses, including prefetch, unit suites, builds, and compiler probes"
+    },
+    "preserved_build_flags": {},
+    "profile": "project's default dev profile; no optimization, panic, debug, feature, or source overrides",
+    "removed_backend_variables": [
+      "LUST_CRANELIFT_BACKEND"
+    ],
+    "stack_scope": "inherited RUST_MIN_STACK is preserved for timed builds and compiler probes; only the two unit-suite process trees receive the explicit shared test_harness override"
+  },
+  "errors": [],
+  "excluded_warmup_pair_count": 1,
+  "excluded_warmup_sample_count": 2,
+  "finished_utc": "2026-11-08T18:40:28.921603+00:00",
+  "hardware": {
+    "available_cpus": 4,
+    "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+    "logical_cpus": 4,
+    "machine": "x86_64",
+    "python": "3.12.3",
+    "release": "7.0.0-1017-azure",
+    "system": "Linux"
+  },
+  "input_check_count": 37,
+  "input_checks": [
+    {
+      "stage": "before prefetch",
+      "unchanged": true
+    },
+    {
+      "stage": "after prefetch",
+      "unchanged": true
+    },
+    {
+      "stage": "before cargo unit suite",
+      "unchanged": true
+    },
+    {
+      "stage": "after cargo unit suite",
+      "unchanged": true
+    },
+    {
+      "stage": "before coordinator unit suite",
+      "unchanged": true
+    },
+    {
+      "stage": "after coordinator unit suite",
+      "unchanged": true
+    },
+    {
+      "stage": "before cold 0 cargo",
+      "unchanged": true
+    },
+    {
+      "stage": "after cold 0 cargo build",
+      "unchanged": true
+    },
+    {
+      "stage": "after cold 0 cargo runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before cold 0 coordinator",
+      "unchanged": true
+    },
+    {
+      "stage": "after cold 0 coordinator build",
+      "unchanged": true
+    },
+    {
+      "stage": "after cold 0 coordinator runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before cold 1 coordinator",
+      "unchanged": true
+    },
+    {
+      "stage": "after cold 1 coordinator build",
+      "unchanged": true
+    },
+    {
+      "stage": "after cold 1 coordinator runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before cold 1 cargo",
+      "unchanged": true
+    },
+    {
+      "stage": "after cold 1 cargo build",
+      "unchanged": true
+    },
+    {
+      "stage": "after cold 1 cargo runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before warm_noop 0 cargo",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 0 cargo build",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 0 cargo runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before warm_noop 0 coordinator",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 0 coordinator build",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 0 coordinator runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before warm_noop 0 cargo",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 0 cargo build",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 0 cargo runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before warm_noop 0 coordinator",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 0 coordinator build",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 0 coordinator runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before warm_noop 1 coordinator",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 1 coordinator build",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 1 coordinator runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "before warm_noop 1 cargo",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 1 cargo build",
+      "unchanged": true
+    },
+    {
+      "stage": "after warm_noop 1 cargo runtime",
+      "unchanged": true
+    },
+    {
+      "stage": "final verification",
+      "unchanged": true
+    }
+  ],
+  "inputs": {
+    "backend": {
+      "bytes": 15411184,
+      "path": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+      "sha256": "75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc"
+    },
+    "coordinator": {
+      "path": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/release/cargo-lust",
+      "sha256": "cd413ee160e9d76d4624275df386d6013930b4104a37a2c77392920ac0bf10a4"
+    },
+    "probes": {
+      "supported.rs": "64d06c8ab8146cbe2000172ed693574f50ee8538a9604bb5e7af4adc49d4e0ba",
+      "unsupported.rs": "70dc76f5cba9211760fdd1b9cf438f4e4dce25bc2cbf3a806cb20e9de3165bb3"
+    },
+    "scripts": {
+      "measure-project.py": "0b10ad630a17825f3b4c52334836942af93986711d0ba6d20ec80e5231d00964",
+      "measure.py": "b4f095967941e2daeca378f4aea2ff9f245bc4b6766f0c5c86e01962fd74b294"
+    },
+    "tcc": {
+      "file_count": 23,
+      "path": "/home/runner/work/lustr/lustr/third_party/tcc",
+      "sha256": "adda6b01015de9fd9ebd65c7ed56389776225fc4d60deaaec71ee69ec1873611"
+    }
+  },
+  "limits": [
+    "Two measured pairs per scenario on one Linux x86_64 runner. The low sample count does not establish statistical confidence or general Rust-project speedups.",
+    "Cold means empty per-route Cargo target directories; dependencies were fetched before timing and installed toolchains, dependency sources, and operating-system caches remained warm.",
+    "The AMD EPYC 9V45 runner exposes four logical CPUs, while Cargo used one job. Do not compare absolute timings with earlier runs on different runner hardware.",
+    "Both routes used the pinned-Cargo private temporary old-build-layout opt-out. This setting is specific to this benchmark and toolchain revision.",
+    "Both unit-suite process trees used RUST_MIN_STACK=268435456, matching Lust production worker stacks. This override was not applied to timed builds or compiler probes.",
+    "Primary timings measure cargo build --bins with the unchanged default dev profile. Unit suites and compiler runtime probes are separate qualification steps, not compile-plus-test timing samples.",
+    "Runtime checks cover version, capabilities, one supported program, and one async rejection. Passing them and 391 tests per route is not exhaustive compiler conformance.",
+    "No body-edit, signature-edit, type-edit, macro-edit, rejection-latency, peak-memory, or release-runtime performance measurement is provided for this larger project.",
+    "The build retains the rustc frontend and an LLVM-built standard library. Native Lust artifacts are not mixed into the Rust crate graph."
+  ],
+  "measured_pair_count": 4,
+  "measured_sample_count": 8,
+  "method": {
+    "backend_proof": "fresh root rustc commands for builds and tests must select exactly the configured candidate library or default/explicit LLVM for baseline; warm binary hashes must match verified warmup",
+    "cold": "empty per-route target directories; installed compiler, dependency sources, and OS caches remain warm",
+    "interleaving": "alternate first route in each measured pair",
+    "limits": "one real compiler project and limited probes; no broad conformance or production performance claim",
+    "normalization": "only compiler/probe directory prefixes and version build ID; raw output is retained",
+    "p95": "nearest-rank; with 2 samples, p95 is the maximum",
+    "prefetch": "locked dependencies before timing; subsequent Cargo commands offline",
+    "runtime": "outside build timing; fresh identical-path probe directory and disabled Lust daemon/cache",
+    "test_suite": "one untimed cargo test --bins --no-fail-fast -- --nocapture per route before timing, in separate empty targets; require both success and equal test counts",
+    "timed_operation": "cargo build --bins -vv --color never, default dev profile",
+    "warm": "one excluded pair, then unchanged builds with retained targets"
+  },
+  "pair_count": 5,
+  "pairs": [
+    {
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "sample": 0,
+      "scenario": "cold",
+      "warmup": false
+    },
+    {
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "sample": 1,
+      "scenario": "cold",
+      "warmup": false
+    },
+    {
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "sample": 0,
+      "scenario": "warm_noop",
+      "warmup": true
+    },
+    {
+      "order": [
+        "cargo",
+        "coordinator"
+      ],
+      "passed": true,
+      "sample": 0,
+      "scenario": "warm_noop",
+      "warmup": false
+    },
+    {
+      "order": [
+        "coordinator",
+        "cargo"
+      ],
+      "passed": true,
+      "sample": 1,
+      "scenario": "warm_noop",
+      "warmup": false
+    }
+  ],
+  "passed": true,
+  "passed_pair_count": 5,
+  "provenance": {
+    "artifact": "https://github.com/glopyglerky/lustr/actions/runs/42510335761/artifacts/13629213305",
+    "artifact_id": 13629213305,
+    "artifact_zip_bytes": 1620059,
+    "artifact_zip_sha256": "bc7419017116a5d2f0a6fcce24fa0d19a3d2af4fd2ef78d9b174e5cf9cd6bf31",
+    "checkout_note": "GitHub Actions tested the pull-request merge checkout; head_commit identifies the source change under review.",
+    "head_commit": "42ab5dcb302e31eb547dbb76999ebc6b8134527b",
+    "job": "https://github.com/glopyglerky/lustr/actions/runs/42510335761/job/128821816027",
+    "job_id": 128821816027,
+    "preserved_artifact_members_verified_byte_for_byte": true,
+    "repository": "glopyglerky/lustr",
+    "tested_checkout_commit": "5b52cfc2322f28f1d4edda7ef01cbd7b866e2d4f",
+    "workflow_run": "https://github.com/glopyglerky/lustr/actions/runs/42510335761",
+    "workflow_run_id": 42510335761
+  },
+  "raw_report": {
+    "artifact_member": "compiler-set-lust-project.json",
+    "compressed_bytes": 1537310,
+    "compressed_sha256": "cce6a1cc9cfab9b9b37d83b555b3cb2b279baed280c804e4c2bc2d6d027a6e85",
+    "gzip_mtime": 0,
+    "path": "lust-project-42ab5dc.json.gz",
+    "roundtrip_verified": true,
+    "uncompressed_bytes": 9960259,
+    "uncompressed_sha256": "2f333f2dab541f0fe951a44086771c32f13bf51fde82324773616b2af172f552"
+  },
+  "runtime_qualification": {
+    "built_compiler_probe_sets": 10,
+    "capabilities_equal_in_all_pairs": true,
+    "individual_probe_processes": 40,
+    "normalization": "only compiler/probe directory prefixes and version build ID; raw output is retained",
+    "normalized_outputs_independently_reconstructed": true,
+    "normalized_probe_results": {
+      "capabilities": {
+        "returncode": 0,
+        "stderr": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "bytes": 34432,
+          "sha256": "5957aa862fafe3bcebfc7c828471f6ffa8fb854e0fa22d07f725f6818591a979"
+        }
+      },
+      "supported": {
+        "returncode": 0,
+        "stderr": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "bytes": 3,
+          "sha256": "084c799cd551dd1d8d5c5f9a5d593b2e931f5e36122ee5c793c1d08a19839cc0"
+        }
+      },
+      "unsupported": {
+        "returncode": 1,
+        "stderr": {
+          "bytes": 241,
+          "sha256": "f9b269c62184164955a8bc2609d3a2466f3d7b03d3970257ac635b910618dd40"
+        },
+        "stdout": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "version": {
+        "returncode": 0,
+        "stderr": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stdout": {
+          "bytes": 24,
+          "sha256": "7c58dc6692c60f15448143b6469b76ba54e11cf5e0e8aaa6112a9c5078b07299"
+        }
+      }
+    },
+    "paired_comparisons": 5,
+    "passed": true,
+    "supported_stdout": "42\n",
+    "timing_scope": "All compiler runtime probes occur outside the reported Cargo build timing.",
+    "unsupported_diagnostic_code": "L0405"
+  },
+  "samples": [
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 7046064,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "0ea4df9aa14245c65a2357042906f64bd823836ae998da5f3b97c37105e5d522"
+        },
+        "lust-core": {
+          "bytes": 294717872,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "55280dd4991266168d91b01e22680666e2728aad7cf5d1f0ed5b8b870b5c628c"
+        }
+      },
+      "backend_proof_mode": "fresh_rustc_commands",
+      "backend_verified": true,
+      "build_elapsed_ns": 61797754510,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 24442,
+        "sha256": "eaafcc8f1d0610b185a7ed93356026d4543ab99ad608f04ba6f0b914bd8654a2"
+      },
+      "build_stdout": {
+        "bytes": 326889,
+        "sha256": "875a03ddb95acae0a301dc29b243f06394284c713508348aba34f430226a5f7f"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 11212495,
+        "supported": 68829851,
+        "unsupported": 6192100,
+        "version": 1135651
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 0,
+      "scenario": "cold",
+      "source_report_index": "samples[0]",
+      "warmup": false
+    },
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 6303176,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "c21f682111d0c2cc4b41bc1512325dd1527b1055f3aad7d2ebc3867c9ea69c55"
+        },
+        "lust-core": {
+          "bytes": 205860440,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "95ba61318f91824e642687b123e2a1356fd1b626a8837c9849c57e76132d1e7a"
+        }
+      },
+      "backend_proof_mode": "fresh_rustc_commands",
+      "backend_verified": true,
+      "build_elapsed_ns": 40369191533,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 26671,
+        "sha256": "70cee0a0de6a9d3ee672d8bc391be13be2b033c0e58b1afd537be2e700269031"
+      },
+      "build_stdout": {
+        "bytes": 327009,
+        "sha256": "8326cb3b4eba369952de103788e5123240372ea65642fbf6862e0c1564e4e904"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 11944685,
+        "supported": 53390715,
+        "unsupported": 8621126,
+        "version": 1057734
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 0,
+      "scenario": "cold",
+      "source_report_index": "samples[1]",
+      "warmup": false
+    },
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 6303176,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "c21f682111d0c2cc4b41bc1512325dd1527b1055f3aad7d2ebc3867c9ea69c55"
+        },
+        "lust-core": {
+          "bytes": 205860440,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "8b767c9004196e5b23f006a087a62ab96d65cb6e1ceef27201c783ca5093764a"
+        }
+      },
+      "backend_proof_mode": "fresh_rustc_commands",
+      "backend_verified": true,
+      "build_elapsed_ns": 38431304176,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 26671,
+        "sha256": "c9b9bbb3c090b426e31d25f949e2ed6444362570a30be8cc076a83b060069d45"
+      },
+      "build_stdout": {
+        "bytes": 327009,
+        "sha256": "8d99fe1c3beb1d23961f3bcda028f866fe6db33878b725fc7d631fbffaef923d"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 32272153,
+        "supported": 64830755,
+        "unsupported": 8125742,
+        "version": 3948274
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 1,
+      "scenario": "cold",
+      "source_report_index": "samples[2]",
+      "warmup": false
+    },
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 7046064,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "0ea4df9aa14245c65a2357042906f64bd823836ae998da5f3b97c37105e5d522"
+        },
+        "lust-core": {
+          "bytes": 294717872,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "cab72194b89685096aa5ba77ba86d6deb55e188d8ea0cc4528940cc98d8c083b"
+        }
+      },
+      "backend_proof_mode": "fresh_rustc_commands",
+      "backend_verified": true,
+      "build_elapsed_ns": 57273548001,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 24442,
+        "sha256": "8ba312253f51c08dba2f963400b8126e7beb878100daa2b1173f32af6f32ccc1"
+      },
+      "build_stdout": {
+        "bytes": 326889,
+        "sha256": "84e196e0144478ecded2a90427bfa8a4ae78da1026136fe4bc4edc81dbc85a46"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 11950900,
+        "supported": 50599436,
+        "unsupported": 4738613,
+        "version": 1081520
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 1,
+      "scenario": "cold",
+      "source_report_index": "samples[3]",
+      "warmup": false
+    },
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 7046064,
+          "fresh": true,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "0ea4df9aa14245c65a2357042906f64bd823836ae998da5f3b97c37105e5d522"
+        },
+        "lust-core": {
+          "bytes": 294717872,
+          "fresh": true,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "da58fcbb6d7d919bd59a49e9dcc5d9ef08f26d5b044391a462e0ce53808aa8ac"
+        }
+      },
+      "backend_proof_mode": "verified_warmup_artifacts",
+      "backend_verified": true,
+      "build_elapsed_ns": 19070308,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 282,
+        "sha256": "bdccd19ec9293c8e30f3df53d127a827a826f79a17e722894b0c7e5406352bf5"
+      },
+      "build_stdout": {
+        "bytes": 319629,
+        "sha256": "c08265992787aed5fca8a72c6973cc9f591be8383c71d5b864852ac05e444ef2"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 11466167,
+        "supported": 62561078,
+        "unsupported": 5617860,
+        "version": 1155692
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_report_index": "samples[4]",
+      "warmup": false
+    },
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 6303176,
+          "fresh": true,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "c21f682111d0c2cc4b41bc1512325dd1527b1055f3aad7d2ebc3867c9ea69c55"
+        },
+        "lust-core": {
+          "bytes": 205860440,
+          "fresh": true,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "072b87b70d20d3c28ad36ef2ea51f54fd3c5982ee9cd37444b0ac4bdab7aed0e"
+        }
+      },
+      "backend_proof_mode": "verified_warmup_artifacts",
+      "backend_verified": true,
+      "build_elapsed_ns": 22122677,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 534,
+        "sha256": "2ab1ebf5288de4a108079c7fe18004286d9e8204787e631521b509d24e412a96"
+      },
+      "build_stdout": {
+        "bytes": 319743,
+        "sha256": "7c83b707675bd290b5edae41d0faabad852a96f9397758b07284a6b2c2589182"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 13093039,
+        "supported": 57506023,
+        "unsupported": 8375181,
+        "version": 1125166
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_report_index": "samples[5]",
+      "warmup": false
+    },
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 6303176,
+          "fresh": true,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "c21f682111d0c2cc4b41bc1512325dd1527b1055f3aad7d2ebc3867c9ea69c55"
+        },
+        "lust-core": {
+          "bytes": 205860440,
+          "fresh": true,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "072b87b70d20d3c28ad36ef2ea51f54fd3c5982ee9cd37444b0ac4bdab7aed0e"
+        }
+      },
+      "backend_proof_mode": "verified_warmup_artifacts",
+      "backend_verified": true,
+      "build_elapsed_ns": 20174486,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 534,
+        "sha256": "2ab1ebf5288de4a108079c7fe18004286d9e8204787e631521b509d24e412a96"
+      },
+      "build_stdout": {
+        "bytes": 319743,
+        "sha256": "7c83b707675bd290b5edae41d0faabad852a96f9397758b07284a6b2c2589182"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 0,
+      "route": "coordinator",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 15476773,
+        "supported": 56152166,
+        "unsupported": 8647126,
+        "version": 1107861
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 1,
+      "scenario": "warm_noop",
+      "source_report_index": "samples[6]",
+      "warmup": false
+    },
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 7046064,
+          "fresh": true,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "0ea4df9aa14245c65a2357042906f64bd823836ae998da5f3b97c37105e5d522"
+        },
+        "lust-core": {
+          "bytes": 294717872,
+          "fresh": true,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "da58fcbb6d7d919bd59a49e9dcc5d9ef08f26d5b044391a462e0ce53808aa8ac"
+        }
+      },
+      "backend_proof_mode": "verified_warmup_artifacts",
+      "backend_verified": true,
+      "build_elapsed_ns": 19992861,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 282,
+        "sha256": "bdccd19ec9293c8e30f3df53d127a827a826f79a17e722894b0c7e5406352bf5"
+      },
+      "build_stdout": {
+        "bytes": 319629,
+        "sha256": "c701c5575736c2420a58728103a17739f2e25a56e2fc365be110fc3b466f2c9d"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 1,
+      "route": "cargo",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 9175454,
+        "supported": 55869018,
+        "unsupported": 5129665,
+        "version": 1110143
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 1,
+      "scenario": "warm_noop",
+      "source_report_index": "samples[7]",
+      "warmup": false
+    }
+  ],
+  "schema_version": 1,
+  "selection_plan": {
+    "args": [
+      "build",
+      "-Zcodegen-backend",
+      "--config",
+      "profile.dev.codegen-backend=\"/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so\"",
+      "--config",
+      "profile.test.codegen-backend=\"/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so\"",
+      "--manifest-path",
+      "/home/runner/work/lustr/lustr/Cargo.toml",
+      "--bins",
+      "--target-dir",
+      "/tmp/cargo-lust-project-bench-4h6y8hkt/plan-target",
+      "--jobs",
+      "1",
+      "--locked",
+      "--offline",
+      "-vv",
+      "--color",
+      "never",
+      "--message-format=json"
+    ],
+    "codegen_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+    "environment": {},
+    "environment_remove": [],
+    "experimental": true,
+    "format_version": 1,
+    "program": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/cargo",
+    "reason": "experimental configured Cranelift dev/test backend; no panic or feature flags are changed, and backend correctness requires qualification",
+    "requested_engine": "cranelift",
+    "selected_engine": "cranelift"
+  },
+  "settings": {
+    "jobs": 1,
+    "low_sample": true,
+    "samples_per_scenario": 2,
+    "scenarios": [
+      "cold",
+      "warm_noop"
+    ]
+  },
+  "source": {
+    "commit": "5b52cfc2322f28f1d4edda7ef01cbd7b866e2d4f",
+    "inventory_fingerprint_recomputed": true,
+    "project": "/home/runner/work/lustr/lustr",
+    "scope": "tracked working files and submodule gitlink identities; no application source edits",
+    "sha256": "75b8d950aa397c1dbdc1b5b5082dedcc942aa4c4fc85b048f89ea9fb1fc730ae",
+    "status": "",
+    "tracked_file_count": 13004
+  },
+  "statistics": {
+    "cold": {
+      "baseline_over_coordinator_median": 1.5110476328818394,
+      "metric": "Cargo build wall time",
+      "routes": {
+        "cargo": {
+          "max_ns": 61797754510,
+          "median_ns": 59535651255.5,
+          "min_ns": 57273548001,
+          "p95_ns": 61797754510,
+          "samples": 2
+        },
+        "coordinator": {
+          "max_ns": 40369191533,
+          "median_ns": 39400247854.5,
+          "min_ns": 38431304176,
+          "p95_ns": 40369191533,
+          "samples": 2
+        }
+      }
+    },
+    "warm_noop": {
+      "baseline_over_coordinator_median": 0.9235411131474704,
+      "metric": "Cargo build wall time",
+      "routes": {
+        "cargo": {
+          "max_ns": 19992861,
+          "median_ns": 19531584.5,
+          "min_ns": 19070308,
+          "p95_ns": 19992861,
+          "samples": 2
+        },
+        "coordinator": {
+          "max_ns": 22122677,
+          "median_ns": 21148581.5,
+          "min_ns": 20174486,
+          "p95_ns": 22122677,
+          "samples": 2
+        }
+      }
+    }
+  },
+  "statistics_recomputed_from_measured_samples": true,
+  "test_harness": {
+    "environment_overrides": {
+      "RUST_MIN_STACK": "268435456"
+    },
+    "errors": [],
+    "passed": true,
+    "reason": "src/pool.rs STACK_SIZE gives production compiler threads 256 MiB because default 2 MiB stacks overflow on accepted deep ASTs; apply the same minimum to both unit suites only"
+  },
+  "test_qualification": [
+    {
+      "argv": [
+        "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/cargo",
+        "test",
+        "--manifest-path",
+        "/home/runner/work/lustr/lustr/Cargo.toml",
+        "--bins",
+        "--target-dir",
+        "/tmp/cargo-lust-project-bench-4h6y8hkt/qualification-7oae5k75/cargo",
+        "--jobs",
+        "1",
+        "--locked",
+        "--offline",
+        "-vv",
+        "--color",
+        "never",
+        "--no-fail-fast",
+        "--",
+        "--nocapture"
+      ],
+      "backend_verified": true,
+      "elapsed_ns": 94218910876,
+      "environment_overrides": {
+        "RUST_MIN_STACK": "268435456"
+      },
+      "errors": [],
+      "expected_backend": "llvm",
+      "passed": true,
+      "returncode": 0,
+      "route": "cargo",
+      "source_report_index": "test_qualification[0]",
+      "stderr": {
+        "bytes": 56925,
+        "sha256": "eb347068e429bceb6506b9b8039376c5b14efd1391fb2bfc8628f860171b2333"
+      },
+      "stdout": {
+        "bytes": 33014,
+        "sha256": "ed2f2048c97a2dff93d97de4ec586d768b04dd2f20dd46dae34fe3bdb946ee71"
+      },
+      "test_counts": [
+        {
+          "failed": 0,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 11
+        },
+        {
+          "failed": 0,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 380
+        }
+      ],
+      "timed_out": false,
+      "timing_role": "Untimed prequalification; excluded from build benchmark statistics.",
+      "total_tests_passed": 391,
+      "verified_root_crates": [
+        "lust",
+        "lust_core"
+      ]
+    },
+    {
+      "argv": [
+        "/home/runner/work/lustr/lustr/tools/cargo-lust/target/release/cargo-lust",
+        "--engine",
+        "cranelift",
+        "test",
+        "--manifest-path",
+        "/home/runner/work/lustr/lustr/Cargo.toml",
+        "--bins",
+        "--target-dir",
+        "/tmp/cargo-lust-project-bench-4h6y8hkt/qualification-7oae5k75/coordinator",
+        "--jobs",
+        "1",
+        "--locked",
+        "--offline",
+        "-vv",
+        "--color",
+        "never",
+        "--no-fail-fast",
+        "--",
+        "--nocapture"
+      ],
+      "backend_verified": true,
+      "elapsed_ns": 81763117183,
+      "environment_overrides": {
+        "RUST_MIN_STACK": "268435456"
+      },
+      "errors": [],
+      "expected_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+      "passed": true,
+      "returncode": 0,
+      "route": "coordinator",
+      "source_report_index": "test_qualification[1]",
+      "stderr": {
+        "bytes": 59222,
+        "sha256": "180c0f3f4f576a4809cfc91d3d5cd10dc42279687eb91622a2f5c3efa935cde4"
+      },
+      "stdout": {
+        "bytes": 33020,
+        "sha256": "29f461366ec028d544990479ebd017aa376d55c3784ce58f5d141975015ead41"
+      },
+      "test_counts": [
+        {
+          "failed": 0,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 11
+        },
+        {
+          "failed": 0,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 380
+        }
+      ],
+      "timed_out": false,
+      "timing_role": "Untimed prequalification; excluded from build benchmark statistics.",
+      "total_tests_passed": 391,
+      "verified_root_crates": [
+        "lust",
+        "lust_core"
+      ]
+    }
+  ],
+  "tools": {
+    "paths": {
+      "cargo": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/cargo",
+      "rustc": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustc",
+      "rustdoc": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustdoc"
+    },
+    "requested_toolchain": "nightly-2026-11-05",
+    "versions": {
+      "cargo": {
+        "bytes": 353,
+        "sha256": "1029e1b49d1580c4f58bcec24d211ba020cfe08a2ae633680fe42747fcfe605e",
+        "text": "cargo 1.101.0-nightly (3c747ea3e 2026-11-03)\nrelease: 1.101.0-nightly\ncommit-hash: 3c747ea3ead23951c1b43a5edfcbdb449135ddeb\ncommit-date: 2026-11-03\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]\n"
+      },
+      "rustc": {
+        "bytes": 214,
+        "sha256": "81fd6af93c2bd154de55b222c511d08ffd1cf7404833ad856d0da9bdbe94b2b4",
+        "text": "rustc 1.101.0-nightly (2d20b42b8 2026-11-04)\nbinary: rustc\ncommit-hash: 2d20b42b883dcfc014f3c2c56081eeb6091c2179\ncommit-date: 2026-11-04\nhost: x86_64-unknown-linux-gnu\nrelease: 1.101.0-nightly\nLLVM version: 23.1.5\n"
+      },
+      "rustdoc": {
+        "bytes": 218,
+        "sha256": "4a0137550c65502114e036ec8db073d91ebfa1122f36dda9c0c3f48a74129871",
+        "text": "rustdoc 1.101.0-nightly (2d20b42b8 2026-11-04)\nbinary: rustdoc\ncommit-hash: 2d20b42b883dcfc014f3c2c56081eeb6091c2179\ncommit-date: 2026-11-04\nhost: x86_64-unknown-linux-gnu\nrelease: 1.101.0-nightly\nLLVM version: 23.1.5\n"
+      }
+    }
+  },
+  "unchanged_input_check_count": 37,
+  "warmups": [
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 7046064,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "0ea4df9aa14245c65a2357042906f64bd823836ae998da5f3b97c37105e5d522"
+        },
+        "lust-core": {
+          "bytes": 294717872,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "da58fcbb6d7d919bd59a49e9dcc5d9ef08f26d5b044391a462e0ce53808aa8ac"
+        }
+      },
+      "backend_proof_mode": "fresh_rustc_commands",
+      "backend_verified": true,
+      "build_elapsed_ns": 57560499846,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 23837,
+        "sha256": "b4febd8641d12aa767dac530deecad4071e343e3e87f9e914b6a87794c65c95f"
+      },
+      "build_stdout": {
+        "bytes": 326669,
+        "sha256": "cd0c96595c27456e62bcdde9a1a46e46e4866a21334552ed20792cf3edbb0114"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 0,
+      "route": "cargo",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 10947154,
+        "supported": 53793978,
+        "unsupported": 6402092,
+        "version": 1145988
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_report_index": "warmups[0]",
+      "warmup": true
+    },
+    {
+      "artifacts": {
+        "lust": {
+          "bytes": 6303176,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "c21f682111d0c2cc4b41bc1512325dd1527b1055f3aad7d2ebc3867c9ea69c55"
+        },
+        "lust-core": {
+          "bytes": 205860440,
+          "fresh": false,
+          "profile": {
+            "debug_assertions": true,
+            "debuginfo": 2,
+            "opt_level": "0",
+            "overflow_checks": true,
+            "test": false
+          },
+          "sha256": "072b87b70d20d3c28ad36ef2ea51f54fd3c5982ee9cd37444b0ac4bdab7aed0e"
+        }
+      },
+      "backend_proof_mode": "fresh_rustc_commands",
+      "backend_verified": true,
+      "build_elapsed_ns": 39580485635,
+      "build_returncode": 0,
+      "build_stderr": {
+        "bytes": 26066,
+        "sha256": "17edb1f9cf2090c6fec686185e4c42e0da111d14406e0e17df3cdf3cd2a4eb57"
+      },
+      "build_stdout": {
+        "bytes": 326789,
+        "sha256": "b4ec3a7228abaadaa41a450d0b4e1524322addddcff712d1916234edbcb2c165"
+      },
+      "build_timed_out": false,
+      "order_in_pair": 1,
+      "route": "coordinator",
+      "runtime_passed": true,
+      "runtime_probe_elapsed_ns": {
+        "capabilities": 13337321,
+        "supported": 55973177,
+        "unsupported": 8611747,
+        "version": 1120660
+      },
+      "runtime_probe_returncodes": {
+        "capabilities": 0,
+        "supported": 0,
+        "unsupported": 1,
+        "version": 0
+      },
+      "sample": 0,
+      "scenario": "warm_noop",
+      "source_report_index": "warmups[1]",
+      "warmup": true
+    }
+  ],
+  "workload": "unchanged root Lust compiler"
+}

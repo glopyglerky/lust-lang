@@ -1,13 +1,17 @@
 name: CI
 
-# There is no git remote yet, so this workflow has never run. It is kept
-# valid (actionlint) and runs the same scripts/ci.sh gate as a dev box.
+# Run the same upstream scripts/ci.sh gate as a dev box.
 on:
   push:
+    branches: [next]
   pull_request:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   linux-x86_64:
@@ -41,7 +45,8 @@ jobs:
         run: bash scripts/ci.sh
 
   macos-arm64:
-    runs-on: macos-14
+    # macOS 14 runners retired on 2026-11-02. macos-15 is the supported Arm64 image.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Cache pinned tcc

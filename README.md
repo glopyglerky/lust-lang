@@ -1,3 +1,31 @@
+# Lustr compiler set
+
+This fork develops a coordinated compiler set for unchanged, complete Rust projects. It preserves upstream Lust's fast subset compiler and adds one rustc-based complement before considering more independent frontends.
+
+**Current implementation:** [`cargo-lust`](tools/cargo-lust) is an independently installable Rust coordinator. Its default path preserves Cargo/rustc compatibility. An explicit Cranelift path experiments with faster development code generation, and an explicit Lust path uses the existing compiler for a complete supported target. Automatic Lust/rustc artifact mixing and an independent full Rust frontend are not implemented. This initial integration does not establish a general speedup.
+
+The pinned Cranelift backend includes panic-unwinding support. On Linux x86_64, it built the unchanged upstream Lust compiler in a median **39.40 seconds**, compared with **59.54 seconds** for Cargo/LLVM: **33.8% less development-build time** in two interleaved pairs. Both variants passed all 391 upstream unit tests and matched the runtime probes. No-op builds were slightly slower. This is an initial result on one project; see the [qualified measurements and limits](docs/compiler-set/verification.md#qualified-full-project-result).
+
+To try the development backend, start in a checkout of this fork. The setup helper currently supports Linux x86_64:
+
+```sh
+cargo install --path tools/cargo-lust --locked
+bash tools/cargo-lust/scripts/build-cranelift.sh
+source tools/cargo-lust/target/complement/env.sh
+
+cd /path/to/your/rust/project
+cargo lust --engine cranelift build --workspace
+cargo lust --engine cranelift test --workspace
+```
+
+Use `cargo lust build` for the default Cargo compatibility route. Backend setup is a one-time build, and its generated environment selects the matching installed nightly explicitly. Release/custom profiles retain the selected Cargo configuration.
+
+Read the [coordinator usage](tools/cargo-lust/README.md), [compiler design](docs/compiler-set/design.md), [implementation roadmap](docs/compiler-set/roadmap.md), and [verification results](docs/compiler-set/verification.md). Automatic selection, native Lust/Rust artifact interoperability, and broader project and target qualification remain open.
+
+## Upstream Lust
+
+The upstream README follows. Its measurements and supported-subset statements describe upstream Lust, not the new coordinator or a general full-Rust speedup.
+
 <img src="assets/icon.svg" width="64" height="64" alt="Lust logo: a pink crab with a smiling face">
 
 # lust-lang

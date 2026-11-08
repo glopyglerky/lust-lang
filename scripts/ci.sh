@@ -31,6 +31,9 @@ else
 fi
 cargo build --release
 
+step "image startup"
+python3 scripts/test-image-startup.py
+
 step "diagnostic code registry"
 scripts/check-codes.sh
 
