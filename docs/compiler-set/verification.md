@@ -79,7 +79,9 @@ This establishes the exercised Rust crate boundary with a shared compiler toolch
 
 The [follow-up run at `98139b0`](https://github.com/glopyglerky/lustr/actions/runs/42507594541/job/128813495199) caught a regression while replacing inherited backend environment variables with command-scoped Cargo configuration. Cargo discarded configuration supplied before the subcommand when the caller also supplied `--config` after it. The mixed-backend test found that the application and procedural macro had no backend flag, although the package override still selected LLVM for the library. The workflow failed before either benchmark ran; the passing output-only checks from that run do not establish the requested compiler selection.
 
-The correction places generated configuration after `build`, `run`, or `test`, before the caller's arguments. Ordinary Cargo tests reproduce the precedence rule with stable optimization settings. Optional execution tests and both benchmark runners inspect actual compiler invocations, rather than relying on a requested plan or a successful program alone. The corrected code requires a new hosted qualification.
+The correction places generated configuration after `build`, `run`, or `test`, before the caller's arguments. Ordinary Cargo tests reproduce the precedence rule with stable optimization settings. Optional execution tests and both benchmark runners inspect actual compiler invocations, rather than relying on a requested plan or a successful program alone.
+
+The [corrected run at `219b915`](https://github.com/glopyglerky/lustr/actions/runs/42508899383/job/128817456020) passed all three actual Cranelift gates, including the mixed-backend override and nested Cargo. It also compiled the coordinator through its own Cranelift route and passed all 29 ordinary tests. Linux, macOS, Windows, Rust 1.85, and actual native Lust checks passed in the same workflow. Doctests execute successfully, but their internal rustdoc compilation is not independently covered by the rustc-command backend assertions.
 
 ### Inherited upstream platform failure
 
@@ -125,6 +127,22 @@ For this fixture, empty-target compilation took 21.6% less time. The edit differ
 
 The [summary and raw samples](evidence/cranelift-linux-summary.json), [compressed full report](evidence/cranelift-linux.json.gz), and [backend provenance](evidence/cranelift-linux-backend.json) preserve the result beyond the Actions artifact's retention period. The downloaded artifact ZIP's SHA-256 matched GitHub's reported digest before these records were saved.
 
+### Backend-verified follow-up
+
+The `219b915` run repeated the same six-pair fixture workload after the Cargo configuration correction. It checked actual compiler invocations for fresh crates and retained artifact hashes for cached crates, including the build script and procedural macro. All 34 pairs passed: 60 measured observations and eight excluded warmup observations. All 68 backend-verification records passed, covering 140 fresh compiler commands and 108 cached-artifact checks. The same pinned nightly and custom backend source were used within each comparison, on a four-CPU Linux x86_64 runner reporting an AMD EPYC 7763.
+
+| Scenario | Cargo/LLVM median | Coordinator/Cranelift median | Cargo / coordinator |
+| --- | ---: | ---: | ---: |
+| Empty target directory | 559.07 ms | 434.40 ms | 1.287 |
+| Warm, no source change | 17.74 ms | 18.60 ms | 0.954 |
+| Function body edit | 139.95 ms | 138.27 ms | 1.012 |
+| Function signature edit | 151.85 ms | 146.15 ms | 1.039 |
+| Invalid type edit | 50.27 ms | 52.07 ms | 0.965 |
+
+Empty-target compilation took 22.3% less time in this run. Warm edits changed little, while unchanged builds and rejection were slower. These remain small-fixture observations with six samples per route and scenario. No statistical significance, general warm-edit improvement, or production speedup follows from them. Backend verification and artifact hashing are outside the reported build timing; Cargo's verbose command output is included equally in both routes.
+
+The [follow-up summary](evidence/cranelift-linux-219b915-summary.json), [complete compressed report](evidence/cranelift-linux-219b915.json.gz), and [backend identity](evidence/cranelift-linux-219b915-backend.json) retain the new result. Historical measurements above remain separate. The complete workflow still failed its substantial-project verification step, as described below; the successful small-fixture step is not a successful whole-workflow result.
+
 ## Remaining qualification
 
 ### First substantial-project run
@@ -133,11 +151,17 @@ The [initial unchanged-Lust project run](https://github.com/glopyglerky/lustr/ac
 
 The benchmark's follow-up configuration uses the same 256 MiB virtual thread stack that upstream Lust already gives its production compiler workers (`src/pool.rs::STACK_SIZE`), applied only to both unit-suite process trees. The parser limits and tests are unchanged.
 
-Pinned Cargo `3c747ea3ead23951c1b43a5edfcbdb449135ddeb` also enables a new build-directory layout, while unchanged Lust assumes the old locations and names when reading build-script output. This one project benchmark therefore applies Cargo's exact, temporary `__CARGO_TEMPORARY_BUILD_DIR_NEW_LAYOUT_OPT_OUT=1` compatibility setting equally to both routes. It verifies the Cargo commit before using that private setting and records the override. Normal coordinator builds receive neither benchmark compatibility setting. The source-backed layout diagnosis still requires the full follow-up suites to pass; the original test's detailed assertion was lost when the later parser test aborted the process.
+Pinned Cargo `3c747ea3ead23951c1b43a5edfcbdb449135ddeb` also enables a new build-directory layout, while unchanged Lust assumes the old locations and names when reading build-script output. This one project benchmark therefore applies Cargo's exact, temporary `__CARGO_TEMPORARY_BUILD_DIR_NEW_LAYOUT_OPT_OUT=1` compatibility setting equally to both routes. It verifies the Cargo commit before using that private setting and records the override. Normal coordinator builds receive neither benchmark compatibility setting. The original test's detailed assertion was lost when the later parser test aborted the process. The subsequent unit suites at `219b915` passed under these explicit shared settings.
 
 See the pinned Cargo sources for [layout](https://github.com/rust-lang/cargo/blob/3c747ea3ead23951c1b43a5edfcbdb449135ddeb/src/compiler/layout.rs), [build-script filenames and output](https://github.com/rust-lang/cargo/blob/3c747ea3ead23951c1b43a5edfcbdb449135ddeb/src/compiler/custom_build.rs), and [the compatibility setting](https://github.com/rust-lang/cargo/blob/3c747ea3ead23951c1b43a5edfcbdb449135ddeb/src/workspace/features.rs).
 
 Review also identified that a planned backend is insufficient proof of execution when Cargo rustflags can override it. The substantial-project runner now verifies the fresh rustc command for each root binary, rejects hidden or ambiguous backend selection, and ties no-op samples to the verified warmup binaries' hashes. Both unit suites run once before any measured builds, preserving failures and withholding ratios unless both succeed.
+
+### Subsequent unit qualification and log-parser correction
+
+At `219b915`, both unit-suite processes returned zero and each reported 11 client tests plus 380 core tests passing. The benchmark nevertheless stopped before timing because its compiler-command verifier rejected a quoted multiline package description in Cargo's verbose output for the `cc` dependency. This was a framing error in the verifier: one Cargo command spanned several physical lines. The raw report contains zero timed samples and no performance statistics.
+
+The [qualification summary](evidence/lust-project-219b915-qualification-summary.json) and [complete compressed report](evidence/lust-project-219b915-qualification.json.gz) preserve both successful test-process results and the failed overall benchmark. The corrected shared verifier preserves complete quoted commands across newlines and continues rejecting malformed or truncated command records. Replaying it against the unchanged saved logs confirms the root test binaries' LLVM and exact custom-backend selections for both 391-test suites. The summary records this retrospective verification separately, including the verifier's source hashes; it does not change the original report's failed status. The corrected runner requires a fresh full benchmark run before any substantial-project speedup can be claimed.
 
 ### Broader coverage
 

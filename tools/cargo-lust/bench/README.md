@@ -60,6 +60,10 @@ retain artifacts from a verified compilation. A missing, overridden, or
 ambiguous backend selection fails the measurement before any speed ratios are
 reported.
 
+Both runners share the same command parser. It preserves quoted multiline
+arguments and environment values in Cargo's verbose display, including package
+descriptions, while rejecting truncated or ambiguous command records.
+
 Add `--build-and-run` to summarize compilation plus executable runtime. Every
 successful build executes the fixture even without this flag, because a faster
 build with wrong behavior is not a qualifying result. Without the flag, those

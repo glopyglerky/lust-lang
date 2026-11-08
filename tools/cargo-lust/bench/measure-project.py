@@ -16,7 +16,6 @@ import math
 import os
 from pathlib import Path
 import re
-import shlex
 import shutil
 import statistics
 import subprocess
@@ -29,7 +28,6 @@ import measure as common
 SCENARIOS = ("cold", "warm_noop")
 BINS = {"lust", "lust-core"}
 ROOT_CRATES = {"lust", "lust_core"}
-ENV_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
 UNIT_TEST_STACK = str(256 << 20)
 PINNED_CARGO_COMMIT = "3c747ea3ead23951c1b43a5edfcbdb449135ddeb"
 CARGO_LAYOUT_OPT_OUT = "__CARGO_TEMPORARY_BUILD_DIR_NEW_LAYOUT_OPT_OUT"
@@ -190,74 +188,9 @@ def arguments(operation: str, project: Path, target: Path, jobs: int, messages: 
 
 
 def verify_backend(row: dict, rustc: str, backend: str | None, result: dict) -> None:
-    """Verify fresh root compiler commands, retaining partial failure evidence.
-
-    Cargo's POSIX verbose display exposes flags after config and environment
-    resolution. A coordinator plan alone cannot detect a later rustflag that
-    replaces the selected backend. Wrappers and response files are refused
-    because the displayed arguments would not establish effective rustc flags.
-    """
-    result.update({"mode": "fresh_rustc_commands", "expected_backend": backend or "llvm", "commands": [], "passed": False})
-    seen = set()
-    for line in encoded(row["stderr"]).decode("utf-8").splitlines():
-        displayed = line.strip()
-        if not displayed.startswith("Running `"):
-            continue
-        if not displayed.endswith("`"):
-            raise ProjectError("Cargo emitted an incomplete verbose command; the backend cannot be verified.")
-        command = displayed[len("Running `"):-1]
-        try:
-            tokens = shlex.split(command, posix=True)
-        except ValueError as error:
-            result["unparsed_command"] = command
-            raise ProjectError(f"Cannot parse Cargo's verbose command: {error}") from error
-        start = 0
-        while start < len(tokens) and ENV_ASSIGNMENT.match(tokens[start]):
-            start += 1
-        argv = tokens[start:]
-        names = []
-        for index, token in enumerate(argv[1:], 1):
-            if token == "--crate-name":
-                names.append(argv[index + 1] if index + 1 < len(argv) else "")
-            elif token.startswith("--crate-name="):
-                names.append(token.partition("=")[2])
-        if not ROOT_CRATES.intersection(names):
-            continue
-        evidence = {"displayed_command": command, "tokens": tokens, "crate_names": names, "backend_selectors": [], "passed": False}
-        result["commands"].append(evidence)
-        if len(names) != 1 or names[0] in seen:
-            raise ProjectError("Cargo emitted duplicate or ambiguous root crate compiler commands.")
-        crate = names[0]
-        if not argv or argv[0] != rustc:
-            raise ProjectError(f"{crate} did not invoke the selected rustc directly; compiler wrappers cannot be qualified by this benchmark.")
-        if any(token.startswith("@") for token in argv[1:]):
-            raise ProjectError(f"{crate} uses a rustc response file; its effective backend cannot be verified.")
-        index = 1
-        while index < len(argv):
-            token = argv[index]
-            payload = None
-            if token == "-Z":
-                index += 1
-                if index >= len(argv):
-                    raise ProjectError(f"{crate} has an incomplete -Z argument.")
-                payload = argv[index]
-            elif token.startswith("-Z"):
-                payload = token[2:].removeprefix("=")
-            if payload is not None:
-                key, separator, value = payload.partition("=")
-                if key.replace("_", "-") == "codegen-backend":
-                    if not separator or not value:
-                        raise ProjectError(f"{crate} has an incomplete backend selector.")
-                    evidence["backend_selectors"].append(value)
-                elif "codegen-backend" in payload.replace("_", "-").replace(" ", ""):
-                    raise ProjectError(f"{crate} has an ambiguous backend selector.")
-            index += 1
-        selectors = evidence["backend_selectors"]
-        valid = selectors == [backend] if backend is not None else selectors in ([], ["llvm"])
-        if not valid:
-            raise ProjectError(f"{crate} used backend selectors {selectors!r}; expected {'exactly ' + repr(backend) if backend else 'default LLVM or exactly llvm'}.")
-        seen.add(crate)
-        evidence["passed"] = True
+    """Require fresh root commands using the shared parser and backend checks."""
+    result["mode"] = "fresh_rustc_commands"
+    seen = common.verify_backend_commands(row, rustc, backend, result, ROOT_CRATES)
     if seen != ROOT_CRATES:
         raise ProjectError(f"Cargo did not expose fresh rustc commands for both root binaries; verified {sorted(seen)!r}.")
     result["passed"] = True

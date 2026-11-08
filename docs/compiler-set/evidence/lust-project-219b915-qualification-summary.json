@@ -1,0 +1,522 @@
+{
+  "backend_report": {
+    "artifact_member": "tools/cargo-lust/target/complement/backend.json",
+    "bytes": 3035,
+    "copied_byte_for_byte": true,
+    "path": "cranelift-linux-219b915-backend.json",
+    "sha256": "ebb8bcfb2a97c8d0333364014ff2c9a08d315da190a307c2612e96d8b782fd74"
+  },
+  "backend_verification": {
+    "attempted_routes": 2,
+    "failure_analysis": "Each route contains one Cargo verbose command whose CARGO_PKG_DESCRIPTION spans physical lines. The line-based verifier rejected that command as incomplete. The raw report retained the two successful process exits and matching test summaries but did not complete backend verification.",
+    "multiline_verbose_command_starts_by_route": {
+      "cargo": 1,
+      "coordinator": 1
+    },
+    "passed_routes": 0,
+    "verified_command_count": 0
+  },
+  "created_utc": "2026-11-08T18:16:13.239342+00:00",
+  "environment": {
+    "cargo_layout_compatibility": {
+      "actual_cargo_commit": "3c747ea3ead23951c1b43a5edfcbdb449135ddeb",
+      "applied": true,
+      "environment_overrides": {
+        "__CARGO_TEMPORARY_BUILD_DIR_NEW_LAYOUT_OPT_OUT": "1"
+      },
+      "inherited_value": null,
+      "reason": "This pinned Cargo changed build-script artifact layout; unchanged Lust expects the previous layout. The private temporary Cargo opt-out restores that layout without source edits.",
+      "required_cargo_commit": "3c747ea3ead23951c1b43a5edfcbdb449135ddeb",
+      "scope": "real-project benchmark only; both routes and their subprocesses, including prefetch, unit suites, builds, and compiler probes"
+    },
+    "preserved_build_flags": {},
+    "profile": "project's default dev profile; no optimization, panic, debug, feature, or source overrides",
+    "removed_backend_variables": [
+      "LUST_CRANELIFT_BACKEND"
+    ],
+    "stack_scope": "inherited RUST_MIN_STACK is preserved for timed builds and compiler probes; only the two unit-suite process trees receive the explicit shared test_harness override"
+  },
+  "errors": [
+    "Unit qualification failed before timing: cargo: Cargo emitted an incomplete verbose command; the backend cannot be verified.; coordinator: Cargo emitted an incomplete verbose command; the backend cannot be verified."
+  ],
+  "excluded_warmup_sample_count": 0,
+  "finished_utc": "2026-11-08T18:21:09.646897+00:00",
+  "hardware": {
+    "available_cpus": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "logical_cpus": 4,
+    "machine": "x86_64",
+    "python": "3.12.3",
+    "release": "7.0.0-1017-azure",
+    "system": "Linux"
+  },
+  "input_checks": [
+    {
+      "stage": "before prefetch",
+      "unchanged": true
+    },
+    {
+      "stage": "after prefetch",
+      "unchanged": true
+    },
+    {
+      "stage": "before cargo unit suite",
+      "unchanged": true
+    },
+    {
+      "stage": "after cargo unit suite",
+      "unchanged": true
+    },
+    {
+      "stage": "before coordinator unit suite",
+      "unchanged": true
+    },
+    {
+      "stage": "after coordinator unit suite",
+      "unchanged": true
+    }
+  ],
+  "inputs": {
+    "backend": {
+      "bytes": 15411184,
+      "path": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so",
+      "sha256": "ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f"
+    },
+    "coordinator": {
+      "path": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/release/cargo-lust",
+      "sha256": "cd413ee160e9d76d4624275df386d6013930b4104a37a2c77392920ac0bf10a4"
+    },
+    "probes": {
+      "supported.rs": "64d06c8ab8146cbe2000172ed693574f50ee8538a9604bb5e7af4adc49d4e0ba",
+      "unsupported.rs": "70dc76f5cba9211760fdd1b9cf438f4e4dce25bc2cbf3a806cb20e9de3165bb3"
+    },
+    "scripts": {
+      "measure-project.py": "614b531e52ba14bc7dadfff6d626825b45ac3347a387278d72cd5cf3745958b6",
+      "measure.py": "db8283dd157c6c81ff5fb7e2dabb4302a6de200bcfe35e0bafda64e067ffb29c"
+    },
+    "tcc": {
+      "file_count": 23,
+      "path": "/home/runner/work/lustr/lustr/third_party/tcc",
+      "sha256": "adda6b01015de9fd9ebd65c7ed56389776225fc4d60deaaec71ee69ec1873611"
+    }
+  },
+  "limits": [
+    "The original project qualification did not pass because backend verification failed in its log parser. A separately identified retrospective replay now verifies the recorded root backend commands; the original benchmark still produced no timing samples.",
+    "Each route reported 11 plus 380 passed tests, with no failed, ignored, measured, or filtered-out tests.",
+    "No timed build samples, warmups, or comparison ratios were produced. Qualification process durations must not be presented as benchmark results.",
+    "Both unit-suite process trees used a 256 MiB RUST_MIN_STACK setting matching Lust production worker stacks; it was not applied to timed builds or compiler probes.",
+    "Both routes and their subprocesses used the pinned-Cargo temporary old-build-layout opt-out in this benchmark only; source and default dev profile were unchanged.",
+    "Successful unit processes do not establish full Rust conformance, arbitrary mixed-backend interoperability, or a speedup on this project."
+  ],
+  "measured_sample_count": 0,
+  "method": {
+    "backend_proof": "fresh root rustc commands for builds and tests must select exactly the configured candidate library or default/explicit LLVM for baseline; warm binary hashes must match verified warmup",
+    "cold": "empty per-route target directories; installed compiler, dependency sources, and OS caches remain warm",
+    "interleaving": "alternate first route in each measured pair",
+    "limits": "one real compiler project and limited probes; no broad conformance or production performance claim",
+    "normalization": "only compiler/probe directory prefixes and version build ID; raw output is retained",
+    "p95": "nearest-rank; with 2 samples, p95 is the maximum",
+    "prefetch": "locked dependencies before timing; subsequent Cargo commands offline",
+    "runtime": "outside build timing; fresh identical-path probe directory and disabled Lust daemon/cache",
+    "test_suite": "one untimed cargo test --bins --no-fail-fast -- --nocapture per route before timing, in separate empty targets; require both success and equal test counts",
+    "timed_operation": "cargo build --bins -vv --color never, default dev profile",
+    "warm": "one excluded pair, then unchanged builds with retained targets"
+  },
+  "pair_count": 0,
+  "passed": false,
+  "provenance": {
+    "artifact": "https://github.com/glopyglerky/lustr/actions/runs/42508899383/artifacts/13629260105",
+    "artifact_id": 13629260105,
+    "artifact_members_verified_byte_for_byte": true,
+    "artifact_zip_bytes": 1075243,
+    "artifact_zip_sha256": "7c467cce153c9dbf3441d2192a0aa40088a43f8cf269375d87df5edcbd973fd5",
+    "checkout_note": "GitHub Actions tested the pull-request merge checkout; head_commit identifies the source change under review.",
+    "head_commit": "219b9154e4f185e158c967c53f6831b7f3fb453b",
+    "job": "https://github.com/glopyglerky/lustr/actions/runs/42508899383/job/128817456020",
+    "job_id": 128817456020,
+    "repository": "glopyglerky/lustr",
+    "tested_checkout_commit": "a34e6b8660bb2962929e6fa2e4f77177d55456b9",
+    "workflow_run": "https://github.com/glopyglerky/lustr/actions/runs/42508899383",
+    "workflow_run_id": 42508899383
+  },
+  "raw_report": {
+    "artifact_member": "compiler-set-lust-project.json",
+    "compressed_bytes": 1016334,
+    "compressed_sha256": "130e7b242e42c98a203e58251564030637cb9a4504d22516334658ae9dbf5ab9",
+    "gzip_mtime": 0,
+    "path": "lust-project-219b915-qualification.json.gz",
+    "roundtrip_verified": true,
+    "uncompressed_bytes": 4530007,
+    "uncompressed_sha256": "4b894cfaede0c6eeb063a6c94c18115419d47a48ca410ca0a6b3f237d395d640"
+  },
+  "retrospective_backend_verification": {
+    "created_utc": "2026-11-08T18:29:15.089545+00:00",
+    "interpretation": "The recorded LLVM and configured Cranelift root test compilations are now verified, and their original processes each passed 391 tests. This retrospective proof does not change the original failed qualification result or supply missing benchmark measurements.",
+    "original_benchmark_passed": false,
+    "original_measured_sample_count": 0,
+    "original_statistics": {},
+    "parser_entry_points": [
+      "measure.cargo_verbose_commands",
+      "measure-project.verify_backend"
+    ],
+    "parser_files": [
+      {
+        "bytes": 36297,
+        "path": "tools/cargo-lust/bench/measure.py",
+        "sha256": "b4f095967941e2daeca378f4aea2ff9f245bc4b6766f0c5c86e01962fd74b294"
+      },
+      {
+        "bytes": 32227,
+        "path": "tools/cargo-lust/bench/measure-project.py",
+        "sha256": "0b10ad630a17825f3b4c52334836942af93986711d0ba6d20ec80e5231d00964"
+      }
+    ],
+    "passed": true,
+    "routes": [
+      {
+        "complete_verbose_command_count": 13,
+        "expected_backend": "llvm",
+        "original_process_returncode": 0,
+        "original_test_counts": [
+          [
+            11,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            380,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "original_tests_passed": 391,
+        "passed": true,
+        "root_commands": [
+          {
+            "compiler_argument_count": 45,
+            "compiler_executable": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustc",
+            "crate": "lust",
+            "displayed_command_sha256": "dfbbb2700e595092eb739f2626de32b89c6a5a744906ac69eec3dbd475118037",
+            "expected_backend": "llvm",
+            "observed_backend_selectors": [],
+            "passed": true,
+            "test_harness": true
+          },
+          {
+            "compiler_argument_count": 45,
+            "compiler_executable": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustc",
+            "crate": "lust_core",
+            "displayed_command_sha256": "b308eb72e4888fc4f56b7064a25a57278f1506d6ce372ae9d4f452d748c91070",
+            "expected_backend": "llvm",
+            "observed_backend_selectors": [],
+            "passed": true,
+            "test_harness": true
+          }
+        ],
+        "route": "cargo",
+        "source_report_index": "test_qualification[0]",
+        "source_stderr_sha256": "a1bfb247cd4e76a1bb4df42007fdf1f3aa372c04b874e34aeba869d79f9aad87",
+        "verified_root_command_count": 2
+      },
+      {
+        "complete_verbose_command_count": 13,
+        "expected_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so",
+        "original_process_returncode": 0,
+        "original_test_counts": [
+          [
+            11,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            380,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "original_tests_passed": 391,
+        "passed": true,
+        "root_commands": [
+          {
+            "compiler_argument_count": 47,
+            "compiler_executable": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustc",
+            "crate": "lust_core",
+            "displayed_command_sha256": "190a0707b74bbde4b747136ef5f62d1c2f797f8cb1c5cf44cee0fe38f42d916f",
+            "expected_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so",
+            "observed_backend_selectors": [
+              "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so"
+            ],
+            "passed": true,
+            "test_harness": true
+          },
+          {
+            "compiler_argument_count": 47,
+            "compiler_executable": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustc",
+            "crate": "lust",
+            "displayed_command_sha256": "75d728dd216bfd34b68ae1ca6203f63199430fdd19a5eff7e0954cf586c63a1f",
+            "expected_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so",
+            "observed_backend_selectors": [
+              "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so"
+            ],
+            "passed": true,
+            "test_harness": true
+          }
+        ],
+        "route": "coordinator",
+        "source_report_index": "test_qualification[1]",
+        "source_stderr_sha256": "797e58fb8575ed58276f5ce19ebd5126fca65787c12c6149c91bd54fd5385a6c",
+        "verified_root_command_count": 2
+      }
+    ],
+    "scope": "Replayed the corrected shared parser and root backend verifier against the untouched original stderr records. No compiler, test, or benchmark was rerun.",
+    "source_report": "lust-project-219b915-qualification.json.gz",
+    "source_report_uncompressed_sha256": "4b894cfaede0c6eeb063a6c94c18115419d47a48ca410ca0a6b3f237d395d640",
+    "verified_root_command_count": 4,
+    "verified_route_count": 2
+  },
+  "schema_version": 1,
+  "selection_plan": {
+    "args": [
+      "build",
+      "-Zcodegen-backend",
+      "--config",
+      "profile.dev.codegen-backend=\"/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so\"",
+      "--config",
+      "profile.test.codegen-backend=\"/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so\"",
+      "--manifest-path",
+      "/home/runner/work/lustr/lustr/Cargo.toml",
+      "--bins",
+      "--target-dir",
+      "/tmp/cargo-lust-project-bench-epesne6k/plan-target",
+      "--jobs",
+      "1",
+      "--locked",
+      "--offline",
+      "-vv",
+      "--color",
+      "never",
+      "--message-format=json"
+    ],
+    "codegen_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so",
+    "environment": {},
+    "environment_remove": [],
+    "experimental": true,
+    "format_version": 1,
+    "program": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/cargo",
+    "reason": "experimental configured Cranelift dev/test backend; no panic or feature flags are changed, and backend correctness requires qualification",
+    "requested_engine": "cranelift",
+    "selected_engine": "cranelift"
+  },
+  "settings": {
+    "jobs": 1,
+    "low_sample": true,
+    "samples_per_scenario": 2,
+    "scenarios": [
+      "cold",
+      "warm_noop"
+    ]
+  },
+  "source": {
+    "commit": "a34e6b8660bb2962929e6fa2e4f77177d55456b9",
+    "project": "/home/runner/work/lustr/lustr",
+    "scope": "tracked working files and submodule gitlink identities; no application source edits",
+    "sha256": "ec75addf797f3b8a279d48c7c24224602fe8f5f703d530113c5febcf8c9940b8",
+    "status": "",
+    "tracked_file_count": 12999
+  },
+  "statistics": {},
+  "status": "unit processes succeeded; backend-command verification failed before benchmark timing",
+  "test_harness": {
+    "environment_overrides": {
+      "RUST_MIN_STACK": "268435456"
+    },
+    "errors": [
+      "cargo: Cargo emitted an incomplete verbose command; the backend cannot be verified.",
+      "coordinator: Cargo emitted an incomplete verbose command; the backend cannot be verified."
+    ],
+    "passed": false,
+    "reason": "src/pool.rs STACK_SIZE gives production compiler threads 256 MiB because default 2 MiB stacks overflow on accepted deep ASTs; apply the same minimum to both unit suites only"
+  },
+  "test_qualification": [
+    {
+      "argv": [
+        "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/cargo",
+        "test",
+        "--manifest-path",
+        "/home/runner/work/lustr/lustr/Cargo.toml",
+        "--bins",
+        "--target-dir",
+        "/tmp/cargo-lust-project-bench-epesne6k/qualification-6dcwxxky/cargo",
+        "--jobs",
+        "1",
+        "--locked",
+        "--offline",
+        "-vv",
+        "--color",
+        "never",
+        "--no-fail-fast",
+        "--",
+        "--nocapture"
+      ],
+      "backend_verification": {
+        "commands": [],
+        "expected_backend": "llvm",
+        "mode": "fresh_rustc_commands",
+        "passed": false
+      },
+      "cwd": "/home/runner/work/lustr/lustr",
+      "elapsed_ns": 149067704078,
+      "environment_overrides": {
+        "RUST_MIN_STACK": "268435456"
+      },
+      "errors": [
+        "Cargo emitted an incomplete verbose command; the backend cannot be verified."
+      ],
+      "inherited_RUST_MIN_STACK": null,
+      "passed": false,
+      "process_succeeded": true,
+      "purpose": "cargo actual root cargo test --bins",
+      "returncode": 0,
+      "route": "cargo",
+      "stderr": {
+        "bytes": 56925,
+        "sha256": "a1bfb247cd4e76a1bb4df42007fdf1f3aa372c04b874e34aeba869d79f9aad87"
+      },
+      "stdout": {
+        "bytes": 33014,
+        "sha256": "acfebac6f4b7128dc05b547cf0d11354c0cdd8c6b7bd03a848d0497e4c38fbab"
+      },
+      "test_counts": [
+        {
+          "failed": 0,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 11
+        },
+        {
+          "failed": 0,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 380
+        }
+      ],
+      "test_result_lines": [
+        "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "test result: ok. 380 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 54.18s"
+      ],
+      "timed_out": false,
+      "timing_role": "untimed prequalification process; this elapsed time is not a benchmark sample",
+      "total_tests_passed": 391
+    },
+    {
+      "argv": [
+        "/home/runner/work/lustr/lustr/tools/cargo-lust/target/release/cargo-lust",
+        "--engine",
+        "cranelift",
+        "test",
+        "--manifest-path",
+        "/home/runner/work/lustr/lustr/Cargo.toml",
+        "--bins",
+        "--target-dir",
+        "/tmp/cargo-lust-project-bench-epesne6k/qualification-6dcwxxky/coordinator",
+        "--jobs",
+        "1",
+        "--locked",
+        "--offline",
+        "-vv",
+        "--color",
+        "never",
+        "--no-fail-fast",
+        "--",
+        "--nocapture"
+      ],
+      "backend_verification": {
+        "commands": [],
+        "expected_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/ecc3c0245c5b6ff7972d000945e3db04fb94bb0a47d5ce229be1299eda5c821f/librustc_codegen_cranelift.so",
+        "mode": "fresh_rustc_commands",
+        "passed": false
+      },
+      "cwd": "/home/runner/work/lustr/lustr",
+      "elapsed_ns": 141720530824,
+      "environment_overrides": {
+        "RUST_MIN_STACK": "268435456"
+      },
+      "errors": [
+        "Cargo emitted an incomplete verbose command; the backend cannot be verified."
+      ],
+      "inherited_RUST_MIN_STACK": null,
+      "passed": false,
+      "process_succeeded": true,
+      "purpose": "coordinator actual root cargo test --bins",
+      "returncode": 0,
+      "route": "coordinator",
+      "stderr": {
+        "bytes": 59446,
+        "sha256": "797e58fb8575ed58276f5ce19ebd5126fca65787c12c6149c91bd54fd5385a6c"
+      },
+      "stdout": {
+        "bytes": 33020,
+        "sha256": "4632b5433e421452897345c88541fd6c53086e9d071bd48a2b8cf9ffc8b6f816"
+      },
+      "test_counts": [
+        {
+          "failed": 0,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 11
+        },
+        {
+          "failed": 0,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 380
+        }
+      ],
+      "test_result_lines": [
+        "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 380 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 71.76s"
+      ],
+      "timed_out": false,
+      "timing_role": "untimed prequalification process; this elapsed time is not a benchmark sample",
+      "total_tests_passed": 391
+    }
+  ],
+  "tools": {
+    "paths": {
+      "cargo": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/cargo",
+      "rustc": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustc",
+      "rustdoc": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustdoc"
+    },
+    "requested_toolchain": "nightly-2026-11-05",
+    "versions": {
+      "cargo": {
+        "bytes": 353,
+        "sha256": "1029e1b49d1580c4f58bcec24d211ba020cfe08a2ae633680fe42747fcfe605e",
+        "text": "cargo 1.101.0-nightly (3c747ea3e 2026-11-03)\nrelease: 1.101.0-nightly\ncommit-hash: 3c747ea3ead23951c1b43a5edfcbdb449135ddeb\ncommit-date: 2026-11-03\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]\n"
+      },
+      "rustc": {
+        "bytes": 214,
+        "sha256": "81fd6af93c2bd154de55b222c511d08ffd1cf7404833ad856d0da9bdbe94b2b4",
+        "text": "rustc 1.101.0-nightly (2d20b42b8 2026-11-04)\nbinary: rustc\ncommit-hash: 2d20b42b883dcfc014f3c2c56081eeb6091c2179\ncommit-date: 2026-11-04\nhost: x86_64-unknown-linux-gnu\nrelease: 1.101.0-nightly\nLLVM version: 23.1.5\n"
+      },
+      "rustdoc": {
+        "bytes": 218,
+        "sha256": "4a0137550c65502114e036ec8db073d91ebfa1122f36dda9c0c3f48a74129871",
+        "text": "rustdoc 1.101.0-nightly (2d20b42b8 2026-11-04)\nbinary: rustdoc\ncommit-hash: 2d20b42b883dcfc014f3c2c56081eeb6091c2179\ncommit-date: 2026-11-04\nhost: x86_64-unknown-linux-gnu\nrelease: 1.101.0-nightly\nLLVM version: 23.1.5\n"
+      }
+    }
+  },
+  "workload": "unchanged root Lust compiler"
+}

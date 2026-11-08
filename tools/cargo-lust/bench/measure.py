@@ -33,6 +33,7 @@ PROBE = "pub fn benchmark_value() -> u32 { 41 } // BENCH_PROBE"
 SCENARIOS = ("cold", "warm_noop", "body_edit", "signature_edit", "rejected_edit")
 FIXTURE_CRATES = {"fixture_app", "fixture_core", "fixture_derive", "build_script_build"}
 ENV_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+RUNNING_COMMAND = re.compile(r"^[ \t]*Running `", re.MULTILINE)
 PROFILE = {
     "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
     "CARGO_PROFILE_DEV_DEBUG": "2",
@@ -235,24 +236,63 @@ def selected_plan(coordinator: str, cargo: str, project: Path, root: Path, env: 
         raise BenchmarkError("The candidate plan does not select the expected command-scoped backend for the measured operation.")
 
 
-def verify_backend_commands(build: dict, rustc: str, backend: str | None, result: dict) -> set[str]:
-    """Check Cargo's effective rustc argv, after config and flag resolution."""
-    result.update({"expected_backend": backend or "llvm", "commands": [], "artifacts": [], "passed": False})
-    output = build["stderr"]
+def cargo_verbose_commands(output: dict):
+    """Yield complete Cargo command bodies and tokens from its Linux display.
+
+    Argument and environment values can contain quoted literal newlines or
+    backticks. Only an unquoted, unescaped backtick followed by the end of its
+    physical line closes Cargo's outer display delimiter.
+    """
     stderr = output["text"] if "text" in output else base64.b64decode(output["base64"], validate=True).decode("utf-8")
+    cursor = 0
+    while match := RUNNING_COMMAND.search(stderr, cursor):
+        start = position = match.end()
+        quote = None
+        while position < len(stderr):
+            char = stderr[position]
+            if quote == "'":
+                if char == "'":
+                    quote = None
+            elif char == "\\":
+                if position + 1 == len(stderr):
+                    raise BenchmarkError("Cargo emitted an unfinished escape in a verbose command.")
+                position += 2
+                continue
+            elif quote == '"':
+                if char == '"':
+                    quote = None
+            elif char in ("'", '"'):
+                quote = char
+            elif char == "`":
+                end = stderr.find("\n", position + 1)
+                if end == -1:
+                    end = len(stderr)
+                if stderr[position + 1:end].strip(" \t\r"):
+                    raise BenchmarkError("Cargo emitted ambiguous text after a verbose command's closing delimiter.")
+                command = stderr[start:position]
+                try:
+                    tokens = shlex.split(command, posix=True)
+                except ValueError as error:
+                    raise BenchmarkError(f"Cannot parse Cargo's verbose command: {error}") from error
+                if not tokens:
+                    raise BenchmarkError("Cargo emitted an empty verbose command.")
+                cursor = end + 1
+                yield command, tokens
+                break
+            elif char == "\n":
+                raise BenchmarkError("Cargo emitted an unquoted newline before a verbose command's closing delimiter.")
+            position += 1
+        else:
+            raise BenchmarkError("Cargo emitted an incomplete verbose command or unfinished quote.")
+
+
+def verify_backend_commands(build: dict, rustc: str, backend: str | None, result: dict,
+                            crates: set[str] | None = None) -> set[str]:
+    """Check Cargo's effective rustc argv, after config and flag resolution."""
+    crates = FIXTURE_CRATES if crates is None else crates
+    result.update({"expected_backend": backend or "llvm", "commands": [], "passed": False})
     seen = set()
-    for line in stderr.splitlines():
-        displayed = line.strip()
-        if not displayed.startswith("Running `"):
-            continue
-        if not displayed.endswith("`"):
-            raise BenchmarkError("Cargo emitted an incomplete verbose command; backend verification failed.")
-        command = displayed[len("Running `"):-1]
-        try:
-            tokens = shlex.split(command, posix=True)
-        except ValueError as error:
-            result["unparsed_command"] = command
-            raise BenchmarkError(f"Cannot parse Cargo's verbose command: {error}") from error
+    for command, tokens in cargo_verbose_commands(build["stderr"]):
         start = 0
         while start < len(tokens) and ENV_ASSIGNMENT.match(tokens[start]):
             start += 1
@@ -263,12 +303,12 @@ def verify_backend_commands(build: dict, rustc: str, backend: str | None, result
                 names.append(argv[index + 1] if index + 1 < len(argv) else "")
             elif token.startswith("--crate-name="):
                 names.append(token.partition("=")[2])
-        if not FIXTURE_CRATES.intersection(names):
+        if not crates.intersection(names):
             continue
         evidence = {"displayed_command": command, "tokens": tokens, "crate_names": names, "backend_selectors": [], "passed": False}
         result["commands"].append(evidence)
         if len(names) != 1 or names[0] in seen:
-            raise BenchmarkError("Cargo emitted duplicate or ambiguous fixture compiler commands.")
+            raise BenchmarkError("Cargo emitted duplicate or ambiguous compiler commands.")
         crate = names[0]
         if not argv or argv[0] != rustc:
             raise BenchmarkError(f"{crate} did not invoke the selected rustc directly; wrapper arguments cannot prove its backend.")
@@ -314,6 +354,7 @@ def verify_backend(build: dict, artifacts: list[dict], rustc: str, backend: str 
     else:
         required = set()
     result["required_fresh_crates"] = sorted(required)
+    result["artifacts"] = []
     seen = verify_backend_commands(build, rustc, backend, result)
     if not required.issubset(seen):
         raise BenchmarkError(f"Missing fresh compiler commands for {sorted(required - seen)!r}.")

@@ -2,6 +2,22 @@
 
 This roadmap preserves the full Rust acceleration goal. Each item has an executable acceptance condition. The initial coordinator is a starting point; tasks remain open until their own code and evidence exist.
 
+## Implementation status
+
+The [verification report](verification.md) identifies the exact tested commits and retains the measurements and failures.
+
+| Item | Current status |
+| --- | --- |
+| 1. Cargo entry point | Implemented. Ordinary Cargo qualification passes on Linux, macOS, Windows, and Rust 1.85. Actual native Lust and pinned Cranelift execution gates pass on Linux x86_64. |
+| 2. Backend qualification | Partial. Panic recovery, destructors, full-language fixtures, mixed LLVM/Cranelift crates, and nested Cargo pass with the pinned backend. The broader feature and platform matrix below remains open. |
+| 3. Workload measurements | Small-fixture evidence is retained, including regressions. An unchanged-Lust workload and strict qualification runner are implemented; a successful substantial-project result must be recorded before claiming its speedup. |
+| 4. Automatic Lust routing | Open. Native Lust selection remains explicit and applies to complete supported targets. |
+| 5. Shared semantic interface | Open. The Cranelift integration shares rustc's metadata and frontend; it does not expose that interface to native Lust. |
+| 6. Lust generation from full Rust IR | Open. Native Lust does not participate inside Cargo's Rust library graph. |
+| 7. Persistent full Rust frontend | Open. The complement still invokes rustc for full-language analysis. |
+| 8. Additional compiler workers | No further independent frontend selected. A split requires the measurements and equivalence checks below. |
+| 9. Installation and release qualification | Partial. The coordinator installs independently, and the pinned backend has a Linux setup helper. A complete supported release bundle and broader host/target qualification remain open. |
+
 ## 1. Cargo entry point
 
 Deliver a dependency-free, independently installable `cargo-lust` binary. Default builds use the selected Cargo toolchain with its exact arguments. Expose explicit Rust, Cranelift, and whole-target Lust paths, and a plan view that explains the decision.
