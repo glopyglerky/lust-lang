@@ -308,3 +308,38 @@ withheld ratios. The [failure summary](evidence/lust-project-a626367-fcntl-failu
 and [unaltered report](evidence/lust-project-a626367-fcntl-failure.json.gz)
 preserve the diagnostics and complete run. The earlier `42ab5dc` measurements
 remain historical evidence for that tested source and configuration.
+
+### Variadic declaration correction
+
+The failure came from Lust's declarations in `src/client.rs`, `src/daemon.rs`
+and `src/image.rs`: each declared three fixed `fcntl` arguments. The actual C
+interface has two fixed arguments followed by a variadic argument list. The
+standard library imports that correct signature, so the conflicting declaration
+can fail when both occur in one Cranelift codegen unit. The three declarations
+now match the C interface; production call sites and their values are unchanged.
+
+A minimal real-compiler reproducer fails with the old declaration and passes
+after changing only that declaration. Both LLVM and Cranelift were exercised,
+including the compiler's default codegen settings. The new
+[`fcntl` fixture](../../tools/cargo-lust/fixtures/fcntl-variadic) checks both
+argument counts, descriptor flag restoration, file cloning, reads and standard
+library drops. The actual backend gate verifies fresh compiler commands for
+the program and test harness. No panic, debug-assertion or codegen-unit change
+is used to make the regression pass.
+
+After the correction, a fresh default-development build of both native Lust
+binaries through Cranelift succeeded. The generated compiler passed startup,
+supported-program execution and unsupported-program rejection. All 391 native
+unit tests passed under LLVM, 33 coordinator tests passed on Linux, and all four
+actual Cranelift qualification tests passed. Independent review found no
+remaining blocker in the declaration correction.
+
+The [correction summary](evidence/fcntl-correction-2026-11-08-summary.json) and
+[raw evidence](evidence/fcntl-correction-2026-11-08.json.gz) retain source hashes,
+minimal reproducer results, full native build output and validation logs.
+The local full build used Cargo's default incremental behavior, while the
+earlier failing CI command did not include incremental code generation. The
+standalone reproducer also verifies the declaration correction without
+incremental compilation. This is correctness evidence, not a new performance
+measurement. Future benchmark runs identify the corrected fork source rather
+than labeling it unchanged upstream Lust.

@@ -6,6 +6,10 @@ This fork develops a coordinated compiler set for unchanged, complete Rust proje
 
 The pinned Cranelift backend includes panic-unwinding support. On Linux x86_64, it built the unchanged upstream Lust compiler in a median **39.40 seconds**, compared with **59.54 seconds** for Cargo/LLVM: **33.8% less development-build time** in two interleaved pairs. Both variants passed all 391 upstream unit tests and matched the runtime probes. No-op builds were slightly slower. This is an initial result on one project; see the [qualified measurements and limits](docs/compiler-set/verification.md#qualified-full-project-result).
 
+Those timings describe the retained `42ab5dc` benchmark. The continuation also
+corrects native platform startup and three variadic C declarations exposed by
+later qualification; new benchmarks must identify that corrected source.
+
 To try the development backend, start in a checkout of this fork. The setup helper currently supports Linux x86_64:
 
 ```sh
