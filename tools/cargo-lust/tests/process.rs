@@ -128,7 +128,8 @@ fn process_contract_preserves_arguments_io_failure_and_toolchain_routing() {
     }
 
     // A failed Cranelift build is returned once; it never triggers a Cargo or
-    // Lust retry. Only the backend profile settings differ from the input.
+    // Lust retry. Backend profile settings are command arguments, never new
+    // inherited environment variables that could break nested Cargo commands.
     let backend = scratch.0.join("mock backend with spaces.so");
     fs::write(&backend, "process fixture only; never loaded as a backend").unwrap();
     let fast_log = scratch.0.join("cranelift.log");
@@ -143,8 +144,35 @@ fn process_contract_preserves_arguments_io_failure_and_toolchain_routing() {
     let observed = record(&fast_log);
     assert_eq!(observed.lines().filter(|line| *line == "invocation").count(), 1);
     for key in ["CARGO_PROFILE_DEV_CODEGEN_BACKEND", "CARGO_PROFILE_TEST_CODEGEN_BACKEND"] {
-        assert!(observed.contains(&format!("env {key}={}\n", hex(backend.as_os_str().as_encoded_bytes()))));
+        assert!(observed.contains(&format!("env {key}=<unset>\n")));
     }
+    let backend_literal = format!("\"{}\"", backend.to_str().unwrap().replace('\\', "\\\\").replace('"', "\\\""));
+    let expected_arguments = [
+        "-Zcodegen-backend".to_owned(),
+        "--config".to_owned(),
+        format!("profile.dev.codegen-backend={backend_literal}"),
+        "--config".to_owned(),
+        format!("profile.test.codegen-backend={backend_literal}"),
+        "build".to_owned(),
+    ];
+    let received: Vec<_> = observed.lines().filter_map(|line| line.strip_prefix("arg=")).collect();
+    let expected: Vec<_> = expected_arguments.iter().map(|argument| hex(argument.as_bytes())).collect();
+    assert_eq!(received, expected);
+
+    // Existing caller configuration remains inherited. The coordinator scopes
+    // its own choice rather than globally removing the caller's environment.
+    let inherited_log = scratch.0.join("inherited-backend.log");
+    let inherited = coordinator(&executable, &inherited_log)
+        .env("LUST_CRANELIFT_BACKEND", &backend)
+        .env("CARGO_PROFILE_DEV_CODEGEN_BACKEND", "caller-dev")
+        .env("CARGO_PROFILE_TEST_CODEGEN_BACKEND", "caller-test")
+        .args(["--engine", "cranelift", "build"])
+        .output()
+        .unwrap();
+    assert_eq!(inherited.status.code(), Some(23));
+    let observed = record(&inherited_log);
+    assert!(observed.contains(&format!("env CARGO_PROFILE_DEV_CODEGEN_BACKEND={}\n", hex(b"caller-dev"))));
+    assert!(observed.contains(&format!("env CARGO_PROFILE_TEST_CODEGEN_BACKEND={}\n", hex(b"caller-test"))));
 
     let release_log = scratch.0.join("release.log");
     let release = coordinator(&executable, &release_log).args(["--engine", "cranelift", "build", "-vr"]).output().unwrap();
@@ -173,7 +201,10 @@ fn process_contract_preserves_arguments_io_failure_and_toolchain_routing() {
         .unwrap();
     assert!(dry.status.success());
     assert!(dry.stderr.is_empty());
-    assert!(String::from_utf8(dry.stdout).unwrap().contains("\"selected_engine\":\"cranelift\""));
+    let json = String::from_utf8(dry.stdout).unwrap();
+    assert!(json.contains("\"selected_engine\":\"cranelift\""));
+    assert!(json.contains(&format!("\"codegen_backend\":{backend_literal}")));
+    assert!(json.contains("\"environment\":{}"));
     assert!(!dry_log.exists(), "a plan executed the project tool");
 
     // Missing configuration or a named stock backend cannot quietly compile
@@ -248,6 +279,19 @@ fn process_contract_preserves_arguments_io_failure_and_toolchain_routing() {
             let native = coordinator(&native_path, &path_log).arg("build").output().unwrap();
             assert_eq!(native.status.code(), Some(23));
             assert_eq!(record(&path_log).lines().filter(|line| *line == "invocation").count(), 1);
+
+            // Ordinary OS arguments and executable names remain lossless, but
+            // Cargo's TOML profile value cannot represent non-UTF-8 path bytes.
+            let invalid_backend_log = scratch.0.join("non-utf8-backend.log");
+            let invalid_backend = coordinator(&executable, &invalid_backend_log)
+                .env("LUST_CRANELIFT_BACKEND", &native_path)
+                .args(["--engine", "cranelift", "plan", "build"])
+                .output()
+                .unwrap();
+            assert_eq!(invalid_backend.status.code(), Some(2));
+            assert!(invalid_backend.stdout.is_empty());
+            assert!(String::from_utf8_lossy(&invalid_backend.stderr).contains("valid UTF-8"));
+            assert!(!invalid_backend_log.exists());
         }
 
         let signal_log = scratch.0.join("signal.log");

@@ -221,8 +221,9 @@ def selected_plan(coordinator: str, cargo: str, project: Path, root: Path, env: 
         raise BenchmarkError(f"Expected engine {expected}, but coordinator plan selected {plan.get('selected_engine')}.")
     if plan.get("program") != cargo:
         raise BenchmarkError("The candidate plan does not use the baseline's exact Cargo executable.")
-    if expected == "cranelift" and plan.get("environment", {}).get("CARGO_PROFILE_DEV_CODEGEN_BACKEND") != env.get("LUST_CRANELIFT_BACKEND"):
-        raise BenchmarkError("The candidate plan does not select the configured Cranelift library for the measured dev profile.")
+    expected_backend = env.get("LUST_CRANELIFT_BACKEND") if expected == "cranelift" else None
+    if "codegen_backend" not in plan or plan["codegen_backend"] != expected_backend or (expected == "cranelift" and not expected_backend):
+        raise BenchmarkError("The candidate plan does not select the expected command-scoped backend for the measured operation.")
 
 
 def sample(route: str, prefix: list[str], project: Path, target: Path, run_dir: Path, source_hash: str,

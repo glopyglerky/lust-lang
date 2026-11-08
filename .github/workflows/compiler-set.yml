@@ -77,10 +77,7 @@ jobs:
       - name: Verify full Rust, panic recovery, and tests
         run: cargo +nightly-2026-11-05 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test qualification actual_cranelift -- --ignored --nocapture
       - name: Compile and test the coordinator with its complementary backend
-        run: |
-          CARGO_PROFILE_DEV_CODEGEN_BACKEND="$LUST_CRANELIFT_BACKEND" \
-          CARGO_PROFILE_TEST_CODEGEN_BACKEND="$LUST_CRANELIFT_BACKEND" \
-          cargo +nightly-2026-11-05 test -Zcodegen-backend --manifest-path tools/cargo-lust/Cargo.toml --target-dir tools/cargo-lust/target/complement-tests --locked --offline
+        run: tools/cargo-lust/target/debug/cargo-lust --engine cranelift test --manifest-path tools/cargo-lust/Cargo.toml --target-dir tools/cargo-lust/target/complement-tests --locked --offline
       - name: Build coordinator for measurement
         run: cargo +nightly-2026-11-05 build --manifest-path tools/cargo-lust/Cargo.toml --release --locked --offline
       - name: Measure the selected backend

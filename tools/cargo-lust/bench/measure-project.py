@@ -16,6 +16,7 @@ import math
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import statistics
 import subprocess
@@ -27,6 +28,11 @@ import measure as common
 
 SCENARIOS = ("cold", "warm_noop")
 BINS = {"lust", "lust-core"}
+ROOT_CRATES = {"lust", "lust_core"}
+ENV_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+UNIT_TEST_STACK = str(256 << 20)
+PINNED_CARGO_COMMIT = "3c747ea3ead23951c1b43a5edfcbdb449135ddeb"
+CARGO_LAYOUT_OPT_OUT = "__CARGO_TEMPORARY_BUILD_DIR_NEW_LAYOUT_OPT_OUT"
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures" / "subset"
 TEST_SUMMARY = re.compile(r"test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored; (\d+) measured; (\d+) filtered out;")
 
@@ -102,6 +108,10 @@ def tracked_files(project: Path, git: str) -> list[dict]:
     return records
 
 
+def rustflag_variable(name: str) -> bool:
+    return name == "RUSTFLAGS" or (name.startswith("CARGO_") and name.endswith("RUSTFLAGS"))
+
+
 def backend_environment() -> tuple[dict[str, str], list[str]]:
     env = os.environ.copy()
     removed = []
@@ -109,8 +119,8 @@ def backend_environment() -> tuple[dict[str, str], list[str]]:
         if (name.startswith("CARGO_PROFILE_") and name.endswith("_CODEGEN_BACKEND")) or name == "LUST_CRANELIFT_BACKEND":
             removed.append(name)
             del env[name]
-    for name in ("RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS"):
-        if "codegen-backend" in env.get(name, ""):
+    for name, value in env.items():
+        if rustflag_variable(name) and "codegen-backend" in value.replace("_", "-"):
             raise ProjectError(f"{name} selects a backend; remove that override so the baseline can use its ordinary backend.")
     return env, sorted(removed)
 
@@ -155,11 +165,139 @@ def resolve_tools(project: Path, env: dict[str, str], report: dict, timeout: flo
     return result
 
 
+def configure_cargo_layout(env: dict[str, str], report: dict) -> None:
+    version = report["tools"]["versions"]["cargo"].get("text", "")
+    commit = next((line.removeprefix("commit-hash: ") for line in version.splitlines() if line.startswith("commit-hash: ")), None)
+    compatibility = {"environment_overrides": {CARGO_LAYOUT_OPT_OUT: "1"}, "inherited_value": env.get(CARGO_LAYOUT_OPT_OUT), "required_cargo_commit": PINNED_CARGO_COMMIT, "actual_cargo_commit": commit, "scope": "real-project benchmark only; both routes and their subprocesses, including prefetch, unit suites, builds, and compiler probes", "reason": "This pinned Cargo changed build-script artifact layout; unchanged Lust expects the previous layout. The private temporary Cargo opt-out restores that layout without source edits.", "applied": False}
+    report["environment"]["cargo_layout_compatibility"] = compatibility
+    if commit != PINNED_CARGO_COMMIT:
+        raise ProjectError(f"The real-project layout compatibility switch is qualified only for Cargo commit {PINNED_CARGO_COMMIT}; use the pinned nightly-2026-11-05 toolchain.")
+    env[CARGO_LAYOUT_OPT_OUT] = "1"
+    compatibility["applied"] = True
+
+
 def arguments(operation: str, project: Path, target: Path, jobs: int, messages: bool = True) -> list[str]:
     args = [operation, "--manifest-path", str(project / "Cargo.toml"), "--bins", "--target-dir", str(target), "--jobs", str(jobs), "--locked", "--offline"]
+    if operation in ("build", "test"):
+        args.extend(["-vv", "--color", "never"])
+    if operation == "test":
+        args.append("--no-fail-fast")
     if messages:
         args.append("--message-format=json")
+    if operation == "test":
+        args.extend(["--", "--nocapture"])
     return args
+
+
+def verify_backend(row: dict, rustc: str, backend: str | None, result: dict) -> None:
+    """Verify fresh root compiler commands, retaining partial failure evidence.
+
+    Cargo's POSIX verbose display exposes flags after config and environment
+    resolution. A coordinator plan alone cannot detect a later rustflag that
+    replaces the selected backend. Wrappers and response files are refused
+    because the displayed arguments would not establish effective rustc flags.
+    """
+    result.update({"mode": "fresh_rustc_commands", "expected_backend": backend or "llvm", "commands": [], "passed": False})
+    seen = set()
+    for line in encoded(row["stderr"]).decode("utf-8").splitlines():
+        displayed = line.strip()
+        if not displayed.startswith("Running `"):
+            continue
+        if not displayed.endswith("`"):
+            raise ProjectError("Cargo emitted an incomplete verbose command; the backend cannot be verified.")
+        command = displayed[len("Running `"):-1]
+        try:
+            tokens = shlex.split(command, posix=True)
+        except ValueError as error:
+            result["unparsed_command"] = command
+            raise ProjectError(f"Cannot parse Cargo's verbose command: {error}") from error
+        start = 0
+        while start < len(tokens) and ENV_ASSIGNMENT.match(tokens[start]):
+            start += 1
+        argv = tokens[start:]
+        names = []
+        for index, token in enumerate(argv[1:], 1):
+            if token == "--crate-name":
+                names.append(argv[index + 1] if index + 1 < len(argv) else "")
+            elif token.startswith("--crate-name="):
+                names.append(token.partition("=")[2])
+        if not ROOT_CRATES.intersection(names):
+            continue
+        evidence = {"displayed_command": command, "tokens": tokens, "crate_names": names, "backend_selectors": [], "passed": False}
+        result["commands"].append(evidence)
+        if len(names) != 1 or names[0] in seen:
+            raise ProjectError("Cargo emitted duplicate or ambiguous root crate compiler commands.")
+        crate = names[0]
+        if not argv or argv[0] != rustc:
+            raise ProjectError(f"{crate} did not invoke the selected rustc directly; compiler wrappers cannot be qualified by this benchmark.")
+        if any(token.startswith("@") for token in argv[1:]):
+            raise ProjectError(f"{crate} uses a rustc response file; its effective backend cannot be verified.")
+        index = 1
+        while index < len(argv):
+            token = argv[index]
+            payload = None
+            if token == "-Z":
+                index += 1
+                if index >= len(argv):
+                    raise ProjectError(f"{crate} has an incomplete -Z argument.")
+                payload = argv[index]
+            elif token.startswith("-Z"):
+                payload = token[2:].removeprefix("=")
+            if payload is not None:
+                key, separator, value = payload.partition("=")
+                if key.replace("_", "-") == "codegen-backend":
+                    if not separator or not value:
+                        raise ProjectError(f"{crate} has an incomplete backend selector.")
+                    evidence["backend_selectors"].append(value)
+                elif "codegen-backend" in payload.replace("_", "-").replace(" ", ""):
+                    raise ProjectError(f"{crate} has an ambiguous backend selector.")
+            index += 1
+        selectors = evidence["backend_selectors"]
+        valid = selectors == [backend] if backend is not None else selectors in ([], ["llvm"])
+        if not valid:
+            raise ProjectError(f"{crate} used backend selectors {selectors!r}; expected {'exactly ' + repr(backend) if backend else 'default LLVM or exactly llvm'}.")
+        seen.add(crate)
+        evidence["passed"] = True
+    if seen != ROOT_CRATES:
+        raise ProjectError(f"Cargo did not expose fresh rustc commands for both root binaries; verified {sorted(seen)!r}.")
+    result["passed"] = True
+
+
+def inherit_backend_proof(current: dict, warmup: dict, result: dict) -> None:
+    result.update({"mode": "verified_warmup_artifacts", "warmup_route": warmup["route"], "expected_backend": warmup["backend_verification"]["expected_backend"], "artifacts": {}, "passed": False})
+    if not warmup["backend_verification"]["passed"]:
+        raise ProjectError("Warm builds require a verified backend warmup.")
+    for name in sorted(BINS):
+        before, after = warmup["artifacts"][name], current[name]
+        same = before["path"] == after["path"] and before["sha256"] == after["sha256"]
+        result["artifacts"][name] = {"path": after["path"], "warmup_sha256": before["sha256"], "sha256": after["sha256"], "unchanged": same}
+        if not same:
+            raise ProjectError(f"Warm {name} differs from its backend-verified warmup executable.")
+    result["passed"] = True
+
+
+def unit_suite(argv: list[str], project: Path, env: dict[str, str], rustc: str, backend: str | None, timeout: float, result: dict) -> None:
+    """Run one planned suite once; retain its failures for route comparison."""
+    test_env = env.copy()
+    test_env["RUST_MIN_STACK"] = UNIT_TEST_STACK
+    result.update({"argv": argv, "cwd": str(project), "environment_overrides": {"RUST_MIN_STACK": UNIT_TEST_STACK}, "inherited_RUST_MIN_STACK": env.get("RUST_MIN_STACK"), "backend_verification": {"passed": False}, "summaries": [], "errors": [], "passed": False})
+    try:
+        result.update(common.process(argv, project, test_env, timeout))
+    except OSError as error:
+        result["errors"].append(f"Could not launch unit suite: {error}")
+        return
+    try:
+        require(result, "root Lust unit suite")
+    except common.BenchmarkError as error:
+        result["errors"].append(str(error))
+    try:
+        verify_backend(result, rustc, backend, result["backend_verification"])
+    except (common.BenchmarkError, ValueError) as error:
+        result["errors"].append(str(error))
+    result["summaries"] = [list(map(int, match)) for match in TEST_SUMMARY.findall(result["stdout"].get("text", ""))]
+    if not result["summaries"]:
+        result["errors"].append("The root bin test command returned no passing Rust test summaries.")
+    result["passed"] = not result["errors"]
 
 
 def artifacts(row: dict, target: Path, warm: bool) -> dict[str, dict]:
@@ -293,8 +431,10 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
         "probes": {name: common.file_digest(FIXTURES / name) for name in ("supported.rs", "unsupported.rs")},
         "scripts": {path.name: common.file_digest(path) for path in (Path(__file__), Path(common.__file__))},
     }
-    report["environment"] = {"removed_backend_variables": removed, "preserved_build_flags": {name: env[name] for name in ("RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "CARGO_INCREMENTAL", "CARGO_PROFILE_DEV_PANIC", "CARGO_PROFILE_DEV_OPT_LEVEL", "CARGO_PROFILE_DEV_DEBUG", "RUSTC_WRAPPER", "RUSTC_WORKSPACE_WRAPPER") if name in env}, "profile": "project's default dev profile; no optimization, panic, debug, feature, or source overrides"}
+    preserved_names = {name for name in env if rustflag_variable(name)} | {"CARGO_INCREMENTAL", "CARGO_PROFILE_DEV_PANIC", "CARGO_PROFILE_DEV_OPT_LEVEL", "CARGO_PROFILE_DEV_DEBUG", "RUSTC_WRAPPER", "RUSTC_WORKSPACE_WRAPPER", "RUST_MIN_STACK"}
+    report["environment"] = {"removed_backend_variables": removed, "preserved_build_flags": {name: env[name] for name in sorted(preserved_names) if name in env}, "profile": "project's default dev profile; no optimization, panic, debug, feature, or source overrides", "stack_scope": "inherited RUST_MIN_STACK is preserved for timed builds and compiler probes; only the two unit-suite process trees receive the explicit shared test_harness override"}
     tools = resolve_tools(project, env, report, args.timeout)
+    configure_cargo_layout(env, report)
     candidate_env = env.copy()
     candidate_env["LUST_CRANELIFT_BACKEND"] = str(backend)
 
@@ -316,10 +456,34 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
         plan_row = command_record([str(coordinator), "--engine", "cranelift", "plan", *arguments("build", project, scratch / "plan-target", args.jobs)], project, candidate_env, args.timeout, report["setup"], "verify complementary backend selection")
         require(plan_row, "verify coordinator selection")
         plan = json.loads(encoded(plan_row["stdout"]))
-        if plan.get("selected_engine") != "cranelift" or plan.get("program") != tools["cargo"] or plan.get("environment", {}).get("CARGO_PROFILE_DEV_CODEGEN_BACKEND") != str(backend):
+        if plan.get("selected_engine") != "cranelift" or plan.get("program") != tools["cargo"] or plan.get("codegen_backend") != str(backend):
             raise ProjectError("The coordinator plan does not select the exact baseline Cargo and configured Cranelift library.")
         report["plan"] = plan
+
+        # Qualify before spending time on samples. Each route runs once even if
+        # the other suite fails; this is a comparison, not a retry or fallback.
+        # Isolated targets keep qualification artifacts out of all timed builds.
+        with tempfile.TemporaryDirectory(prefix="qualification-", dir=scratch) as qualification:
+            for route in ("cargo", "coordinator"):
+                print(f"unit qualification: {route}", file=sys.stderr, flush=True)
+                guard(f"before {route} unit suite")
+                prefix = [tools["cargo"]] if route == "cargo" else [str(coordinator), "--engine", "cranelift"]
+                row = {"route": route, "purpose": f"{route} actual root cargo test --bins"}
+                report["test_qualification"].append(row)
+                unit_suite([*prefix, *arguments("test", project, Path(qualification) / route, args.jobs, messages=False)], project, env if route == "cargo" else candidate_env, tools["rustc"], str(backend) if route == "coordinator" else None, args.timeout, row)
+                checkpoint(report, args.output)
+                guard(f"after {route} unit suite")
+        qualification_errors = [f"{row['route']}: {error}" for row in report["test_qualification"] for error in row["errors"]]
+        if report["test_qualification"][0]["summaries"] != report["test_qualification"][1]["summaries"]:
+            qualification_errors.append("The two compiler routes executed different root test counts.")
+        report["test_harness"]["errors"] = qualification_errors
+        report["test_harness"]["passed"] = not qualification_errors
+        checkpoint(report, args.output)
+        if qualification_errors:
+            raise ProjectError("Unit qualification failed before timing: " + "; ".join(qualification_errors))
+
         warm_targets = {route: scratch / ("warm-" + route) for route in ("cargo", "coordinator")}
+        verified_warmups = {}
 
         def pair(scenario: str, index: int, targets: dict[str, Path], warmup: bool = False) -> None:
             order = ["cargo", "coordinator"] if index % 2 == 0 else ["coordinator", "cargo"]
@@ -332,11 +496,17 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
                 prefix = [tools["cargo"]] if route == "cargo" else [str(coordinator), "--engine", "cranelift"]
                 selected_env = env if route == "cargo" else candidate_env
                 build = common.process([*prefix, *arguments("build", project, targets[route], args.jobs)], project, selected_env, args.timeout)
-                entry = {"scenario": scenario, "sample": index, "warmup": warmup, "route": route, "order_in_pair": position, "build": build, "runtime": None, "artifacts": {}}
+                entry = {"scenario": scenario, "sample": index, "warmup": warmup, "route": route, "order_in_pair": position, "build": build, "runtime": None, "artifacts": {}, "backend_verification": {"passed": False}}
                 report["warmups" if warmup else "samples"].append(entry)
                 checkpoint(report, args.output)
                 require(build, f"{route} root Lust build")
                 entry["artifacts"] = artifacts(build, targets[route], scenario == "warm_noop" and not warmup)
+                if scenario == "warm_noop" and not warmup:
+                    inherit_backend_proof(entry["artifacts"], verified_warmups[route], entry["backend_verification"])
+                else:
+                    verify_backend(build, tools["rustc"], str(backend) if route == "coordinator" else None, entry["backend_verification"])
+                    if warmup:
+                        verified_warmups[route] = entry
                 guard(f"after {scenario} {index} {route} build")
                 entry["runtime"] = {"commands": {}, "normalized": {}, "passed": False}
                 runtime_probe(Path(entry["artifacts"]["lust"]["path"]), scratch / "runtime-probes", selected_env, args.timeout, entry["runtime"])
@@ -357,20 +527,6 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
         for index in range(args.samples):
             pair("warm_noop", index, warm_targets)
 
-        # This qualification is deliberately outside compilation statistics.
-        # Both commands compile and execute the root compiler's real bin tests.
-        for route in ("cargo", "coordinator"):
-            guard(f"before {route} unit suite")
-            prefix = [tools["cargo"]] if route == "cargo" else [str(coordinator), "--engine", "cranelift"]
-            row = command_record([*prefix, *arguments("test", project, warm_targets[route], args.jobs, messages=False)], project, env if route == "cargo" else candidate_env, args.timeout, report["test_qualification"], f"{route} actual root cargo test --bins")
-            checkpoint(report, args.output)
-            require(row, f"{route} root Lust unit suite")
-            row["summaries"] = [list(map(int, match)) for match in TEST_SUMMARY.findall(row["stdout"].get("text", ""))]
-            if not row["summaries"]:
-                raise ProjectError("The root bin test command returned no passing Rust test summaries.")
-            guard(f"after {route} unit suite")
-        if report["test_qualification"][0]["summaries"] != report["test_qualification"][1]["summaries"]:
-            raise ProjectError("The two compiler routes executed different root test counts.")
     guard("final verification")
 
 
@@ -392,7 +548,8 @@ def main() -> int:
     report = {
         "schema_version": 1, "created_utc": dt.datetime.now(dt.timezone.utc).isoformat(), "workload": "unchanged root Lust compiler", "hardware": common.hardware(),
         "settings": {"samples_per_scenario": args.samples, "jobs": args.jobs, "low_sample": args.samples < 6, "scenarios": list(SCENARIOS)},
-        "method": {"timed_operation": "cargo build --bins, default dev profile", "prefetch": "locked dependencies before timing; subsequent Cargo commands offline", "cold": "empty per-route target directories; installed compiler, dependency sources, and OS caches remain warm", "warm": "one excluded pair, then unchanged builds with retained targets", "interleaving": "alternate first route in each measured pair", "runtime": "outside build timing; fresh identical-path probe directory and disabled Lust daemon/cache", "normalization": "only compiler/probe directory prefixes and version build ID; raw output is retained", "test_suite": "one untimed cargo test --bins per route, with retained targets; require both success and equal test counts", "p95": "nearest-rank; with 2 samples, p95 is the maximum", "limits": "one real compiler project and limited probes; no broad conformance or production performance claim"},
+        "method": {"timed_operation": "cargo build --bins -vv --color never, default dev profile", "backend_proof": "fresh root rustc commands for builds and tests must select exactly the configured candidate library or default/explicit LLVM for baseline; warm binary hashes must match verified warmup", "prefetch": "locked dependencies before timing; subsequent Cargo commands offline", "cold": "empty per-route target directories; installed compiler, dependency sources, and OS caches remain warm", "warm": "one excluded pair, then unchanged builds with retained targets", "interleaving": "alternate first route in each measured pair", "runtime": "outside build timing; fresh identical-path probe directory and disabled Lust daemon/cache", "normalization": "only compiler/probe directory prefixes and version build ID; raw output is retained", "test_suite": "one untimed cargo test --bins --no-fail-fast -- --nocapture per route before timing, in separate empty targets; require both success and equal test counts", "p95": "nearest-rank; with 2 samples, p95 is the maximum", "limits": "one real compiler project and limited probes; no broad conformance or production performance claim"},
+        "test_harness": {"environment_overrides": {"RUST_MIN_STACK": UNIT_TEST_STACK}, "reason": "src/pool.rs STACK_SIZE gives production compiler threads 256 MiB because default 2 MiB stacks overflow on accepted deep ASTs; apply the same minimum to both unit suites only", "errors": [], "passed": False},
         "setup": [], "input_checks": [], "warmups": [], "samples": [], "pairs": [], "test_qualification": [], "errors": [], "statistics": {}, "passed": False,
     }
     status = 0

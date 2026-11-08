@@ -40,12 +40,15 @@ It does not install anything. Without it, the executable paths come from
 The benchmark pins `LUST_CARGO` and `CARGO` to the same executable and records the
 coordinator's plan before timing. A build must select the requested engine;
 `check` must select the compatibility path. An unexpected selection fails the
-measurement.
+measurement. The plan must identify the exact Cargo executable and report the
+selected library through `codegen_backend`, or `null` for the compatibility path.
 
 For Cranelift builds, `LUST_CRANELIFT_BACKEND` or `--cranelift-backend` must name
 the absolute library path produced by setup. The benchmark records its path and
 SHA-256, verifies the plan selects it, and checks that its bytes stay unchanged.
 This setting is passed only to the candidate. The baseline does not receive it.
+The coordinator selects the backend with Cargo command-line configuration;
+it does not export profile backend variables into programs or nested Cargo runs.
 The rustup preview without the backend's `unwinding` feature does not qualify.
 
 Add `--build-and-run` to summarize compilation plus executable runtime. Every
@@ -172,15 +175,39 @@ that one installed rustup toolchain. It runs `cargo fetch --locked` before the
 timed intervals, then uses `--locked --offline` for every build and test. It
 preserves the project's normal dev profile instead of using Lust's optimized
 `gate` or `release` profile. Inherited backend selections are cleared from the
-baseline; the candidate selects the configured library. Other build settings
-are shared and relevant inherited settings are recorded. The artifact records
+baseline; the candidate selects the configured library. Backend overrides in
+`RUSTFLAGS` or any Cargo rustflag environment variable are rejected. Other build
+settings are shared and relevant inherited settings are recorded. The artifact records
 must confirm the root binaries use optimization level 0, debug information 2,
 debug assertions, and overflow checks.
+
+The real-project benchmark also requires Cargo commit
+`3c747ea3ead23951c1b43a5edfcbdb449135ddeb`, supplied by the pinned
+`nightly-2026-11-05` toolchain. It sets
+`__CARGO_TEMPORARY_BUILD_DIR_NEW_LAYOUT_OPT_OUT=1` equally for both routes and
+their subprocesses. That Cargo revision changed its build-script artifact
+layout, while unchanged Lust expects the previous layout. The private temporary
+switch restores the layout needed by Lust's build-script handling. Its exact
+value, inherited value, Cargo commit, reason, and scope are recorded. A different
+Cargo commit fails before measurement because this switch requires renewed
+qualification when the pin changes. The general coordinator and small-fixture
+benchmark do not apply this compatibility switch.
+
+Both routes build and test with `-vv --color never`. For each test compilation,
+cold build, and excluded warmup, the script parses Cargo's actual rustc commands for `lust` and
+`lust_core`. The candidate must select the exact configured backend once; the
+baseline must use default LLVM or one explicit `llvm` selector. Missing,
+duplicated, or overridden backend evidence fails the run. Compiler wrappers and
+rustc response files are refused because their effective arguments cannot be
+verified from Cargo's command display. The report retains the raw commands and
+parsed tokens, including failed checks. A coordinator plan is recorded but does
+not establish which backend compiled the binaries.
 
 Two scenarios are measured. Cold builds use new target directories for both
 routes, which are removed after each pair to bound disk use. Warm builds keep
 separate targets after an excluded warmup and require Cargo to report the
-unchanged binaries as fresh. The first route alternates each pair. Two samples
+unchanged binaries as fresh. Their paths and hashes must also match the
+executables from that route's verified warmup. The first route alternates each pair. Two samples
 are the default for an initial run of this large project; the report marks that
 sample count as low. Increase the even sample count for performance decisions.
 This does not clear the OS page cache or the installed compiler and dependency
@@ -196,11 +223,22 @@ compiler cannot reuse the other compiler's answer. Only compiler/probe directory
 prefixes and the version's build ID are normalized; the report keeps the raw
 stdout, stderr, and status for every command, including failures.
 
-After the timing samples, both routes run the real root `cargo test --bins`
-suite using their retained targets. Both commands must succeed and report the
-same test counts. These test-suite runs are recorded but are not included in
-the build-time medians. This is stronger evidence than a successful compiler
-build alone; it still does not prove every Rust program or every Lust workload.
+Before any timing samples, both routes run the real root `cargo test --bins`
+suite in separate empty target directories. Both planned suites run once, even
+if one fails, so the report retains comparative failure details. They use
+`--no-fail-fast -- --nocapture` to execute all selected bin suites and preserve
+test output. Both commands must succeed, their compiled backends must be
+verified, and their test counts must match before timing starts. Qualification
+targets are then removed. These runs are outside the build-time medians.
+
+Only these two unit-suite subprocesses receive `RUST_MIN_STACK=268435456`.
+Lust's production worker stack is also 256 MiB, as defined by `STACK_SIZE` in
+`src/pool.rs`; its default 2 MiB test-thread stacks overflow on accepted deep
+expressions. The setting, its reason, and any inherited value are recorded for
+both routes. All upstream tests and assertions remain enabled. The timed build
+and runtime-probe environments retain their original stack setting. Passing
+these suites is evidence about this compiler project, not proof for every
+Rust program or Lust workload.
 
 The script hashes tracked working files before and after the operations, as
 well as tcc, the custom backend, and the coordinator. It does not edit project

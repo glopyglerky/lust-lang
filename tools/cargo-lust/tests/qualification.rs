@@ -264,6 +264,39 @@ fn actual_cranelift_keeps_full_rust_output_including_unwinding() {
     success_at("Cranelift workspace unit tests and doctests", &tested);
 }
 
+#[test]
+#[ignore = "requires matching nightly Cargo and LUST_CRANELIFT_BACKEND built with unwinding"]
+fn actual_cranelift_does_not_leak_backend_configuration_into_nested_cargo() {
+    required_cranelift_backend();
+    let scratch = Scratch::new("nested-cargo");
+    let fixture = scratch.fixture("nested-cargo");
+    let manifest = fixture.join("child/Cargo.toml");
+
+    let baseline = execute(
+        command(&scratch, &fixture, "llvm", None)
+            .args(["run", "--offline", "--locked", "--quiet", "--"])
+            .arg(cargo())
+            .arg(&manifest)
+            .arg(scratch.0.join("nested-llvm")),
+    );
+    success_at("ordinary Cargo running an application that invokes nested Cargo", &baseline);
+    assert_eq!(baseline.stdout, b"nested Cargo check passed\n");
+
+    // Run through Cargo, rather than launching the built binary directly: the
+    // regression concerns the environment inherited by `cargo run` programs.
+    // The fixture does not remove or override any of that environment.
+    let candidate = execute(
+        command(&scratch, &fixture, "cranelift", Some("cranelift"))
+            .args(["run", "--offline", "--locked", "--quiet", "--"])
+            .arg(cargo())
+            .arg(&manifest)
+            .arg(scratch.0.join("nested-cranelift")),
+    );
+    success_at("Cranelift Cargo running an application that invokes ordinary nested Cargo", &candidate);
+    assert_eq!(candidate.status.code(), baseline.status.code());
+    assert_eq!(candidate.stdout, baseline.stdout);
+}
+
 /// Read Cargo's verbose command spelling without evaluating it as a shell.
 /// Quoted source and backend paths can contain spaces and apostrophes.
 fn verbose_command_words(command: &str) -> Vec<String> {

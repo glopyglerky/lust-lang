@@ -42,7 +42,9 @@ cargo +nightly-2026-11-05 lust --engine cranelift test
 
 The helper builds the pinned source with its `unwinding` Cargo feature and records the compiler identity and backend hash. It does not change rustup's default toolchain. The generated `env.sh` selects the pinned toolchain and sets `LUST_CRANELIFT_BACKEND` to the absolute library path. Both exports are explicit changes to the current shell. Ordinary coordinator builds never download or install a toolchain.
 
-Cranelift uses the rustc frontend, so async, unsafe code, procedural macros, generic associated types, and other Rust semantics still go through rustc. The coordinator enables Cargo's official `-Zcodegen-backend` mechanism and sets the development/test profile backend variables to that library. It does not select a different panic strategy or alter `RUSTFLAGS`, optimization, features, source, or dependencies.
+Cranelift uses the rustc frontend, so async, unsafe code, procedural macros, generic associated types, and other Rust semantics still go through rustc. The coordinator enables Cargo's official `-Zcodegen-backend` mechanism and selects the library with command-scoped `--config` arguments for the development and test profiles. These settings do not become environment variables inherited by applications, tests, or build scripts that launch Cargo themselves. Existing caller-provided environment settings remain inherited. The coordinator does not select a different panic strategy or alter `RUSTFLAGS`, optimization, features, source, or dependencies.
+
+The backend library path must be valid UTF-8 so Cargo can read it as a TOML configuration value. Quotes, backslashes, and control characters are escaped without changing the path. This restriction applies to the backend setting; ordinary command arguments retain their OS representation.
 
 **The stock rustup Cranelift preview is insufficient for this integration.** Our runtime gate found that it failed to catch the fixture's panic. Upstream builds unwind support behind an optional Cargo feature; passing `-Cpanic=unwind` does not add that missing implementation. The coordinator therefore requires the explicit `LUST_CRANELIFT_BACKEND` path instead of selecting the stock backend by name. Keep the matching compiler revision. The backend remains experimental even when a fixture passes.
 
@@ -99,7 +101,9 @@ cargo lust --engine lust plan check src/main.rs
 cargo lust doctor
 ```
 
-`plan` and `--explain` produce JSON with the requested engine, selected engine, reason, command, arguments, environment changes and removals, and experimental status. They run no Cargo command, compiler, build script, or application. Invalid UTF-8 arguments are represented as lossless byte objects.
+`plan` and `--explain` produce JSON with the requested engine, selected engine, reason, command, arguments, environment changes and removals, and experimental status. The `codegen_backend` field contains the requested backend library path for the Cranelift route and `null` for other routes. They run no Cargo command, compiler, build script, or application. Invalid UTF-8 arguments are represented as lossless byte objects.
+
+The plan describes the coordinator's requested invocation. Cargo configuration and package overrides can affect the backend used for each crate; qualification checks inspect the actual compiler commands.
 
 `doctor` asks installed Cargo, rustc, and Lust for their versions, lists any stock Cranelift library, and reports the explicitly configured backend path. It installs nothing and builds nothing. It reports availability, not qualification. Cargo configuration and custom wrappers may select a compiler different from the one visible through `PATH` and `RUSTC`; the report states that limitation.
 
@@ -113,13 +117,15 @@ LUST_TEST_LUST="$PWD/target/gate/lust" \
   cargo test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline \
   --test qualification actual_lust -- --ignored --nocapture
 
-# Run the actual custom Cranelift full-Rust/panic parity test after setup.
+# Run actual custom Cranelift parity, mixed-backend, and nested Cargo tests.
 source tools/cargo-lust/target/complement/env.sh
 cargo +nightly-2026-11-05 test --manifest-path tools/cargo-lust/Cargo.toml \
   --locked --offline --test qualification actual_cranelift -- --ignored --nocapture
 ```
 
 The ordinary qualification tests use copied, isolated, path-only workspaces. Missing optional compiler engines appear as ignored tests in the default run. They do not count as verified. The optional commands above execute those tests explicitly and fail if their required engine is absent or incorrect.
+
+The nested Cargo gate compiles and runs a separate application through the coordinator. That application launches ordinary Cargo to check another crate, inheriting its environment unchanged. This catches backend settings that leak out of the outer command and make nested Cargo unexpectedly require unstable flags.
 
 The benchmark tool in [`bench/`](bench/) measures equivalent Cargo and coordinated builds. Keep cold, warm, edit, and compile-plus-run results separate. The [architecture](../../docs/compiler-set/design.md) explains why frontend work, generated-program runtime, and coordination costs all matter.
 

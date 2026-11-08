@@ -1,4 +1,4 @@
-# Lust compiler set
+# Lustr compiler set
 
 This fork develops a coordinated compiler set for unchanged, complete Rust projects. It preserves upstream Lust's fast subset compiler and adds one rustc-based complement before considering more independent frontends.
 

@@ -33,7 +33,9 @@ runs no compiler, Cargo command, build script or project program.
 
 No toolchains are installed or selected automatically. No compilation or program
 is retried after failure. The coordinator does not change panic, features, target,
-optimization, source, dependency versions, Cargo configuration or Rust flags.
+optimization, source, dependency versions, configuration files or Rust flags.
+Cranelift selection uses command-scoped Cargo --config arguments, so nested Cargo
+processes do not inherit backend profile environment variables from this tool.
 Auto currently uses Cargo/rustc because arbitrary Lust/Cargo interoperability has
 not been established. It does not claim a speed increase.
 
@@ -42,6 +44,7 @@ Otherwise CARGO selects Cargo, then PATH. Lust is found beside cargo-lust, then 
 An explicit +toolchain runs `rustup run -- TOOLCHAIN cargo` without installing it.
 This discards inherited CARGO and cannot be combined with LUST_CARGO.
 LUST_CRANELIFT_BACKEND is required only when the Cranelift dev/test route is used.
+Its path must be valid UTF-8 for Cargo's command-scoped TOML configuration.
 Choosing a backend path does not certify its features, ABI, or program correctness.
 ";
 
@@ -170,6 +173,7 @@ pub struct Plan {
     pub args: Vec<OsString>,
     pub environment: Vec<(OsString, OsString)>,
     pub environment_remove: Vec<OsString>,
+    pub codegen_backend: Option<OsString>,
     pub experimental: bool,
 }
 
@@ -189,6 +193,7 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
             args: request.args.clone(),
             environment: Vec::new(),
             environment_remove: Vec::new(),
+            codegen_backend: None,
             experimental: true,
         });
     }
@@ -214,7 +219,7 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
         programs.cargo
     };
     let mut selected_engine = Engine::Rustc;
-    let mut environment = Vec::new();
+    let mut codegen_backend = None;
     let reason = match request.engine {
         Engine::Auto => {
             "full project compatibility uses the selected Cargo/rustc configuration; automatic Lust routing is not yet qualified"
@@ -229,8 +234,16 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
                 let backend = configured_cranelift_backend(programs.cranelift_backend.as_deref())?;
                 selected_engine = Engine::Cranelift;
                 args.push(OsString::from("-Zcodegen-backend"));
-                environment.push((OsString::from("CARGO_PROFILE_DEV_CODEGEN_BACKEND"), backend.to_os_string()));
-                environment.push((OsString::from("CARGO_PROFILE_TEST_CODEGEN_BACKEND"), backend.to_os_string()));
+                // Profile environment variables would also reach applications,
+                // tests and build scripts. Their ordinary nested Cargo commands
+                // would then require -Zcodegen-backend unexpectedly. Scope these
+                // settings to this Cargo invocation instead.
+                let value = toml_string(backend);
+                for profile in ["dev", "test"] {
+                    args.push(OsString::from("--config"));
+                    args.push(OsString::from(format!("profile.{profile}.codegen-backend={value}")));
+                }
+                codegen_backend = Some(OsString::from(backend));
                 "experimental configured Cranelift dev/test backend; no panic or feature flags are changed, and backend correctness requires qualification"
             }
         }
@@ -243,16 +256,18 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
         reason,
         program,
         args,
-        environment,
+        environment: Vec::new(),
         environment_remove,
+        codegen_backend,
         experimental: selected_engine == Engine::Cranelift,
     })
 }
 
-fn configured_cranelift_backend(backend: Option<&OsStr>) -> Result<&OsStr, String> {
+fn configured_cranelift_backend(backend: Option<&OsStr>) -> Result<&str, String> {
     let Some(backend) = backend.filter(|value| !value.is_empty()) else {
         return Err("Cranelift dev/test builds require LUST_CRANELIFT_BACKEND=/absolute/path/to/backend-dylib built with unwinding support for the selected nightly; the stock rustup preview backend is not selected because it loses panic semantics".to_owned());
     };
+    let backend = backend.to_str().ok_or("LUST_CRANELIFT_BACKEND must be valid UTF-8 for Cargo's command-scoped TOML configuration")?;
     let path = std::path::Path::new(backend);
     if !path.is_absolute() {
         return Err("LUST_CRANELIFT_BACKEND must be an absolute backend dylib path; named backends such as cranelift and relative paths are not accepted".to_owned());
@@ -263,6 +278,29 @@ fn configured_cranelift_backend(backend: Option<&OsStr>) -> Result<&OsStr, Strin
     // Cargo and rustc validate the library and compiler ABI. Do not load third-party
     // code as a preflight, and do not claim a path proves its build features.
     Ok(backend)
+}
+
+/// One TOML basic string, passed as an argument directly to Cargo. TOML forbids
+/// raw control characters, including DEL, and backslashes must remain literal
+/// path bytes rather than becoming escape sequences such as a Windows `\t`.
+fn toml_string(value: &str) -> String {
+    let mut result = String::from("\"");
+    for ch in value.chars() {
+        match ch {
+            '"' => result.push_str("\\\""),
+            '\\' => result.push_str("\\\\"),
+            '\u{8}' => result.push_str("\\b"),
+            '\t' => result.push_str("\\t"),
+            '\n' => result.push_str("\\n"),
+            '\u{c}' => result.push_str("\\f"),
+            '\r' => result.push_str("\\r"),
+            ch if ch.is_control() && u32::from(ch) <= 0xffff => result.push_str(&format!("\\u{:04x}", u32::from(ch))),
+            ch if ch.is_control() => result.push_str(&format!("\\U{:08x}", u32::from(ch))),
+            ch => result.push(ch),
+        }
+    }
+    result.push('"');
+    result
 }
 
 fn is_codegen_command(args: &[OsString]) -> bool {
@@ -299,8 +337,9 @@ impl Plan {
         let args = self.args.iter().map(|s| os_json(s)).collect::<Vec<_>>().join(",");
         let env = self.environment.iter().map(|(key, value)| format!("{}:{}", os_json(key), os_json(value))).collect::<Vec<_>>().join(",");
         let removed = self.environment_remove.iter().map(|key| os_json(key)).collect::<Vec<_>>().join(",");
+        let backend = self.codegen_backend.as_deref().map_or_else(|| "null".to_owned(), os_json);
         format!(
-            "{{\"format_version\":1,\"requested_engine\":{},\"selected_engine\":{},\"reason\":{},\"experimental\":{},\"program\":{},\"args\":[{}],\"environment\":{{{}}},\"environment_remove\":[{}]}}",
+            "{{\"format_version\":1,\"requested_engine\":{},\"selected_engine\":{},\"reason\":{},\"experimental\":{},\"program\":{},\"args\":[{}],\"environment\":{{{}}},\"environment_remove\":[{}],\"codegen_backend\":{}}}",
             string_json(self.requested_engine.name()),
             string_json(self.selected_engine.name()),
             string_json(self.reason),
@@ -309,6 +348,7 @@ impl Plan {
             args,
             env,
             removed,
+            backend,
         )
     }
 
@@ -451,6 +491,18 @@ mod tests {
         .unwrap()
     }
 
+    fn backend_config_args() -> Vec<OsString> {
+        let backend = mock_backend();
+        let quoted = toml_string(backend.to_str().unwrap());
+        vec![
+            "-Zcodegen-backend".into(),
+            "--config".into(),
+            format!("profile.dev.codegen-backend={quoted}").into(),
+            "--config".into(),
+            format!("profile.test.codegen-backend={quoted}").into(),
+        ]
+    }
+
     #[test]
     fn auto_is_cargo_compatibility_without_speculation() {
         let plan = prepared(&["build", "--workspace", "--locked"]);
@@ -458,6 +510,8 @@ mod tests {
         assert_eq!(plan.selected_engine, Engine::Rustc);
         assert_eq!(plan.args, words(&["build", "--workspace", "--locked"]));
         assert!(plan.environment.is_empty());
+        assert!(plan.codegen_backend.is_none());
+        assert!(plan.json().contains("\"codegen_backend\":null"));
     }
 
     #[test]
@@ -481,10 +535,13 @@ mod tests {
     fn preserves_explicit_toolchain_selection() {
         let plan = prepared(&["+nightly-2026-11-07", "--engine=cranelift", "build", "--offline"]);
         assert_eq!(plan.program, OsStr::new("rustup"));
-        assert_eq!(plan.args, words(&["run", "--", "nightly-2026-11-07", "cargo", "-Zcodegen-backend", "build", "--offline"]));
-        assert_eq!(plan.environment.len(), 2);
+        let mut expected = words(&["run", "--", "nightly-2026-11-07", "cargo"]);
+        expected.extend(backend_config_args());
+        expected.extend(words(&["build", "--offline"]));
+        assert_eq!(plan.args, expected);
+        assert!(plan.environment.is_empty());
         assert_eq!(plan.environment_remove, words(&["CARGO"]));
-        assert!(plan.environment.iter().all(|(key, _)| key != "RUSTFLAGS" && key != "RUSTUP_TOOLCHAIN"));
+        assert_eq!(plan.codegen_backend, Some(mock_backend()));
     }
 
     #[test]
@@ -522,14 +579,24 @@ mod tests {
     }
 
     #[test]
-    fn dev_codegen_commands_use_profile_backend_only() {
+    fn dev_codegen_commands_scope_backend_configuration_to_cargo_arguments() {
         for command in ["build", "run", "test"] {
             let plan = prepared(&["--engine", "cranelift", command, "--features", "a,b"]);
             assert_eq!(plan.selected_engine, Engine::Cranelift);
-            assert_eq!(plan.args, words(&["-Zcodegen-backend", command, "--features", "a,b"]));
-            assert!(plan.environment.iter().all(|(key, _)| key.to_str().unwrap().ends_with("CODEGEN_BACKEND")));
-            assert!(plan.environment.iter().all(|(_, value)| *value == mock_backend()));
+            let mut expected = backend_config_args();
+            expected.extend(words(&[command, "--features", "a,b"]));
+            assert_eq!(plan.args, expected);
+            assert!(plan.environment.is_empty());
+            assert!(plan.environment_remove.is_empty());
+            assert_eq!(plan.codegen_backend, Some(mock_backend()));
+            assert!(plan.json().contains(&format!("\"codegen_backend\":{}", os_json(&mock_backend()))));
         }
+    }
+
+    #[test]
+    fn backend_toml_strings_escape_path_metacharacters_and_controls() {
+        let value = "C:\\tools\\\"backend\"\u{8}\t\n\u{c}\r\u{1}\u{7f}\u{85}/雪🦀.so";
+        assert_eq!(toml_string(value), r#""C:\\tools\\\"backend\"\b\t\n\f\r\u0001\u007f\u0085/雪🦀.so""#);
     }
 
     #[test]
@@ -569,6 +636,7 @@ mod tests {
             .unwrap();
             assert_eq!(plan.selected_engine, Engine::Rustc);
             assert!(plan.environment.is_empty());
+            assert!(plan.codegen_backend.is_none());
         }
     }
 
@@ -590,6 +658,7 @@ mod tests {
             assert_eq!(plan.selected_engine, Engine::Rustc);
             assert_eq!(plan.args, words(&args[2..]));
             assert!(plan.environment.is_empty());
+            assert!(plan.codegen_backend.is_none());
         }
     }
 
@@ -605,7 +674,9 @@ mod tests {
     fn runtime_arguments_do_not_select_profile() {
         let plan = prepared(&["--engine", "cranelift", "run", "--", "--release", "--profile", "prod"]);
         assert_eq!(plan.selected_engine, Engine::Cranelift);
-        assert_eq!(plan.args, words(&["-Zcodegen-backend", "run", "--", "--release", "--profile", "prod"]));
+        let mut expected = backend_config_args();
+        expected.extend(words(&["run", "--", "--release", "--profile", "prod"]));
+        assert_eq!(plan.args, expected);
     }
 
     #[test]
@@ -624,6 +695,7 @@ mod tests {
         assert_eq!(plan.selected_engine, Engine::Lust);
         assert_eq!(plan.program, OsString::from("/tools/lust"));
         assert_eq!(plan.args, words(&["check", "source with spaces/main.rs", "--json"]));
+        assert!(plan.codegen_backend.is_none());
         assert!(parse(&words(&["+nightly", "--engine", "lust", "build", "main.rs"])).is_err());
     }
 
