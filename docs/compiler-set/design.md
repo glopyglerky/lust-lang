@@ -82,11 +82,29 @@ A successful Lust compile is insufficient. A fallback on rejection would miss in
 
 Qualification is configuration-specific. A changed feature, adapter, build script, compiler, target, dependency, or semantic assumption invalidates it. A certificate covering yesterday's complete source snapshot does not prove tomorrow's arbitrary edit correct. Warm invalidation rules must be separately tested.
 
-## Future shared semantic interface
+## Shared semantic interface
 
 The most promising route to coordinated code generation inside arbitrary crates is a rustc-backed, versioned semantic interface. Start with a fixed compiler revision and pass checked, monomorphized bodies with authoritative layouts, calling conventions, symbols, drop/unwind operations, intrinsics, and linkage requirements to the chosen backend.
 
 Initially rustc must remain responsible for metadata publication and Cargo's contract. A C ABI experiment can test a narrow adapter, but cannot establish general Rust ABI compatibility. Moving Lust's code generator behind this interface requires an actual mapping from rustc MIR to Lust's code-generation expectations. That mapping does not exist in this commit.
+
+The first executable step is [`lustr-semantic`](../../tools/lustr-semantic), an
+opt-in driver bound to the pinned compiler installation. It obtains actual
+monomorphized items, symbol identities, function-call ABI, type layouts, drop
+requirements and cleanup edges from rustc queries. The normal backend continues
+to produce every artifact. Only owned inspection data leaves the analysis
+callback, and reports are published atomically after the entire compiler,
+including linking, succeeds. Analysis-only invocations do not force
+monomorphization.
+
+The probe refuses mismatched compiler installations and custom compiler
+executables that would be bypassed by in-process compilation. Its integration
+suite checks ordinary versus inspected artifacts in both directions, compiler
+and linker failures, Cargo build scripts and proc macros, configuration
+preservation, and no-op behavior. This qualifies inspection on the pinned Linux
+host. The report deliberately lacks complete MIR execution semantics and cache
+inputs; it cannot authorize native code generation or reuse. Inspection adds
+overhead and is kept outside the coordinator's normal route.
 
 A persistent full Rust frontend is a separate compiler project. It must account for macro expansion, coherence, negative lookups, trait candidate changes, build-script generated code, const evaluation, and cross-crate metadata. Reusing a rustc query context beyond its valid lifetime is not a daemon implementation. Retained work needs explicit ownership and invalidation rules, plus cold-session equivalence tests.
 

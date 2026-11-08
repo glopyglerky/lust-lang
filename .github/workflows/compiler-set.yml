@@ -5,10 +5,12 @@ on:
     branches: [next]
     paths:
       - 'tools/cargo-lust/**'
+      - 'tools/lustr-semantic/**'
       - '.github/workflows/compiler-set.yml'
   pull_request:
     paths:
       - 'tools/cargo-lust/**'
+      - 'tools/lustr-semantic/**'
       - '.github/workflows/compiler-set.yml'
   workflow_dispatch:
 
@@ -20,6 +22,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  semantic:
+    name: Checked rustc semantic inspection
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned compiler development libraries
+        run: rustup toolchain install nightly-2026-11-05 --profile minimal --component rustc-dev --component rust-src --component llvm-tools --component rustfmt
+      - name: Format check
+        run: cargo +nightly-2026-11-05 fmt --manifest-path tools/lustr-semantic/Cargo.toml -- --check
+      - name: Build pinned inspection tool
+        run: cargo +nightly-2026-11-05 build --manifest-path tools/lustr-semantic/Cargo.toml --locked --offline
+      - name: Verify actual compiler semantics and artifact interoperability
+        run: python3 tools/lustr-semantic/tests/test_probe.py -v
+
   compatibility:
     name: Cargo compatibility (${{ matrix.os }})
     strategy:

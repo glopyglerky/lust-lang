@@ -22,6 +22,12 @@ Use `lustr build` or `cargo lustr build` for the default Cargo compatibility rou
 
 The complementary backend also passes a [bidirectional Rust ABI fixture](tools/cargo-lust/fixtures/mixed-abi): LLVM and Cranelift crates exchange aggregates, trait objects, generic instances and owned allocations; panics unwind through both backends with the expected destructor order. The fixture also checks atomics, thread-local state and C calling conventions. Actual compiler commands establish which backend built each crate. This qualifies those cases on the pinned Linux toolchain; native Lust library interoperability is still open.
 
+The new [`lustr-semantic` development tool](tools/lustr-semantic) reads checked
+monomorphized functions, Rust ABIs, layouts and cleanup edges from the pinned
+rustc driver. Its real-compiler tests establish a first inspection interface for
+future native Lust lowering. The normal rustc backend still generates its
+artifacts; inspection does not accelerate builds or provide executable IR.
+
 Read the [coordinator usage](tools/cargo-lust/README.md), [compiler design](docs/compiler-set/design.md), [implementation roadmap](docs/compiler-set/roadmap.md), and [verification results](docs/compiler-set/verification.md). Automatic selection, native Lust/Rust artifact interoperability, and broader project and target qualification remain open.
 
 ## Upstream Lust
