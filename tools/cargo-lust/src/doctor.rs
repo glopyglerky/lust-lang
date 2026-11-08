@@ -18,16 +18,30 @@ pub fn run() -> i32 {
         .any(|line| line.strip_prefix("release: ").is_some_and(|release| release.contains("nightly") || release.contains("dev")));
     let backend_libraries =
         if sysroot.success && !host.is_empty() { backend_libraries(Path::new(sysroot.stdout.trim()), host) } else { Vec::new() };
+    let configured_backend = std::env::var_os("LUST_CRANELIFT_BACKEND")
+        .map(|value| {
+            let path = Path::new(&value);
+            format!(
+                "{{\"path\":{},\"absolute\":{},\"file_present\":{}}}",
+                json(&value.to_string_lossy()),
+                path.is_absolute(),
+                path.is_file()
+            )
+        })
+        .unwrap_or_else(|| "null".to_owned());
     let ready = cargo.success && compiler.success;
     println!(
-        "{{\"format_version\":1,\"cargo\":{},\"rustc\":{},\"lust\":{},\"cranelift\":{{\"nightly_compiler\":{},\"library_present\":{},\"libraries\":[{}],\"qualified\":false}},\"automatic_lust_routing\":false,\"notes\":[{},{}]}}",
+        "{{\"format_version\":1,\"cargo\":{},\"rustc\":{},\"lust\":{},\"cranelift\":{{\"nightly_compiler\":{},\"preview_library_present\":{},\"preview_libraries\":[{}],\"configured_backend\":{},\"qualified\":false}},\"automatic_lust_routing\":false,\"notes\":[{},{}]}}",
         cargo.json(),
         compiler.json(),
         lust.json(),
         nightly,
         !backend_libraries.is_empty(),
         backend_libraries.iter().map(|name| json(name)).collect::<Vec<_>>().join(","),
-        json("Availability is not semantic or performance qualification. Cranelift remains explicit and experimental."),
+        configured_backend,
+        json(
+            "Availability is not qualification. The stock preview lacks required unwind support; configure an explicitly built unwind-enabled backend with LUST_CRANELIFT_BACKEND."
+        ),
         json(
             "Compiler probes use PATH and RUSTC. Cargo configuration, custom wrappers, or LUST_CARGO may select a different compiler; this command does not build a project to resolve them."
         ),

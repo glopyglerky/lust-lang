@@ -19,7 +19,9 @@ Engines:
   auto       Preserve the project's selected Cargo/rustc configuration (default).
   rustc      Invoke Cargo unchanged, preserving its selected compiler and wrappers.
   cranelift  Experimental Cargo dev/test code generation with Cranelift. Requires
-             a matching nightly rustc and rustc-codegen-cranelift-preview component.
+             LUST_CRANELIFT_BACKEND set to an existing absolute backend dylib, built
+             with unwinding support for the selected nightly rustc. The stock
+             rustup preview backend is not selected: it loses panic semantics.
              Release/custom profiles and commands other than build/run/test stay
              on the project's original Cargo configuration.
   lust       Forward native Lust commands and arguments to Lust for a complete
@@ -39,6 +41,8 @@ LUST_CARGO selects the Cargo executable. LUSTC selects the Lust executable.
 Otherwise CARGO selects Cargo, then PATH. Lust is found beside cargo-lust, then on PATH.
 An explicit +toolchain runs `rustup run -- TOOLCHAIN cargo` without installing it.
 This discards inherited CARGO and cannot be combined with LUST_CARGO.
+LUST_CRANELIFT_BACKEND is required only when the Cranelift dev/test route is used.
+Choosing a backend path does not certify its features, ABI, or program correctness.
 ";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -137,6 +141,7 @@ pub struct Programs {
     pub cargo: OsString,
     pub lust: OsString,
     pub explicit_cargo: bool,
+    pub cranelift_backend: Option<OsString>,
 }
 
 impl Programs {
@@ -145,7 +150,7 @@ impl Programs {
         let cargo = explicit_cargo.clone().or_else(|| std::env::var_os("CARGO")).unwrap_or_else(|| OsString::from("cargo"));
         let lust = std::env::var_os("LUSTC")
             .unwrap_or_else(|| sibling_lust().map(PathBuf::into_os_string).unwrap_or_else(|| OsString::from("lust")));
-        Self { cargo, lust, explicit_cargo: explicit_cargo.is_some() }
+        Self { cargo, lust, explicit_cargo: explicit_cargo.is_some(), cranelift_backend: std::env::var_os("LUST_CRANELIFT_BACKEND") }
     }
 }
 
@@ -221,11 +226,12 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
             } else if has_profile_selection(&request.args) {
                 "explicit release/profile selection; preserve Cargo configuration"
             } else {
+                let backend = configured_cranelift_backend(programs.cranelift_backend.as_deref())?;
                 selected_engine = Engine::Cranelift;
                 args.push(OsString::from("-Zcodegen-backend"));
-                environment.push((OsString::from("CARGO_PROFILE_DEV_CODEGEN_BACKEND"), OsString::from("cranelift")));
-                environment.push((OsString::from("CARGO_PROFILE_TEST_CODEGEN_BACKEND"), OsString::from("cranelift")));
-                "experimental Cranelift dev/test code generation with rustc semantics; no panic or feature flags are changed"
+                environment.push((OsString::from("CARGO_PROFILE_DEV_CODEGEN_BACKEND"), backend.to_os_string()));
+                environment.push((OsString::from("CARGO_PROFILE_TEST_CODEGEN_BACKEND"), backend.to_os_string()));
+                "experimental configured Cranelift dev/test backend; no panic or feature flags are changed, and backend correctness requires qualification"
             }
         }
         Engine::Lust => unreachable!(),
@@ -241,6 +247,22 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
         environment_remove,
         experimental: selected_engine == Engine::Cranelift,
     })
+}
+
+fn configured_cranelift_backend(backend: Option<&OsStr>) -> Result<&OsStr, String> {
+    let Some(backend) = backend.filter(|value| !value.is_empty()) else {
+        return Err("Cranelift dev/test builds require LUST_CRANELIFT_BACKEND=/absolute/path/to/backend-dylib built with unwinding support for the selected nightly; the stock rustup preview backend is not selected because it loses panic semantics".to_owned());
+    };
+    let path = std::path::Path::new(backend);
+    if !path.is_absolute() {
+        return Err("LUST_CRANELIFT_BACKEND must be an absolute backend dylib path; named backends such as cranelift and relative paths are not accepted".to_owned());
+    }
+    if !path.is_file() {
+        return Err(format!("LUST_CRANELIFT_BACKEND does not name an existing backend file: {backend:?}"));
+    }
+    // Cargo and rustc validate the library and compiler ABI. Do not load third-party
+    // code as a preflight, and do not claim a path proves its build features.
+    Ok(backend)
 }
 
 fn is_codegen_command(args: &[OsString]) -> bool {
@@ -372,7 +394,7 @@ pub fn run(args: &[OsString]) -> i32 {
     }
     if plan.selected_engine == Engine::Cranelift {
         eprintln!(
-            "cargo-lust: experimental Cranelift dev/test backend; the selected nightly must contain rustc-codegen-cranelift-preview. Panic and feature settings are preserved; unsupported backend operations fail without retry."
+            "cargo-lust: experimental configured Cranelift backend; use a backend built with unwinding support for this nightly. Panic and feature flags are unchanged. The selected backend still requires semantic qualification; failures are returned without retry."
         );
     }
     execute(&plan)
@@ -411,10 +433,20 @@ mod tests {
             other => panic!("{other:?}"),
         }
     }
+    fn mock_backend() -> OsString {
+        // A real file stands in for a configured library. Planning must never
+        // try to dynamically load it or claim it was qualified as a backend.
+        std::env::current_exe().unwrap().into_os_string()
+    }
     fn prepared(input: &[&str]) -> Plan {
         plan(
             &request(input),
-            Programs { cargo: OsString::from("/tools with spaces/cargo"), lust: OsString::from("/tools/lust"), explicit_cargo: false },
+            Programs {
+                cargo: OsString::from("/tools with spaces/cargo"),
+                lust: OsString::from("/tools/lust"),
+                explicit_cargo: false,
+                cranelift_backend: Some(mock_backend()),
+            },
         )
         .unwrap()
     }
@@ -465,18 +497,26 @@ mod tests {
     fn explicit_cargo_and_toolchain_cannot_conflict() {
         let result = plan(
             &request(&["+nightly", "build"]),
-            Programs { cargo: OsString::from("/custom/cargo"), lust: OsString::from("lust"), explicit_cargo: true },
+            Programs {
+                cargo: OsString::from("/custom/cargo"),
+                lust: OsString::from("lust"),
+                explicit_cargo: true,
+                cranelift_backend: None,
+            },
         );
         assert!(result.unwrap_err().contains("LUST_CARGO"));
     }
 
     #[test]
     fn irrelevant_empty_programs_do_not_block_the_selected_engine() {
-        let cargo = plan(&request(&["build"]), Programs { cargo: OsString::from("cargo"), lust: OsString::new(), explicit_cargo: false });
+        let cargo = plan(
+            &request(&["build"]),
+            Programs { cargo: OsString::from("cargo"), lust: OsString::new(), explicit_cargo: false, cranelift_backend: None },
+        );
         assert!(cargo.is_ok());
         let lust = plan(
             &request(&["--engine=lust", "check", "a.rs"]),
-            Programs { cargo: OsString::new(), lust: OsString::from("lust"), explicit_cargo: true },
+            Programs { cargo: OsString::new(), lust: OsString::from("lust"), explicit_cargo: true, cranelift_backend: None },
         );
         assert!(lust.is_ok());
     }
@@ -488,6 +528,47 @@ mod tests {
             assert_eq!(plan.selected_engine, Engine::Cranelift);
             assert_eq!(plan.args, words(&["-Zcodegen-backend", command, "--features", "a,b"]));
             assert!(plan.environment.iter().all(|(key, _)| key.to_str().unwrap().ends_with("CODEGEN_BACKEND")));
+            assert!(plan.environment.iter().all(|(_, value)| *value == mock_backend()));
+        }
+    }
+
+    #[test]
+    fn cranelift_requires_an_explicit_absolute_backend_path() {
+        for backend in [
+            None,
+            Some(OsString::new()),
+            Some(OsString::from("cranelift")),
+            Some(OsString::from("relative/backend.so")),
+            Some(std::env::current_dir().unwrap().into_os_string()),
+            Some(std::env::current_exe().unwrap().join("missing-backend.so").into_os_string()),
+        ] {
+            for args in [vec!["--engine=cranelift", "build"], vec!["--engine=cranelift", "plan", "build"]] {
+                let result = plan(
+                    &request(&args),
+                    Programs { cargo: "cargo".into(), lust: "lust".into(), explicit_cargo: false, cranelift_backend: backend.clone() },
+                );
+                assert!(result.unwrap_err().contains("LUST_CRANELIFT_BACKEND"));
+            }
+        }
+    }
+
+    #[test]
+    fn non_cranelift_routes_do_not_require_backend_configuration() {
+        for args in [
+            vec!["--engine=cranelift", "build", "--release"],
+            vec!["--engine=cranelift", "test", "--profile=custom"],
+            vec!["--engine=cranelift", "check"],
+            vec!["--engine=cranelift", "b"],
+            vec!["--engine=cranelift", "r"],
+            vec!["--engine=cranelift", "t"],
+        ] {
+            let plan = plan(
+                &request(&args),
+                Programs { cargo: "cargo".into(), lust: "lust".into(), explicit_cargo: false, cranelift_backend: None },
+            )
+            .unwrap();
+            assert_eq!(plan.selected_engine, Engine::Rustc);
+            assert!(plan.environment.is_empty());
         }
     }
 
@@ -583,7 +664,11 @@ mod tests {
         let path = OsString::from_vec(vec![b'f', 0xff, b'o']);
         let args = vec![OsString::from("build"), OsString::from("--manifest-path"), path.clone()];
         let Action::Execute(req) = parse(&args).unwrap() else { panic!() };
-        let plan = plan(&req, Programs { cargo: OsString::from("cargo"), lust: OsString::from("lust"), explicit_cargo: false }).unwrap();
+        let plan = plan(
+            &req,
+            Programs { cargo: OsString::from("cargo"), lust: OsString::from("lust"), explicit_cargo: false, cranelift_backend: None },
+        )
+        .unwrap();
         assert_eq!(plan.args[2], path);
         assert!(plan.json().contains(r#"{"unix_bytes_hex":"66ff6f"}"#));
     }

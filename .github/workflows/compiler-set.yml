@@ -2,6 +2,7 @@ name: Compiler set
 
 on:
   push:
+    branches: [next]
     paths:
       - 'tools/cargo-lust/**'
       - '.github/workflows/compiler-set.yml'
@@ -20,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-14, windows-latest]
+        os: [ubuntu-24.04, macos-15, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -58,21 +59,32 @@ jobs:
         run: cargo +1.99.1 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test qualification actual_lust -- --ignored --nocapture
 
   cranelift:
-    name: Cranelift runtime qualification
+    name: Cranelift with unwinding qualification
     runs-on: ubuntu-24.04
+    env:
+      RUSTUP_TOOLCHAIN: nightly-2026-11-05
     steps:
       - uses: actions/checkout@v4
-      - name: Install pinned development backend
-        run: rustup toolchain install nightly-2026-11-07 --profile minimal --component rustc-codegen-cranelift-preview
+      - name: Build pinned backend with unwind support
+        run: |
+          bash tools/cargo-lust/scripts/build-cranelift.sh
+          source tools/cargo-lust/target/complement/env.sh
+          printf 'LUST_CRANELIFT_BACKEND=%s\n' "$LUST_CRANELIFT_BACKEND" >> "$GITHUB_ENV"
       - name: Verify full Rust, panic recovery, and tests
-        run: cargo +nightly-2026-11-07 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test qualification actual_cranelift -- --ignored --nocapture
+        run: cargo +nightly-2026-11-05 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test qualification actual_cranelift -- --ignored --nocapture
+      - name: Compile and test the coordinator with its complementary backend
+        run: |
+          CARGO_PROFILE_DEV_CODEGEN_BACKEND="$LUST_CRANELIFT_BACKEND" \
+          CARGO_PROFILE_TEST_CODEGEN_BACKEND="$LUST_CRANELIFT_BACKEND" \
+          cargo +nightly-2026-11-05 test -Zcodegen-backend --manifest-path tools/cargo-lust/Cargo.toml --target-dir tools/cargo-lust/target/complement-tests --locked --offline
       - name: Build coordinator for measurement
-        run: cargo +nightly-2026-11-07 build --manifest-path tools/cargo-lust/Cargo.toml --release --locked --offline
+        run: cargo +nightly-2026-11-05 build --manifest-path tools/cargo-lust/Cargo.toml --release --locked --offline
       - name: Measure the selected backend
-        env:
-          RUSTUP_TOOLCHAIN: nightly-2026-11-07
         run: python3 tools/cargo-lust/bench/measure.py --coordinator tools/cargo-lust/target/release/cargo-lust --engine cranelift --samples 6 --output compiler-set-cranelift.json
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: compiler-set-cranelift
-          path: compiler-set-cranelift.json
+          path: |
+            compiler-set-cranelift.json
+            tools/cargo-lust/target/complement/backend.json

@@ -19,13 +19,15 @@ python3 tools/cargo-lust/bench/measure.py \
   --engine rustc --samples 6 --output /tmp/cargo-lust-rustc.json
 ```
 
-For an installed nightly with `rustc-codegen-cranelift-preview`, use that same
+Build the pinned unwinding-enabled Cranelift backend, then use that same
 toolchain for the baseline and candidate:
 
 ```sh
+bash tools/cargo-lust/scripts/build-cranelift.sh
+source tools/cargo-lust/target/complement/env.sh
 python3 tools/cargo-lust/bench/measure.py \
   --coordinator tools/cargo-lust/target/release/cargo-lust \
-  --toolchain nightly --engine cranelift --samples 6 \
+  --toolchain "$RUSTUP_TOOLCHAIN" --engine cranelift --samples 6 \
   --output /tmp/cargo-lust-cranelift.json
 ```
 
@@ -39,6 +41,12 @@ The benchmark pins `LUST_CARGO` and `CARGO` to the same executable and records t
 coordinator's plan before timing. A build must select the requested engine;
 `check` must select the compatibility path. An unexpected selection fails the
 measurement.
+
+For Cranelift builds, `LUST_CRANELIFT_BACKEND` or `--cranelift-backend` must name
+the absolute library path produced by setup. The benchmark records its path and
+SHA-256, verifies the plan selects it, and checks that its bytes stay unchanged.
+This setting is passed only to the candidate. The baseline does not receive it.
+The rustup preview without the backend's `unwinding` feature does not qualify.
 
 Add `--build-and-run` to summarize compilation plus executable runtime. Every
 successful build executes the fixture even without this flag, because a faster
@@ -117,7 +125,8 @@ The JSON contains:
 - Raw elapsed nanoseconds, command arguments, exit status, and captured output
   for every measured sample and excluded warmup.
 - Per-pair input hashes, ordering, acceptance results and runtime parity.
-- The selected compiler plan, Cargo/rustc versions, the rustc commit and host triple, coordinator executable
+- The selected compiler plan, exact custom backend path and hash when used,
+  Cargo/rustc versions, the rustc commit and host triple, coordinator executable
   hash, and hashes of installed Cranelift backend files when found.
 - Fixture files and hashes, explicit profile settings, hardware information,
   and measurement limits.

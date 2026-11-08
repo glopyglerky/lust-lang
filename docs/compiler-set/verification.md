@@ -33,7 +33,7 @@ LUST_TEST_LUST=/path/to/lust \
 
 The local run used normal Cargo development settings. Baseline and candidate source trees were copies of the same fixture and had separate target directories. Tests did not change project panic settings, features, optimization, debug information, or incremental compilation settings.
 
-The ordinary test suite passes 25 tests. The separately executed actual Lust test also passes. The process-level cases verify unchanged argument bytes, raw I/O, exit status, Unix signal termination, existing compiler wrappers, no execution during planning, and exactly one execution after failure. Regression tests cover explicit rustup selection, grouped release flags, and a real Cargo alias that selects release.
+The ordinary test suite passes 27 tests. The separately executed actual Lust test also passes. The process-level cases verify unchanged argument bytes, raw I/O, exit status, Unix signal termination, existing compiler wrappers, no execution during planning, and exactly one execution after failure. Regression tests cover explicit rustup selection, grouped release flags, a real Cargo alias that selects release, and the requirement for an explicit existing backend file.
 
 The Cargo integration executes a workspace with a separate custom derive proc macro, a generated-source build script, a library dependency, async polling, raw-pointer operations, generic associated types, const generics, a C function calling convention, panic catching, and destruction during unwinding. It checks this output against both ordinary Cargo and the coordinator:
 
@@ -49,7 +49,15 @@ The real Lust path prints `42` for its supported program. A separate async progr
 
 The ordinary test run explicitly ignores the actual Lust and actual Cranelift tests. The Lust test was also executed explicitly as shown above. Cranelift has not been executed locally because the required toolchain is absent.
 
-The compiler-set workflow includes a dedicated, pinned nightly Cranelift job. It must compile and run the full Rust workspace, including `catch_unwind` and a destructor, then execute its tests. A component installation or a constructed command is not a passing backend gate. Inspect the workflow result for the commit in question before describing that backend as qualified.
+The compiler-set workflow includes a dedicated, pinned custom Cranelift job. It must compile and run the full Rust workspace, including `catch_unwind` and a destructor, then execute its tests. A component installation or a constructed command is not a passing backend gate. Inspect the workflow result for the commit in question before describing that backend as qualified.
+
+### Stock backend failure and correction
+
+The first [hosted qualification run](https://github.com/glopyglerky/lust-lang/actions/runs/42501159516/job/128793996883), on commit `fc16a72e68a6731def4a026aef561ac640f120c3`, installed the stock preview for `rustc 1.101.0-nightly (c980177d8 2026-11-06)`. Its baseline passed. The Cranelift-built program exited 101 instead of completing the panic-recovery fixture. The initial fixture suppressed its panic hook, so the failed execution printed no application output.
+
+Source inspection established that upstream's optional `unwinding` feature supplies the missing catch and cleanup implementation. The integration now requires an explicit custom backend built with that feature, pinned to source `8edf4d040acb77048e04b52a379e93dccae888e6` and its matching `nightly-2026-11-05`. The runtime fixture now prints a deterministic trace before the panic, from its hook, and after recovery. Compilation and direct execution are separate checks. The panic and destructor assertions remain required.
+
+The initial hosted jobs passed Cargo compatibility on Linux and Windows, the Rust 1.85 minimum, and the actual Lust gate. The macOS 14 runner was retired on 2026-11-02, so the CI configuration now uses the supported macOS 15 Arm64 image. Neither the earlier cancelled macOS job nor a failing stock backend counts as a pass.
 
 Cross-platform and minimum-toolchain workflow jobs are distinct from local Linux results. A configured CI job does not count as an executed test.
 
@@ -61,7 +69,7 @@ No general full-Rust speedup is claimed. Upstream Lust's warm-edit ratios descri
 
 ### Local compatibility-route measurements
 
-The release-built coordinator was compared with the same Cargo/rustc 1.99.1 toolchain, one build job, explicit dev settings with unwinding, six interleaved pairs per scenario, and separate target directories. All 34 pairs passed, including four excluded warmup pairs. The 60 measured compilations included 48 successful builds with runtime parity and 12 rejected invalid edits.
+The initial release-built coordinator was compared with the same Cargo/rustc 1.99.1 toolchain, one build job, explicit dev settings with unwinding, six interleaved pairs per scenario, and separate target directories. All 34 pairs passed, including four excluded warmup pairs. The 60 measured compilations included 48 successful builds with runtime parity and 12 rejected invalid edits. These records describe the initial fixture and coordinator published in `fc16a72e68a6731def4a026aef561ac640f120c3`; later backend-setup changes are a separate qualification.
 
 | Scenario | Cargo median | Coordinator median | Cargo / coordinator |
 | --- | ---: | ---: | ---: |

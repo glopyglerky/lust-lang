@@ -81,6 +81,7 @@ fn coordinator(executable: &Path, log: &Path) -> Command {
     let mut command = Command::new(env!("CARGO_BIN_EXE_cargo-lust"));
     command.env("LUST_CARGO", executable).env("RECORDER_LOG", log);
     command.env_remove("CARGO_PROFILE_DEV_CODEGEN_BACKEND").env_remove("CARGO_PROFILE_TEST_CODEGEN_BACKEND");
+    command.env_remove("LUST_CRANELIFT_BACKEND");
     command.env_remove("RECORDER_STDIN").env_remove("RECORDER_SIGNAL");
     command
 }
@@ -128,15 +129,21 @@ fn process_contract_preserves_arguments_io_failure_and_toolchain_routing() {
 
     // A failed Cranelift build is returned once; it never triggers a Cargo or
     // Lust retry. Only the backend profile settings differ from the input.
+    let backend = scratch.0.join("mock backend with spaces.so");
+    fs::write(&backend, "process fixture only; never loaded as a backend").unwrap();
     let fast_log = scratch.0.join("cranelift.log");
-    let fast = coordinator(&executable, &fast_log).args(["--engine", "cranelift", "build"]).output().unwrap();
+    let fast = coordinator(&executable, &fast_log)
+        .env("LUST_CRANELIFT_BACKEND", &backend)
+        .args(["--engine", "cranelift", "build"])
+        .output()
+        .unwrap();
     assert_eq!(fast.status.code(), Some(23));
     assert_eq!(fast.stdout, b"{\"diagnostic\":\"fixture\"}\n\xff");
     assert!(fast.stderr.ends_with(b"fixture diagnostic\n\xfe"));
     let observed = record(&fast_log);
     assert_eq!(observed.lines().filter(|line| *line == "invocation").count(), 1);
     for key in ["CARGO_PROFILE_DEV_CODEGEN_BACKEND", "CARGO_PROFILE_TEST_CODEGEN_BACKEND"] {
-        assert!(observed.contains(&format!("env {key}={}\n", hex(b"cranelift"))));
+        assert!(observed.contains(&format!("env {key}={}\n", hex(backend.as_os_str().as_encoded_bytes()))));
     }
 
     let release_log = scratch.0.join("release.log");
@@ -159,11 +166,32 @@ fn process_contract_preserves_arguments_io_failure_and_toolchain_routing() {
     assert_eq!(record(&lust_log).lines().filter(|line| *line == "invocation").count(), 1);
 
     let dry_log = scratch.0.join("plan.log");
-    let dry = coordinator(&executable, &dry_log).args(["--engine=cranelift", "plan", "build"]).output().unwrap();
+    let dry = coordinator(&executable, &dry_log)
+        .env("LUST_CRANELIFT_BACKEND", &backend)
+        .args(["--engine=cranelift", "plan", "build"])
+        .output()
+        .unwrap();
     assert!(dry.status.success());
     assert!(dry.stderr.is_empty());
     assert!(String::from_utf8(dry.stdout).unwrap().contains("\"selected_engine\":\"cranelift\""));
     assert!(!dry_log.exists(), "a plan executed the project tool");
+
+    // Missing configuration or a named stock backend cannot quietly compile
+    // with broken unwind behavior. Neither execution nor planning starts Cargo.
+    for (index, backend) in [None, Some(""), Some("cranelift"), Some("relative/backend.so")].into_iter().enumerate() {
+        for command in [vec!["build"], vec!["plan", "build"]] {
+            let rejected_log = scratch.0.join(format!("rejected-backend-{index}.log"));
+            let mut rejected = coordinator(&executable, &rejected_log);
+            if let Some(backend) = backend {
+                rejected.env("LUST_CRANELIFT_BACKEND", backend);
+            }
+            let rejected = rejected.args(["--engine", "cranelift"]).args(command).output().unwrap();
+            assert_eq!(rejected.status.code(), Some(2));
+            assert!(rejected.stdout.is_empty());
+            assert!(String::from_utf8_lossy(&rejected.stderr).contains("LUST_CRANELIFT_BACKEND"));
+            assert!(!rejected_log.exists(), "invalid backend configuration executed Cargo");
+        }
+    }
 
     let absent_log = scratch.0.join("absent.log");
     let absent = coordinator(&scratch.0.join("does not exist"), &absent_log).arg("build").output().unwrap();

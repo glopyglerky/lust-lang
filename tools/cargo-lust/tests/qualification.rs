@@ -12,6 +12,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const EXPECTED: &str = "derived=41 generated=7 async=42 raw=19 gat=13 const=15 ffi=21 body=42 probe=41 panic=1 drops=1\n";
+const EXPECTED_PANIC_TRACE: &str =
+    "fixture: entering catch_unwind\nfixture: panic hook: qualification panic\nfixture: catch_unwind returned; caught=true drops=1\n";
 static SERIAL: AtomicU64 = AtomicU64::new(0);
 
 struct Scratch(PathBuf);
@@ -74,6 +76,11 @@ fn command(scratch: &Scratch, fixture: &Path, target: &str, engine: Option<&str>
     };
     command.current_dir(fixture);
     command.env("CARGO_TARGET_DIR", scratch.0.join(target));
+    // The test executable may itself have been built with the complementary
+    // backend. Fixture baselines must still use ordinary Cargo; explicit
+    // Cranelift invocations set their own backend through the coordinator.
+    command.env_remove("CARGO_PROFILE_DEV_CODEGEN_BACKEND");
+    command.env_remove("CARGO_PROFILE_TEST_CODEGEN_BACKEND");
     command
 }
 
@@ -82,9 +89,13 @@ fn execute(command: &mut Command) -> Output {
 }
 
 fn success(output: &Output) {
+    success_at("command", output);
+}
+
+fn success_at(stage: &str, output: &Output) {
     assert!(
         output.status.success(),
-        "status={}\nstdout:\n{}\nstderr:\n{}",
+        "{stage} failed: status={}\nstdout:\n{}\nstderr:\n{}",
         output.status,
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
@@ -157,6 +168,8 @@ fn manifest_paths_and_cargo_subcommand_invocation_preserve_arguments() {
             .current_dir(&scratch.0)
             .env("LUST_CARGO", cargo())
             .env("CARGO_TARGET_DIR", scratch.0.join("manifest-target"))
+            .env_remove("CARGO_PROFILE_DEV_CODEGEN_BACKEND")
+            .env_remove("CARGO_PROFILE_TEST_CODEGEN_BACKEND")
             .args(["lust", "--engine", "rustc", "build", "--offline", "--locked", "--manifest-path"])
             .arg(fixture.join("Cargo.toml")),
     );
@@ -211,17 +224,37 @@ fn actual_lust_accepts_its_subset_and_keeps_unsupported_rust_rejected() {
 }
 
 #[test]
-#[ignore = "requires a compatible selected nightly Cargo and Cranelift component"]
+#[ignore = "requires matching nightly Cargo and LUST_CRANELIFT_BACKEND built with unwinding"]
 fn actual_cranelift_keeps_full_rust_output_including_unwinding() {
+    let backend = std::env::var_os("LUST_CRANELIFT_BACKEND")
+        .expect("set LUST_CRANELIFT_BACKEND to the matching custom backend built with --features unwinding");
+    assert!(
+        Path::new(&backend).is_absolute() && Path::new(&backend).is_file(),
+        "LUST_CRANELIFT_BACKEND must name an existing absolute backend library: {backend:?}",
+    );
     let scratch = Scratch::new("actual-cranelift");
     let fixture = scratch.fixture("full-rust");
-    let baseline = execute(command(&scratch, &fixture, "llvm", None).args(["run", "--offline", "--locked", "--quiet"]));
-    success(&baseline);
+
+    // Build separately, then run the final Cargo binary directly. A runtime
+    // panic must not be reported as an unexplained `cargo run` compilation error.
+    let baseline_build = execute(command(&scratch, &fixture, "llvm", None).args(["build", "--offline", "--locked", "--workspace"]));
+    success_at("baseline Cargo compilation", &baseline_build);
+    let candidate_build =
+        execute(command(&scratch, &fixture, "cranelift", Some("cranelift")).args(["build", "--offline", "--locked", "--workspace"]));
+    success_at("Cranelift Cargo compilation, before any program execution", &candidate_build);
+
+    let executable_name = format!("fixture-app{}", std::env::consts::EXE_SUFFIX);
+    let baseline = execute(Command::new(scratch.0.join("llvm/debug").join(&executable_name)).current_dir(&fixture));
+    success_at("baseline binary execution, after successful compilation", &baseline);
     assert_eq!(baseline.stdout, EXPECTED.as_bytes());
-    let cranelift = execute(command(&scratch, &fixture, "cranelift", Some("cranelift")).args(["run", "--offline", "--locked", "--quiet"]));
-    success(&cranelift);
+    assert_eq!(baseline.stderr, EXPECTED_PANIC_TRACE.as_bytes());
+
+    let cranelift = execute(Command::new(scratch.0.join("cranelift/debug").join(&executable_name)).current_dir(&fixture));
+    success_at("Cranelift binary execution, after successful compilation; panic trace follows", &cranelift);
+    assert_eq!(cranelift.status.code(), baseline.status.code());
     assert_eq!(cranelift.stdout, baseline.stdout);
+    assert_eq!(cranelift.stderr, baseline.stderr);
     let tested =
         execute(command(&scratch, &fixture, "cranelift", Some("cranelift")).args(["test", "--offline", "--locked", "--workspace"]));
-    success(&tested);
+    success_at("Cranelift workspace unit tests and doctests", &tested);
 }

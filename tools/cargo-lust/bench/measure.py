@@ -134,7 +134,7 @@ def clean_environment(cargo_home: Path) -> tuple[dict[str, str], list[str]]:
         "RUSTFLAGS", "RUSTDOCFLAGS", "CARGO_ENCODED_RUSTFLAGS", "CARGO_ENCODED_RUSTDOCFLAGS",
         "CARGO", "CARGO_HOME", "CARGO_TARGET_DIR", "CARGO_INCREMENTAL", "CARGO_BUILD_JOBS",
         "CARGO_BUILD_TARGET", "CARGO_MAKEFLAGS", "MAKEFLAGS", "MFLAGS",
-        "LUST_CARGO", "LUSTC",
+        "LUST_CARGO", "LUSTC", "LUST_CRANELIFT_BACKEND",
     }
     for key in list(env):
         if key in exact or key.startswith(("CARGO_PROFILE_", "CARGO_BUILD_", "CARGO_TARGET_", "CARGO_LUST_")):
@@ -221,8 +221,8 @@ def selected_plan(coordinator: str, cargo: str, project: Path, root: Path, env: 
         raise BenchmarkError(f"Expected engine {expected}, but coordinator plan selected {plan.get('selected_engine')}.")
     if plan.get("program") != cargo:
         raise BenchmarkError("The candidate plan does not use the baseline's exact Cargo executable.")
-    if expected == "cranelift" and plan.get("environment", {}).get("CARGO_PROFILE_DEV_CODEGEN_BACKEND") != "cranelift":
-        raise BenchmarkError("The candidate plan does not select Cranelift for the measured dev profile.")
+    if expected == "cranelift" and plan.get("environment", {}).get("CARGO_PROFILE_DEV_CODEGEN_BACKEND") != env.get("LUST_CRANELIFT_BACKEND"):
+        raise BenchmarkError("The candidate plan does not select the configured Cranelift library for the measured dev profile.")
 
 
 def sample(route: str, prefix: list[str], project: Path, target: Path, run_dir: Path, source_hash: str,
@@ -350,9 +350,20 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
         env, removed = clean_environment(root / "cargo-home")
         cargo, rustc, rustdoc = choose_tools(args, env, root, report)
         env.update({"CARGO": cargo, "LUST_CARGO": cargo, "RUSTC": rustc, "RUSTDOC": rustdoc})
+        candidate_env = env.copy()
+        backend = None
+        if args.engine == "cranelift" and args.operation == "build":
+            configured = args.cranelift_backend or os.environ.get("LUST_CRANELIFT_BACKEND")
+            if not configured:
+                raise BenchmarkError("Cranelift builds require --cranelift-backend or LUST_CRANELIFT_BACKEND from the pinned setup helper.")
+            backend = Path(configured)
+            if not backend.is_absolute() or not backend.is_file():
+                raise BenchmarkError("The selected Cranelift backend must be an existing absolute library path.")
+            candidate_env["LUST_CRANELIFT_BACKEND"] = str(backend)
+            report["selected_cranelift_backend"] = {"path": str(backend), "sha256": file_digest(backend), "bytes": backend.stat().st_size}
         report["removed_environment_keys"] = removed
         report["identities"] = identify(cargo, rustc, coordinator, env, root, args)
-        selected_plan(coordinator, cargo, project, root, env, args, report)
+        selected_plan(coordinator, cargo, project, root, candidate_env, args, report)
         lock = process([cargo, "generate-lockfile", "--offline", "--manifest-path", str(project / "Cargo.toml")], project, env, args.timeout)
         report["setup"].append(lock)
         require_success(lock, "preparing the copied fixture's lockfile")
@@ -372,7 +383,7 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
                 if scenario == "cold":
                     target = target / str(index)
                 entry = sample(route, prefixes[route], project, target, root / "runs" / scenario / str(index) / route,
-                               source_hash, expected_probe, scenario, index, position, env, args)
+                               source_hash, expected_probe, scenario, index, position, candidate_env if route == "coordinator" else env, args)
                 entries.append(entry)
                 report["warmups" if warmup else "samples"].append(entry)
             # A warmup starts from an empty target directory, so freshness expectations do not apply.
@@ -396,6 +407,8 @@ def benchmark(args: argparse.Namespace, report: dict) -> None:
                     # Each rejected snapshot differs, avoiding a repeated-error cache benchmark.
                     source = original.replace(PROBE, PROBE.replace("{ 41 }", f'{{ "type_error_{index}" }}'))
                 run_pair(scenario, index, source, expected_probe)
+        if backend is not None and file_digest(backend) != report["selected_cranelift_backend"]["sha256"]:
+            raise BenchmarkError("The selected backend's bytes changed during the benchmark.")
 
 
 def write_report(report: dict, output: str) -> None:
@@ -418,6 +431,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--coordinator", help="Built cargo-lust executable; otherwise locate cargo-lust on PATH.")
     parser.add_argument("--engine", choices=("rustc", "cranelift"), default="rustc")
+    parser.add_argument("--cranelift-backend", help="Absolute unwinding-enabled backend library path; defaults to LUST_CRANELIFT_BACKEND for Cranelift builds.")
     parser.add_argument("--operation", choices=("build", "check"), default="build")
     parser.add_argument("--samples", type=int, default=6, help="Measured pairs per scenario, default 6; even counts balance ordering.")
     parser.add_argument("--jobs", type=int, default=1)

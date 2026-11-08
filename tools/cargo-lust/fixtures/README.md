@@ -5,7 +5,11 @@ exercises an external procedural derive, a build script's generated Rust and
 environment variables, async polling, generic associated types, const generics,
 unsafe pointer access, a C calling convention, cross-crate calls, and a doctest.
 The binary catches a panic and checks that a stack destructor ran. This catches
-an accidental change from unwinding to aborting.
+an accidental change from unwinding to aborting. A deterministic stderr trace
+marks entry, the panic hook, and successful recovery. The optional Cranelift test
+compiles first, then runs the final executable directly and compares stdout,
+stderr, and exit status with the ordinary Cargo build. A failed recovery is
+therefore distinguishable from a failed compilation.
 
 Expected output with no application arguments:
 

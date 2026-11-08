@@ -31,18 +31,22 @@ Coordinator options go before the command. Arguments after the command, includin
 
 ## Try the complementary development backend
 
-Install a nightly and its matching Cranelift component explicitly, then choose that toolchain:
+Build the pinned Cranelift backend with unwind support, then select its matching toolchain. The initial setup helper supports Linux x86_64 and needs Git, rustup, Python 3, and a C build environment:
 
 ```sh
-rustup toolchain install nightly-2026-11-07 --profile minimal \
-  --component rustc-codegen-cranelift-preview
-cargo +nightly-2026-11-07 lust --engine cranelift build
-cargo +nightly-2026-11-07 lust --engine cranelift test
+bash tools/cargo-lust/scripts/build-cranelift.sh
+source tools/cargo-lust/target/complement/env.sh
+cargo +nightly-2026-11-05 lust --engine cranelift build
+cargo +nightly-2026-11-05 lust --engine cranelift test
 ```
 
-Cranelift uses the rustc frontend, so async, unsafe code, procedural macros, generic associated types, and other Rust semantics still go through rustc. The coordinator enables Cargo's official `-Zcodegen-backend` mechanism and the development/test profile backend variables. It does not select a different panic strategy or alter `RUSTFLAGS`, optimization, features, source, or dependencies.
+The helper builds the pinned source with its `unwinding` Cargo feature and records the compiler identity and backend hash. It does not change rustup's default toolchain. The generated `env.sh` selects the pinned toolchain and sets `LUST_CRANELIFT_BACKEND` to the absolute library path. Both exports are explicit changes to the current shell. Ordinary coordinator builds never download or install a toolchain.
 
-This backend is experimental. Upstream lists incomplete `std::arch` support and experimental panic unwinding with platform restrictions. Installing a component does not prove that a project can use it. A backend error remains an error, and a failing program or test is never retried. See the [official backend documentation](https://github.com/rust-lang/rustc_codegen_cranelift/blob/main/Readme.md) and [this fork's verification report](../../docs/compiler-set/verification.md).
+Cranelift uses the rustc frontend, so async, unsafe code, procedural macros, generic associated types, and other Rust semantics still go through rustc. The coordinator enables Cargo's official `-Zcodegen-backend` mechanism and sets the development/test profile backend variables to that library. It does not select a different panic strategy or alter `RUSTFLAGS`, optimization, features, source, or dependencies.
+
+**The stock rustup Cranelift preview is insufficient for this integration.** Our runtime gate found that it failed to catch the fixture's panic. Upstream builds unwind support behind an optional Cargo feature; passing `-Cpanic=unwind` does not add that missing implementation. The coordinator therefore requires the explicit `LUST_CRANELIFT_BACKEND` path instead of selecting the stock backend by name. Keep the matching compiler revision. The backend remains experimental even when a fixture passes.
+
+Upstream also lists incomplete `std::arch` support and panic unwinding with platform restrictions. A backend error remains an error, and a failing program or test is never retried. See the [official backend documentation](https://github.com/rust-lang/rustc_codegen_cranelift/blob/main/Readme.md) and [this fork's verification report](../../docs/compiler-set/verification.md).
 
 The Cranelift choice applies to development `build`, `run`, and `test`. Explicit `--release`, `-r`, grouped release flags such as `-qr`, and `--profile` requests preserve the project's existing Cargo configuration. `check`, `bench`, `doc`, `clippy`, aliases such as `b`, other Cargo commands, and unknown extensions also pass through unchanged. Cargo owns alias expansion because aliases can select a different profile or operation. In particular, this backend does not promise faster `cargo check`.
 
@@ -75,7 +79,7 @@ cargo lust doctor
 
 `plan` and `--explain` produce JSON with the requested engine, selected engine, reason, command, arguments, environment changes and removals, and experimental status. They run no Cargo command, compiler, build script, or application. Invalid UTF-8 arguments are represented as lossless byte objects.
 
-`doctor` asks installed Cargo, rustc, and Lust for their versions and checks the selected rustc sysroot for a Cranelift library. It installs nothing and builds nothing. It reports availability, not qualification. Cargo configuration and custom wrappers may select a compiler different from the one visible through `PATH` and `RUSTC`; the report states that limitation.
+`doctor` asks installed Cargo, rustc, and Lust for their versions, lists any stock Cranelift library, and reports the explicitly configured backend path. It installs nothing and builds nothing. It reports availability, not qualification. Cargo configuration and custom wrappers may select a compiler different from the one visible through `PATH` and `RUSTC`; the report states that limitation.
 
 ## Verify and measure
 
@@ -87,8 +91,9 @@ LUST_TEST_LUST="$PWD/target/gate/lust" \
   cargo test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline \
   --test qualification actual_lust -- --ignored --nocapture
 
-# Run the actual Cranelift full-Rust/panic parity test.
-cargo +nightly-2026-11-07 test --manifest-path tools/cargo-lust/Cargo.toml \
+# Run the actual custom Cranelift full-Rust/panic parity test after setup.
+source tools/cargo-lust/target/complement/env.sh
+cargo +nightly-2026-11-05 test --manifest-path tools/cargo-lust/Cargo.toml \
   --locked --offline --test qualification actual_cranelift -- --ignored --nocapture
 ```
 

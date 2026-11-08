@@ -14,13 +14,23 @@ impl Drop for DropProbe {
 }
 
 fn main() {
-    std::panic::set_hook(Box::new(|_| {}));
+    std::panic::set_hook(Box::new(|info| {
+        let payload = info.payload();
+        let message = payload
+            .downcast_ref::<&str>()
+            .copied()
+            .or_else(|| payload.downcast_ref::<String>().map(String::as_str))
+            .unwrap_or("non-string panic payload");
+        eprintln!("fixture: panic hook: {message}");
+    }));
     let drops = Arc::new(AtomicU32::new(0));
     let captured = drops.clone();
+    eprintln!("fixture: entering catch_unwind");
     let caught = std::panic::catch_unwind(move || {
         let _guard = DropProbe(captured);
         panic!("qualification panic");
     });
+    eprintln!("fixture: catch_unwind returned; caught={} drops={}", caught.is_err(), drops.load(Ordering::SeqCst),);
     let value = 19;
     let pointer = unsafe { fixture_core::read_raw(&value) };
     let ffi: extern "C" fn(u32) -> u32 = fixture_core::ffi_increment;
