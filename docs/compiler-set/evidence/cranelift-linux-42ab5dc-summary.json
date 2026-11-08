@@ -1,0 +1,470 @@
+{
+  "acceptance_parity_pair_count": 34,
+  "backend_recipe": {
+    "backend_build_rustflags": "-Zallow-features=rustc_private,f16,f128",
+    "pin": {
+      "cargo_lock_git_blob": "c9b921615f43009892a2b8434d190b3544da35fd",
+      "features": [
+        "unwinding"
+      ],
+      "host": "x86_64-unknown-linux-gnu",
+      "repository": "https://github.com/rust-lang/rustc_codegen_cranelift.git",
+      "revision": "8edf4d040acb77048e04b52a379e93dccae888e6",
+      "schema_version": 1,
+      "toolchain": "nightly-2026-11-05"
+    },
+    "qualification": {
+      "full_project_coverage_proven": false,
+      "panic_strategy": "unwind",
+      "probe_command": [
+        "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu/bin/rustc",
+        "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/unwind-probe.rs",
+        "--crate-name",
+        "cargo_lust_unwind_probe",
+        "--edition",
+        "2024",
+        "-Zcodegen-backend=/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+        "-Cpanic=unwind",
+        "-Copt-level=0",
+        "-Coverflow-checks=on",
+        "-Cdebug-assertions=on",
+        "-o",
+        "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/unwind-probe"
+      ],
+      "probe_stdout": "catch_unwind=1 drops=1"
+    },
+    "sysroot": "the pinned toolchain's ordinary LLVM-built standard library"
+  },
+  "backend_report": {
+    "artifact_member": "tools/cargo-lust/target/complement/backend.json",
+    "bytes": 3035,
+    "copied_byte_for_byte": true,
+    "path": "lust-project-42ab5dc-backend.json",
+    "sha256": "f2593a962f47340ab94959f2c6d01787bc4be724684262cbf539a783a097d9ee"
+  },
+  "backend_verification": {
+    "artifact_check_count": 236,
+    "artifact_check_unit": "One crate artifact-group proof record; a record may contain multiple hashed output files.",
+    "artifact_checks_by_mode": {
+      "fresh_rustc_command": 128,
+      "verified_cached_artifacts": 108
+    },
+    "fresh_rustc_command_count": 140,
+    "groups": {
+      "excluded_warmups": {
+        "cargo": {
+          "artifact_checks_by_mode": {
+            "fresh_rustc_command": 16
+          },
+          "backend_selector_check": "no override of the pinned rustc default LLVM backend",
+          "expected_backend": "llvm",
+          "fresh_commands_by_crate": {
+            "build_script_build": 4,
+            "fixture_app": 4,
+            "fixture_core": 4,
+            "fixture_derive": 4
+          },
+          "fresh_rustc_commands": 16,
+          "passed_fresh_rustc_commands": 16,
+          "passed_rows": 4,
+          "rows": 4
+        },
+        "coordinator": {
+          "artifact_checks_by_mode": {
+            "fresh_rustc_command": 16
+          },
+          "backend_selector_check": "exactly the configured custom library path in every fresh rustc command",
+          "expected_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+          "fresh_commands_by_crate": {
+            "build_script_build": 4,
+            "fixture_app": 4,
+            "fixture_core": 4,
+            "fixture_derive": 4
+          },
+          "fresh_rustc_commands": 16,
+          "passed_fresh_rustc_commands": 16,
+          "passed_rows": 4,
+          "rows": 4
+        }
+      },
+      "measured_samples": {
+        "cargo": {
+          "artifact_checks_by_mode": {
+            "fresh_rustc_command": 48,
+            "verified_cached_artifacts": 54
+          },
+          "backend_selector_check": "no override of the pinned rustc default LLVM backend",
+          "expected_backend": "llvm",
+          "fresh_commands_by_crate": {
+            "build_script_build": 6,
+            "fixture_app": 18,
+            "fixture_core": 24,
+            "fixture_derive": 6
+          },
+          "fresh_rustc_commands": 54,
+          "passed_fresh_rustc_commands": 54,
+          "passed_rows": 30,
+          "rows": 30
+        },
+        "coordinator": {
+          "artifact_checks_by_mode": {
+            "fresh_rustc_command": 48,
+            "verified_cached_artifacts": 54
+          },
+          "backend_selector_check": "exactly the configured custom library path in every fresh rustc command",
+          "expected_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+          "fresh_commands_by_crate": {
+            "build_script_build": 6,
+            "fixture_app": 18,
+            "fixture_core": 24,
+            "fixture_derive": 6
+          },
+          "fresh_rustc_commands": 54,
+          "passed_fresh_rustc_commands": 54,
+          "passed_rows": 30,
+          "rows": 30
+        }
+      }
+    },
+    "passed_rows": 68,
+    "rejection_scope": "Rejected edits verify the actual compiler command and expected rejection; rejected source produces no executable for runtime comparison.",
+    "row_count": 68,
+    "timing_scope": "Backend verification and artifact hashing occur outside the reported build elapsed time."
+  },
+  "created_utc": "2026-11-08T18:31:58.996764+00:00",
+  "engine": "cranelift",
+  "errors": [],
+  "excluded_warmup_pair_count": 4,
+  "excluded_warmup_sample_count": 8,
+  "fixture": {
+    "base_sha256": "1123c9afe1ebd10341a885afb7d1f1f5397ad3f8c668a698e9cd29e70797e0d2",
+    "files": [
+      {
+        "bytes": 318,
+        "path": "Cargo.lock",
+        "sha256": "766efb4bbf851998ca7fc923da668cf3afdbeca01749db26772b2370dafbe0a7"
+      },
+      {
+        "bytes": 89,
+        "path": "Cargo.toml",
+        "sha256": "c5054733d8352fdd6c94290dfd2747294aa7d7cd1ec3ad7c4e353d5ec3522784"
+      },
+      {
+        "bytes": 174,
+        "path": "app/Cargo.toml",
+        "sha256": "94e1e54a4f4ff53e497e44ab62c0ff06c23ee56d79fcc5629c6aff8779b17ded"
+      },
+      {
+        "bytes": 1846,
+        "path": "app/src/main.rs",
+        "sha256": "bdc1e4a1b5f73a8070d89c1f11061b9ed592158a436c5b967bc940f79bf605c5"
+      },
+      {
+        "bytes": 102,
+        "path": "core/Cargo.toml",
+        "sha256": "e116e06247dc172d8bced63a72eb0481ed0e1fce66b46969791b6332bf3a71cf"
+      },
+      {
+        "bytes": 325,
+        "path": "core/build.rs",
+        "sha256": "0d5762d355fb293ab68036b1d12f55aaa4fe77f50bb696b7684fb2cfe7edecad"
+      },
+      {
+        "bytes": 2271,
+        "path": "core/src/lib.rs",
+        "sha256": "f996e957f4887f9d1eab3ed122d6a5b6f7d8d0384ae54645db094a1236686a3b"
+      },
+      {
+        "bytes": 110,
+        "path": "derive/Cargo.toml",
+        "sha256": "7dc0b5e9ff846c18a0ecdcb8f4f1d38d53c90edf63b0beadd4b2e4e000fde74d"
+      },
+      {
+        "bytes": 699,
+        "path": "derive/src/lib.rs",
+        "sha256": "7dad1cddebcc68d06a51a1bd44ff6c1fa0c6961b04adb3df6241b1da4d4f32a4"
+      }
+    ],
+    "path": "/home/runner/work/lustr/lustr/tools/cargo-lust/fixtures/full-rust"
+  },
+  "hardware": {
+    "available_cpus": 4,
+    "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+    "logical_cpus": 4,
+    "machine": "x86_64",
+    "python": "3.12.3",
+    "release": "7.0.0-1017-azure",
+    "system": "Linux"
+  },
+  "identities": {
+    "cargo": {
+      "command": [
+        "/home/runner/.cargo/bin/cargo",
+        "--version",
+        "--verbose"
+      ],
+      "stdout": {
+        "bytes": 353,
+        "sha256": "1029e1b49d1580c4f58bcec24d211ba020cfe08a2ae633680fe42747fcfe605e",
+        "text": "cargo 1.101.0-nightly (3c747ea3e 2026-11-03)\nrelease: 1.101.0-nightly\ncommit-hash: 3c747ea3ead23951c1b43a5edfcbdb449135ddeb\ncommit-date: 2026-11-03\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]\n"
+      }
+    },
+    "coordinator": {
+      "command": [
+        "/home/runner/work/lustr/lustr/tools/cargo-lust/target/release/cargo-lust",
+        "--version"
+      ],
+      "executable_sha256": "cd413ee160e9d76d4624275df386d6013930b4104a37a2c77392920ac0bf10a4",
+      "stdout": {
+        "bytes": 17,
+        "sha256": "fe4dcea10091834439fa8e8796086b94e182759c4230db3bde5b5e3dc90aa85b",
+        "text": "cargo-lust 0.1.0\n"
+      }
+    },
+    "rustc": {
+      "command": [
+        "/home/runner/.cargo/bin/rustc",
+        "-vV"
+      ],
+      "stdout": {
+        "bytes": 214,
+        "sha256": "81fd6af93c2bd154de55b222c511d08ffd1cf7404833ad856d0da9bdbe94b2b4",
+        "text": "rustc 1.101.0-nightly (2d20b42b8 2026-11-04)\nbinary: rustc\ncommit-hash: 2d20b42b883dcfc014f3c2c56081eeb6091c2179\ncommit-date: 2026-11-04\nhost: x86_64-unknown-linux-gnu\nrelease: 1.101.0-nightly\nLLVM version: 23.1.5\n"
+      }
+    },
+    "sysroot": {
+      "command": [
+        "/home/runner/.cargo/bin/rustc",
+        "--print",
+        "sysroot"
+      ],
+      "stdout": {
+        "bytes": 76,
+        "sha256": "6ca6ef1bf9da0c0a254d1e2db2b33a5f5b4f843d1799b4d6c38d42ce7f1c3d08",
+        "text": "/home/runner/.rustup/toolchains/nightly-2026-11-05-x86_64-unknown-linux-gnu\n"
+      }
+    }
+  },
+  "limits": [
+    "One small synthetic workspace on one Linux x86_64 runner; these ratios do not establish speedups for arbitrary Rust projects.",
+    "Six measured samples per route and scenario; nearest-rank p95 is the observed maximum at this sample size.",
+    "Cold means empty Cargo target directories. Installed compiler, sysroot, and operating-system page caches remain warm.",
+    "The primary metric is Cargo build elapsed time. Runtime outputs are compared separately; this is not a compile-plus-test benchmark.",
+    "No peak-memory measurement, compiler-stage profiling, or exhaustive Rust conformance result is provided.",
+    "Lust native artifacts are not mixed into the Rust crate graph in this benchmark."
+  ],
+  "measured_pair_count": 30,
+  "measured_sample_count": 60,
+  "method": {
+    "backend_proof": "Cargo -vv --color never commands must select the expected backend for app, core, derive, and build script; cached artifact hashes must match earlier verified compilations; verification overhead is excluded from timing",
+    "clock": "time.perf_counter_ns",
+    "cold": "empty Cargo target directory; installed sysroot and OS page cache are not cold",
+    "interleaving": "alternate the first route in each pair",
+    "limits": "small synthetic fixture; not evidence of broad full-project acceleration; no peak-memory or compiler-stage profiling",
+    "p95": "nearest-rank percentile; at small sample counts this is the maximum",
+    "source": "one shared copied source snapshot per pair, separate target directories",
+    "warm": "one excluded paired warmup; target directories retained"
+  },
+  "operation": "build",
+  "pair_count": 34,
+  "passed": true,
+  "passed_pair_count": 34,
+  "provenance": {
+    "artifact": "https://github.com/glopyglerky/lustr/actions/runs/42510335761/artifacts/13629213305",
+    "artifact_id": 13629213305,
+    "artifact_members_verified_byte_for_byte": true,
+    "artifact_zip_bytes": 1620059,
+    "artifact_zip_sha256": "bc7419017116a5d2f0a6fcce24fa0d19a3d2af4fd2ef78d9b174e5cf9cd6bf31",
+    "checkout_note": "GitHub Actions tested the pull-request merge checkout; head_commit identifies the source change under review.",
+    "head_commit": "42ab5dcb302e31eb547dbb76999ebc6b8134527b",
+    "job": "https://github.com/glopyglerky/lustr/actions/runs/42510335761/job/128821816027",
+    "job_id": 128821816027,
+    "repository": "glopyglerky/lustr",
+    "tested_checkout_commit": "5b52cfc2322f28f1d4edda7ef01cbd7b866e2d4f",
+    "workflow_run": "https://github.com/glopyglerky/lustr/actions/runs/42510335761",
+    "workflow_run_id": 42510335761
+  },
+  "raw_report": {
+    "artifact_member": "compiler-set-cranelift.json",
+    "compressed_bytes": 89752,
+    "compressed_sha256": "d261a1db2b19a93f594f3b49211ff853203e2b7b7c73baddd463c2c92805007f",
+    "gzip_mtime": 0,
+    "path": "cranelift-linux-42ab5dc.json.gz",
+    "roundtrip_verified": true,
+    "uncompressed_bytes": 1586935,
+    "uncompressed_sha256": "dc49345ab55ffe48c9542e8c801b6131050a6db1ce8d50d8108f1680986acc17"
+  },
+  "rejected_pair_count_without_runtime": 6,
+  "removed_environment_keys": [
+    "LUST_CRANELIFT_BACKEND"
+  ],
+  "runtime_parity_pair_count": 28,
+  "schema_version": 1,
+  "selected_cranelift_backend": {
+    "bytes": 15411184,
+    "path": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+    "sha256": "75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc"
+  },
+  "selection_plan": {
+    "args": [
+      "build",
+      "-Zcodegen-backend",
+      "--config",
+      "profile.dev.codegen-backend=\"/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so\"",
+      "--config",
+      "profile.test.codegen-backend=\"/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so\"",
+      "--manifest-path",
+      "/tmp/cargo-lust-bench-hyiv94o2/project/Cargo.toml",
+      "--package",
+      "fixture-app",
+      "--bin",
+      "fixture-app",
+      "--target-dir",
+      "/tmp/cargo-lust-bench-hyiv94o2/plan-target",
+      "--jobs",
+      "1",
+      "--offline",
+      "--locked",
+      "--message-format=json",
+      "-vv",
+      "--color",
+      "never"
+    ],
+    "codegen_backend": "/home/runner/work/lustr/lustr/tools/cargo-lust/target/complement/lib/75e142fbee693c6bd4428ac4e30ba68b807a0bda3865a8ab439d6ce6560687bc/librustc_codegen_cranelift.so",
+    "environment": {},
+    "environment_remove": [],
+    "experimental": true,
+    "format_version": 1,
+    "program": "/home/runner/.cargo/bin/cargo",
+    "reason": "experimental configured Cranelift dev/test backend; no panic or feature flags are changed, and backend correctness requires qualification",
+    "requested_engine": "cranelift",
+    "selected_engine": "cranelift"
+  },
+  "settings": {
+    "features": "fixture defaults, unchanged",
+    "jobs": 1,
+    "primary_metric": "build",
+    "profile": {
+      "CARGO_INCREMENTAL": "1",
+      "CARGO_PROFILE_DEV_DEBUG": "2",
+      "CARGO_PROFILE_DEV_DEBUG_ASSERTIONS": "true",
+      "CARGO_PROFILE_DEV_INCREMENTAL": "true",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_DEV_OVERFLOW_CHECKS": "true",
+      "CARGO_PROFILE_DEV_PANIC": "unwind"
+    },
+    "samples_per_scenario": 6,
+    "scenarios": [
+      "cold",
+      "warm_noop",
+      "body_edit",
+      "signature_edit",
+      "rejected_edit"
+    ],
+    "target": "host"
+  },
+  "statistics": {
+    "body_edit": {
+      "baseline_over_coordinator_median": 1.0270955353712177,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 111219390,
+          "median_ns": 107177301.0,
+          "min_ns": 105503624,
+          "p95_ns": 111219390,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 107266509,
+          "median_ns": 104349885.0,
+          "min_ns": 103253791,
+          "p95_ns": 107266509,
+          "samples": 6
+        }
+      }
+    },
+    "cold": {
+      "baseline_over_coordinator_median": 1.2877089675897428,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 425337552,
+          "median_ns": 419154465.5,
+          "min_ns": 412385058,
+          "p95_ns": 425337552,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 331559837,
+          "median_ns": 325504035.5,
+          "min_ns": 323175583,
+          "p95_ns": 331559837,
+          "samples": 6
+        }
+      }
+    },
+    "rejected_edit": {
+      "baseline_over_coordinator_median": 0.9776043657810258,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 38057015,
+          "median_ns": 36876925.0,
+          "min_ns": 36780179,
+          "p95_ns": 38057015,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 39301793,
+          "median_ns": 37721727.0,
+          "min_ns": 37125701,
+          "p95_ns": 39301793,
+          "samples": 6
+        }
+      }
+    },
+    "signature_edit": {
+      "baseline_over_coordinator_median": 1.0399528441002455,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 116696771,
+          "median_ns": 115864260.5,
+          "min_ns": 113215145,
+          "p95_ns": 116696771,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 114566388,
+          "median_ns": 111412994.5,
+          "min_ns": 108963312,
+          "p95_ns": 114566388,
+          "samples": 6
+        }
+      }
+    },
+    "warm_noop": {
+      "baseline_over_coordinator_median": 0.9635893039618953,
+      "metric": "build.elapsed_ns",
+      "routes": {
+        "cargo": {
+          "max_ns": 13086797,
+          "median_ns": 12762630.0,
+          "min_ns": 11922210,
+          "p95_ns": 13086797,
+          "samples": 6
+        },
+        "coordinator": {
+          "max_ns": 13869286,
+          "median_ns": 13244885.5,
+          "min_ns": 12439831,
+          "p95_ns": 13869286,
+          "samples": 6
+        }
+      }
+    }
+  },
+  "statistics_recomputed_from_measured_samples": true,
+  "workload": "path-only full-rust fixture: application, library, procedural macro, and build script"
+}

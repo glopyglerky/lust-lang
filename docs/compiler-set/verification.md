@@ -4,7 +4,40 @@ Verification date: 2026-11-08.
 
 ## What this establishes
 
-The coordinator preserves ordinary Cargo behavior for the included full Rust workspace, invokes the actual upstream Lust compiler for a supported target, and keeps an unsupported Lust program rejected. The pinned complementary backend with unwind support also compiles and executes the full Rust fixture, passes its tests, and compiles and tests the coordinator itself. These tests establish an executable integration. They do not establish an independent full Rust frontend, arbitrary Lust/rustc library interoperability, automatic fast-path selection, or a speedup on production Rust projects.
+The coordinator preserves ordinary Cargo behavior for the included full Rust workspace, invokes the actual upstream Lust compiler for a supported target, and keeps an unsupported Lust program rejected. The pinned complementary backend with unwind support compiles and executes the full Rust fixture, passes its tests, and compiles and tests the coordinator itself. It also builds the unchanged upstream Lust compiler with a measured cold-development-build reduction, passes the same 391 upstream unit tests, and matches its runtime probes. These results establish the exercised Linux configuration, not an independent full Rust frontend, arbitrary Lust/rustc library interoperability, automatic fast-path selection, or a general Rust speedup.
+
+## Qualified full-project result
+
+The [complete compiler-set workflow at `42ab5dc`](https://github.com/glopyglerky/lustr/actions/runs/42510335761) passed every job. Its [complementary-backend job](https://github.com/glopyglerky/lustr/actions/runs/42510335761/job/128821816027) completed both the small-workspace benchmark and the unchanged-Lust benchmark with the corrected shared command verifier.
+
+The substantial workload builds the original `lust` and `lust-core` binaries from the fork's unchanged upstream compiler source. `src/`, `library/`, `Cargo.toml`, `Cargo.lock`, `build.rs`, and `scripts/build-tcc.sh` have no changes from upstream base `240e08d91d4aed0299639f6f11fd522912b248f9`. Both routes use the same pinned nightly, dependencies, source, default dev profile, and one Cargo build job. The runner reported four available CPUs on an AMD EPYC 9V45, Linux x86_64. Installed toolchains and operating-system caches remain warm; cold means empty Cargo target directories.
+
+| Scenario | Cargo/LLVM median | Coordinator/Cranelift median | Cargo / coordinator |
+| --- | ---: | ---: | ---: |
+| Empty target directory | 59.536 s | 39.400 s | 1.511 |
+| Warm, no source change | 19.532 ms | 21.149 ms | 0.924 |
+
+Cold compilation took **33.8% less time** in two interleaved pairs. The individual LLVM samples were 61.798 and 57.274 seconds; Cranelift took 40.369 and 38.431 seconds. The two no-op pairs showed a small regression. Two samples per route are preliminary evidence, not a statistical significance result or a prediction for other projects. These are build timings; runtime probes, unit suites, backend verification, artifact hashing, and setup are outside that metric.
+
+Before timing, both compiler variants passed 11 client and 380 core unit tests, with the actual compiler commands proving their backend choices. Both cold pairs, the excluded warmup pair, and both no-op pairs then passed supported-program execution, unsupported-program rejection, version, and capability comparisons. Fresh root compiler commands were verified, and no-op binary hashes matched their verified warmups. All 37 source/tool input checks passed.
+
+The benchmark uses two explicit compatibility settings equally for both routes: a 256 MiB minimum stack only for the unit-suite process trees, matching upstream production compiler workers, and the pinned Cargo revision's temporary old-layout opt-out for this legacy Cargo-inspecting project. Timed builds and probes retain their original stack setting. The coordinator does not add either setting to ordinary user builds. The [qualification history below](#first-substantial-project-run) explains why these settings are required.
+
+The [full-project summary and raw samples](evidence/lust-project-42ab5dc-summary.json), [complete compressed report](evidence/lust-project-42ab5dc.json.gz), and [backend provenance](evidence/lust-project-42ab5dc-backend.json) retain the qualified result. The downloaded artifact ZIP matched GitHub's SHA-256 digest before extraction. The report records the actual pull-request merge checkout separately from the reviewed branch head.
+
+### Small workspace on the same runner
+
+The same job also passed 34 fixture pairs, including four excluded warmup pairs, and verified all 68 compiler/artifact records. With six measured samples per route and scenario, it recorded:
+
+| Scenario | Cargo/LLVM median | Coordinator/Cranelift median | Cargo / coordinator |
+| --- | ---: | ---: | ---: |
+| Empty target directory | 419.15 ms | 325.50 ms | 1.288 |
+| Warm, no source change | 12.76 ms | 13.24 ms | 0.964 |
+| Function body edit | 107.18 ms | 104.35 ms | 1.027 |
+| Function signature edit | 115.86 ms | 111.41 ms | 1.040 |
+| Invalid type edit | 36.88 ms | 37.72 ms | 0.978 |
+
+Cold compilation took 22.3% less time on this small fixture. Edit gains remained small, and no-op and rejection cases were slower. Its [summary](evidence/cranelift-linux-42ab5dc-summary.json) and [complete report](evidence/cranelift-linux-42ab5dc.json.gz) preserve this run separately from the historical measurements below. Different runner hardware makes absolute times across separate runs unsuitable for direct comparison.
 
 ## Local tools
 
@@ -143,7 +176,7 @@ Empty-target compilation took 22.3% less time in this run. Warm edits changed li
 
 The [follow-up summary](evidence/cranelift-linux-219b915-summary.json), [complete compressed report](evidence/cranelift-linux-219b915.json.gz), and [backend identity](evidence/cranelift-linux-219b915-backend.json) retain the new result. Historical measurements above remain separate. The complete workflow still failed its substantial-project verification step, as described below; the successful small-fixture step is not a successful whole-workflow result.
 
-## Remaining qualification
+## Substantial-project qualification history
 
 ### First substantial-project run
 
@@ -161,8 +194,8 @@ Review also identified that a planned backend is insufficient proof of execution
 
 At `219b915`, both unit-suite processes returned zero and each reported 11 client tests plus 380 core tests passing. The benchmark nevertheless stopped before timing because its compiler-command verifier rejected a quoted multiline package description in Cargo's verbose output for the `cc` dependency. This was a framing error in the verifier: one Cargo command spanned several physical lines. The raw report contains zero timed samples and no performance statistics.
 
-The [qualification summary](evidence/lust-project-219b915-qualification-summary.json) and [complete compressed report](evidence/lust-project-219b915-qualification.json.gz) preserve both successful test-process results and the failed overall benchmark. The corrected shared verifier preserves complete quoted commands across newlines and continues rejecting malformed or truncated command records. Replaying it against the unchanged saved logs confirms the root test binaries' LLVM and exact custom-backend selections for both 391-test suites. The summary records this retrospective verification separately, including the verifier's source hashes; it does not change the original report's failed status. The corrected runner requires a fresh full benchmark run before any substantial-project speedup can be claimed.
+The [qualification summary](evidence/lust-project-219b915-qualification-summary.json) and [complete compressed report](evidence/lust-project-219b915-qualification.json.gz) preserve both successful test-process results and the failed overall benchmark. The corrected shared verifier preserves complete quoted commands across newlines and continues rejecting malformed or truncated command records. Replaying it against the unchanged saved logs confirms the root test binaries' LLVM and exact custom-backend selections for both 391-test suites. The summary records this retrospective verification separately, including the verifier's source hashes; it does not change the original report's failed status. The later `42ab5dc` run completed the fresh qualification and timed measurements reported at the top of this document.
 
-### Broader coverage
+## Remaining qualification
 
-The fixture does not prove full compiler conformance. Open requirements include production dependency graphs, macro and build-script invalidation, multiple targets and architectures, SIMD/intrinsics, inline assembly, sanitizer and coverage options, no_std/embedded targets, mixed backend ABI correctness, automatic target selection, and performance on representative large projects. Their acceptance conditions remain in the [roadmap](roadmap.md).
+One small fixture and one substantial compiler project do not prove full compiler conformance. Open requirements include a broader workload census, macro and build-script invalidation, multiple targets and architectures, SIMD/intrinsics, inline assembly, sanitizer and coverage options, no_std/embedded targets, mixed backend ABI correctness, automatic target selection, and performance across representative large projects. Their acceptance conditions remain in the [roadmap](roadmap.md).

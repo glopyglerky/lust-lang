@@ -10,7 +10,7 @@ The [verification report](verification.md) identifies the exact tested commits a
 | --- | --- |
 | 1. Cargo entry point | Implemented. Ordinary Cargo qualification passes on Linux, macOS, Windows, and Rust 1.85. Actual native Lust and pinned Cranelift execution gates pass on Linux x86_64. |
 | 2. Backend qualification | Partial. Panic recovery, destructors, full-language fixtures, mixed LLVM/Cranelift crates, and nested Cargo pass with the pinned backend. The broader feature and platform matrix below remains open. |
-| 3. Workload measurements | Small-fixture evidence is retained, including regressions. An unchanged-Lust workload and strict qualification runner are implemented; a successful substantial-project result must be recorded before claiming its speedup. |
+| 3. Workload measurements | Initial evidence is retained for the small fixture and unchanged upstream Lust. The full-project run passed both 391-test suites and all build/runtime gates; two cold pairs measured 59.54 s with LLVM versus 39.40 s with Cranelift. No-op builds regressed. The broader census and profiling requirements below remain open. |
 | 4. Automatic Lust routing | Open. Native Lust selection remains explicit and applies to complete supported targets. |
 | 5. Shared semantic interface | Open. The Cranelift integration shares rustc's metadata and frontend; it does not expose that interface to native Lust. |
 | 6. Lust generation from full Rust IR | Open. Native Lust does not participate inside Cargo's Rust library graph. |
