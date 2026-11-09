@@ -14,6 +14,15 @@ and [Lustr releases](https://github.com/glopyglerky/lustr/releases). Use a relea
 recorded platform, component manifest and checksums. Keep the extracted toolchain
 at a versioned absolute path; ordinary project builds do not rebuild the compiler.
 
+[Preview 2026.11.09-1](https://github.com/glopyglerky/lustr/releases/tag/preview-2026.11.09-1)
+is available for Linux x86_64 GNU with GLIBC 2.39 and GLIBCXX_3.4.32. Download all
+six assets and verify `SHA256SUMS`. It includes the matched BlueFe compiler,
+native/Wasm libraries, Clippy/rustfmt and experimental unwind-enabled Cranelift.
+Other hosts and Wasm execution are unqualified. The release records coordinator
+source `07470b2`; the later default-branch benchmark/docs commit leaves that
+coordinator source unchanged. See the
+[exact release record](https://github.com/glopyglerky/blueFe/blob/main/docs/bluefe/releases/preview-2026.11.09-1.md).
+
 ```sh
 lustr --bluefe-root /absolute/toolchain build --workspace
 lustr --bluefe-root /absolute/toolchain test --workspace
