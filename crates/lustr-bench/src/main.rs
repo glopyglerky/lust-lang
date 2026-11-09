@@ -1,5 +1,6 @@
 //! Linux-only qualification runner. No shell, unsafe code, inherited environment or fallback.
 #![forbid(unsafe_code)]
+mod order;
 mod stats;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -786,18 +787,11 @@ fn study(r: &mut Runner, s: &Spec, report: &mut Value) -> R<()> {
     }
     let mut times: Vec<Vec<f64>> = (0..s.lanes.len()).map(|_| Vec::with_capacity(s.pairs)).collect();
     let mut order = Vec::new();
-    // AB/BA in adjacent pairs; seed selects the first direction in each block.
+    // Blocks restart at each phase; one seeded RNG stream binds both schedules.
     let mut rng = s.seed;
     for warm in [true, false] {
         let count = if warm { s.warmup_pairs } else { s.pairs };
-        let mut direction = false;
-        for pair in 0..count {
-            if pair % 2 == 0 {
-                direction = stats::random(&mut rng) & 1 == 1;
-            } else {
-                direction = !direction;
-            }
-            let indices: Vec<_> = if direction { (0..s.lanes.len()).rev().collect() } else { (0..s.lanes.len()).collect() };
+        for (pair, indices) in order::rounds(s.lanes.len(), count, &mut rng).into_iter().enumerate() {
             order.push(json!({"warmup":warm,"pair":pair,"lane_indices":indices}));
             report["order"] = json!(order);
             for i in indices {
@@ -926,7 +920,7 @@ fn main() -> R<()> {
     fs::create_dir(&out)?;
     publish(&out.join("spec.original.json"), &bytes)?;
     let mut r = Runner { dir: out.clone(), records: Vec::new() };
-    let mut report = json!({"schema":1,"runner_version":env!("CARGO_PKG_VERSION"),"runner_sha256":hash(&std::env::current_exe()?)?,"spec_sha256":hex(&Sha256::digest(&bytes)),"spec":s,"status":"failed","summaries":null,"metadata_comparison_rule":"cargo-optional-min-opt-level-none-v1","metadata_comparison_projections":[],"memory_energy":"not measured","inference_assumptions":"equivalent work; independent pairs for bootstrap; sign exchangeability under null; exploratory unadjusted comparisons"});
+    let mut report = json!({"schema":1,"runner_version":env!("CARGO_PKG_VERSION"),"runner_sha256":hash(&std::env::current_exe()?)?,"spec_sha256":hex(&Sha256::digest(&bytes)),"spec":s,"status":"failed","summaries":null,"order_method":order::METHOD,"metadata_comparison_rule":"cargo-optional-min-opt-level-none-v1","metadata_comparison_projections":[],"memory_energy":"not measured","inference_assumptions":"equivalent work; independent pairs for bootstrap; sign exchangeability under null; exploratory unadjusted comparisons"});
     let metadata = s.force_root.as_ref().map(|p| fs::metadata(s.source.join(p))).transpose()?;
     let result = study(&mut r, &s, &mut report);
     let restored = if let (Some(p), Some(m)) = (&s.force_root, metadata) {

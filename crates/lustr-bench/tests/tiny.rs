@@ -77,6 +77,26 @@ fn actual_bluefe_tiny() {
             assert!(record[key]["cpu_pressure"].as_str().is_some_and(|value| value.contains("avg10=")));
         }
     }
+    // A complete three-lane run must use the versioned position-balanced order.
+    let mut three = spec.clone();
+    let mut third = three["lanes"][1].clone();
+    third["name"] = json!("third");
+    three["lanes"].as_array_mut().unwrap().push(third);
+    for lane in three["lanes"].as_array_mut().unwrap() {
+        lane["normalize"] = json!([[out.join("three/targets").join(lane["name"].as_str().unwrap()), "<TARGET>"]]);
+    }
+    fs::write(out.join("three.json"), serde_json::to_vec(&three).unwrap()).unwrap();
+    assert!(Command::new(exe).arg(out.join("three.json")).arg(out.join("three")).status().unwrap().success());
+    let three: Value = serde_json::from_slice(&fs::read(out.join("three/report.json")).unwrap()).unwrap();
+    assert_eq!(three["order_method"], "randomized-cyclic-blocks-v1");
+    assert_eq!(three["records"].as_array().unwrap().iter().filter(|r| r["phase"] == "timed").count(), 24);
+    let mut positions = [[0; 3]; 3];
+    for round in three["order"].as_array().unwrap().iter().filter(|r| r["warmup"] == false) {
+        for (position, lane) in round["lane_indices"].as_array().unwrap().iter().enumerate() {
+            positions[lane.as_u64().unwrap() as usize][position] += 1;
+        }
+    }
+    assert!(positions.iter().flatten().all(|count| (2..=3).contains(count)));
     assert!(!Command::new(exe).arg(&path).arg(out.join("passed")).status().unwrap().success());
     // Profile values cannot hide a feature difference from operation comparison.
     let mut unequal = spec.clone();

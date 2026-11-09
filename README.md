@@ -108,6 +108,11 @@ runtime gates did not apply the timed frontend options. These are metadata-only
 root checks, not default whole-build results. Full samples, conditional intervals,
 regressions, scoped proofs and a Rust statistics replay command accompany the data.
 
+For future campaigns, the runner now balances lane execution positions in cyclic
+blocks. Its [position theorem and checks](docs/compiler-set/proofs/order-balance.md)
+prove the count bound, without claiming to remove cache effects or establish a
+speedup. Published historical measurements keep their original order and limits.
+
 ## Fork ownership
 
 Lustr owns this layout, its entry points and its documentation. Required inherited

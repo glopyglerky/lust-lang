@@ -156,9 +156,15 @@ Cargo/rustc versus produced BlueFe comparisons separate from same-compiler seria
 versus parallel controls. Different compiler/Cargo versions remain confounders
 regardless of passing tests.
 
-Pairs use adjacent forward/reverse lane orders, with a seeded first direction in
-each block. All lanes run once per pair. Raw order is recorded; there is no
-selective dropping of slow samples. One excluded warmup pair is the minimum;
+New runs use `randomized-cyclic-blocks-v1`: each block visits all cyclic rotations
+of a shuffled lane list, in shuffled rotation order. Every lane runs once per
+round. Complete blocks of `L` rounds visit every execution position once per
+lane. With a partial final block, counts for each lane's positions differ by at
+most one. Choose an even number of rounds divisible by `L`, at least eight,
+for exact position balance. The [construction and position theorem](proofs/order-balance.md)
+state the deterministic guarantee and its limits. The report records the method
+and every actual order. There is no selective dropping of slow samples.
+One excluded warmup round is the minimum;
 choose more before viewing results. Filesystem hashing, correctness work and
 version probing lie outside timing, but can affect cache state. Record hardware,
 OS, thermal/load context and cache preparation with the campaign evidence.
@@ -190,9 +196,11 @@ load spikes and unfavorable observations; do not remove samples after seeing
 ratios. Bootstrap and randomization assumptions remain conditional under either
 host model. Never stop unrelated services or jobs to manufacture admission.
 
-Forward/reverse order does not balance every position with three or more lanes.
-For example, the middle lane stays in the middle in a three-lane campaign;
-pairing and bootstrap resampling do not remove position/cache confounding.
+The earlier forward/reverse method did not balance every position with three
+or more lanes: the middle lane stayed in the middle in a three-lane campaign.
+Published historical reports retain that limitation. The new schedule balances
+positions, but does not balance every predecessor or cancel host/cache effects;
+pairing and bootstrap resampling do not supply those guarantees.
 Also verify the actual options used by correctness gates. A direct Cargo gate
 does not automatically inherit frontend options supplied only to a coordinator's
 timed `rustc` command. Passing that gate qualifies its actual invocation, not
@@ -202,7 +210,7 @@ every timed scheduling configuration. The
 ## Report schema and publication
 
 `report.json` schema 1 contains `runner_version`, `runner_sha256`,
-`spec_sha256`, complete parsed `spec`, `status` (`passed` or `failed`), `records`,
+`spec_sha256`, complete parsed `spec`, `status` (`passed` or `failed`), `order_method`, `records`,
 `source_before`, `source_after` (when reached), `final_source_observation`,
 `final_tools_observation`, `identities`, `dependency_sources_before/after`,
 `compiler_or_cargo_identity_confounders`, `actual_cargo_fingerprints`, `order`,
