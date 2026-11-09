@@ -18,6 +18,14 @@ The [verification report](verification.md) identifies the exact tested commits a
 | 8. Additional compiler workers | No further independent frontend selected. A split requires the measurements and equivalence checks below. |
 | 9. Installation and release qualification | Partial. The coordinator installs independently, and the pinned backend has a Linux setup helper. A complete supported release bundle and broader host/target qualification remain open. |
 
+The [matched CGU16/ThinLTO pilot](measurements/2026-11-09-cgu16-thinlto-v3/README.md)
+adds 108 timed metadata-only root checks, optional waited CPU/scoped RSS and a
+reproducible numerical decision. Its 17.9% aggregate time reduction is against
+the matched stage2 control. Stock remained faster; full-build and broader
+workload gates remain open. The Linux GNU x86_64 packaged preview supplies a
+reusable compiler and matching tools; other hosts, native Lust packaging and the
+broader release qualification in item 9 remain incomplete.
+
 ## 1. Cargo entry point
 
 Deliver a dependency-free, independently installable `cargo-lust` binary. Default builds use the selected Cargo toolchain with its exact arguments. Expose explicit Rust, Cranelift, and whole-target Lust paths, and a plan view that explains the decision.

@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "created_at_utc": "2026-11-09T20:38:08.676564+00:00",
+  "status": "PREREGISTERED_NOT_A_RESULT",
+  "parent_design_sha256": "e83f2d0743163b738abc71e6f13e164d971da67e872eaa69c2084a6ab79d7489",
+  "acceptance": {
+    "handoff_sha256": "36401c60291fcefc8ec7530858b44565377f905eff6c46f2f433148fd89eae4e",
+    "receipt_sha256": "901932c252c2456e8aa664c7d47c499b69317299836afbd7c11210bfe385b6da",
+    "decision": "input/runtime/privacy accepted for bounded future experiment; historical control preservation FAILED/old5487INVALID/four lost captures remain"
+  },
+  "source": {
+    "bluefe": "1b74388e196ee8813f38ba9eeb6d4ab43b6b1071",
+    "lustr_gitlink": "07470b20464bf097c3c88983124aff56c5e44f9a",
+    "measurement_source": "c958a780daf5a700b7fa050d39c3f9c23390c9ce"
+  },
+  "tools": {
+    "runner_sha256": "35c9a2c95a952afd876d5ec05b99f299a49543aa79444084f4f6619dee2b07ac",
+    "gate_sha256": "40755dac54b3960ca780df708a06973fa81118fb850d2e3c71f4cc99c91163fb",
+    "control_manifest_sha256": "cd7ca233f21093aa3f18be2a6318fe305eeae787b837c00d676079400a6c78e4",
+    "candidate_manifest_sha256": "2b0f088a4b4fec511460cf6236cb29054e50736fc52c5fea2f45c4b62ba6dffc",
+    "common_cargo_sha256": "16e827eede03ad04b2be898c42ba40ec434fbb6cbbc13fc60354fdf4fd29a36f",
+    "stock_reference": "existing installed Rust1.99.1 rustc58cf8f9c35b355199727627d07ae34a4e2846d67/Cargo5f94df478; local hashes/versions/sysroot must be frozen; no fresh official-channel verification claimed"
+  },
+  "lanes": [
+    "stock-1-99-1",
+    "stage2-control",
+    "stage2-cgu16-thinlto"
+  ],
+  "primary": "candidate/control wall ratio of matched stage2 packages; same Cargo/source/default frontend/no frontend override; CGU16+ThinLTO/native effects are a joint package, not separate knob effects",
+  "secondary": "stock1.99.1 comparisons explicitly version-confounded, exploratory and not used for candidate advancement",
+  "cases": [
+    {
+      "name": "t3code-ls",
+      "revision": "c90f1b601fc39e8d9eabc269408f8247b26a5bef",
+      "tree": "4ef737bb459718e94aa4466d4ebe4ea304d016d6",
+      "same_tree_as_historical": "b16018167df26a18ee75d3d2b8f4bf2fcd64ce92",
+      "package": "t3-code-ls-core",
+      "selector": [
+        "--lib"
+      ],
+      "test_selector": [
+        "--lib"
+      ],
+      "force_root": "crates/core/src/lib.rs"
+    },
+    {
+      "name": "gitr",
+      "revision": "a183e205ec21e1b916e3763ba85917f2842aeae5",
+      "package": "gitr",
+      "selector": [
+        "--bin",
+        "gitr"
+      ],
+      "test_selector": [
+        "--lib"
+      ],
+      "force_root": "src/main.rs"
+    },
+    {
+      "name": "bluefin",
+      "revision": "b7d124a22d49bacf19f6c3c940333f508d647fb6",
+      "package": "ferrofin-model",
+      "selector": [
+        "--lib"
+      ],
+      "test_selector": [
+        "--lib"
+      ],
+      "force_root": "crates/ferrofin-model/src/lib.rs"
+    }
+  ],
+  "workload": {
+    "scenario": "primed-root-check",
+    "cargo_tail": "rustc --profile check -p PACKAGE SELECTOR --locked --offline --target x86_64-unknown-linux-gnu -vv",
+    "features": "unchanged package defaults; no reductions or dependency/lock changes",
+    "settings": "project check opt0/debug2/overflow-checks true/panic unwind; CARGO_INCREMENTAL=0, CARGO_BUILD_JOBS=4, clean explicit env; no RUSTFLAGS/wrappers/backend/frontend overrides",
+    "affinity": "10-13 fixed for entire dataset; fail before data if unavailable; no global placement/priority/host changes",
+    "source": "owned byte/mode-verified non-Git snapshots; no canonical mtime edits; restore touched root timestamp, source/external/dependency guards pre/post",
+    "gates": "all lanes before/after: selected package executed tests, observable native panic/catch/exactly-oneDrop, exact structured E0502 rejection, complete metadata equality using only versioned absent/null min-opt-level rule, actual root compiler flags and metadata emission, isolated new target+build dirs; produced lanes tests-via explicit Lustr/root/engineauto, stock direct Cargo"
+  },
+  "sampling": {
+    "case_order": [
+      "t3code-ls",
+      "gitr",
+      "bluefin"
+    ],
+    "pairs": 12,
+    "warmup_pairs": 1,
+    "seed": 6757,
+    "order": "randomized-cyclic-blocks-v1",
+    "bootstrap_resamples": 10000,
+    "planned_timed_records": 108,
+    "excluded_warmup_records": 9,
+    "stopping": "fixed count; no outlier removal, performance-driven rerun, adaptive stopping or retuning. Shared input/tool/machinery/host-danger failure stops; isolated workload failure retained null, other registered cases may proceed if independent safety/input gates pass; aggregate requires all3 eligible"
+  },
+  "resources": {
+    "mode": "linux-waited protocolv2 for EVERY lane/command",
+    "cpu": "integer user+system microseconds for waited ancestry; partial collector SELF reported separately; parent hashing/preparation excluded from outer wall, collector startup/report included; no overhead subtraction",
+    "rss_scope_resolution": "Pre-data OS scope is Linux RUSAGE_CHILDREN largest waited-process peak KiB with conditional waited ancestry. Numeric1.20 applies only to this scope. It is NOT simultaneous aggregate tree/cgroup RAM; aggregate RAM and energy remain UNRUN and cannot be claimed/advanced by this metric.",
+    "rss_gate": "all36 matched timed pairs positive/available/bound exact scope; maximum(candidate_peak/control_peak) <=1.20, otherwise FAIL or UNRUN when unavailable/zero; retain every raw value",
+    "cpu_summary": "percase paired geometric candidate/control totalCPU and conditional95% interval only if all12 totals positive/available; otherwise null with reason, no row exclusion; exploratory no CPU threshold"
+  },
+  "analysis": {
+    "per_case": "existing paired-log-v1/splitmix64/rejection-index/percentile; preserve both ratio directions clearly; exact sign-flip4096 assignments per12pair case, unadjusted exploratory",
+    "aggregate": "x[c,j]=ln(candidate_wall)-ln(control_wall); theta=mean over3 fixed cases of mean over12 paired logs; point=exp(theta). Stratified paired bootstrap10000: for each resample, independently draw12 indices with replacement within each case in fixed t3code-ls/gitr/bluefin order using continuous SplitMix64 seed6757 and rejection-index, exp(mean of3 resampled means). Sort; lower=floor(.025*(B-1)), upper=ceil(.975*(B-1)). No aggregate p-value.",
+    "helper": "private Rust analysis only, inspected pinned stats source/cached dependencies; validate known constants, reversal, reproducibility, invalid/missing/duplicate records before any public-workload timing; freeze source/exe hashes together with all3 exact executable specs/admission/source/tool manifests before first timed record",
+    "inference": "fixed workload set/equal weights; independent within-case pairs and exchangeability for sign tests are assumptions; shared-host/cache/thermal/carryover effects recorded, not removed or called quiet-host causality"
+  },
+  "decision": "Experimental numeric criteria only: all correctness/input/postguards pass, aggregate candidate/control point<=0.97 and conditional95%upper<1, every casepoint<=1.03, scopedRSSgate<=1.20 and sampled host budget valid. No automatic release, universal speedup, compiler equivalence or memory-safety claim. Failed/unavailable gates explicit; all regressions retained.",
+  "bounds": {
+    "cargo_jobs": 4,
+    "min_MemAvailable_GiB": 16,
+    "maximum_owned_apparent_GiB": 16,
+    "supervisor_hours": 1,
+    "host_guard": "before/after every case plus sampled <=5s memory/output guard during execution; failure retains raw records, no post-hoc sample filtering or retry; no competing own compiler-build/scanner IO during timed work",
+    "network": "offline; copy only required verified public registry/index/git inputs, never credential/config homes; missing inputs block pre-data, no fallback/version substitution",
+    "cleanup": "one case at a time; after terminal lifecycle/FD/maps/mount/native Cargo locks remove its disposable targets/build dirs and at end own cache/staging; retain small source/hash/logs/raw data; no global/other-worker cleanup, trim/media/reserved disks"
+  },
+  "scope": "metadata-only root experiment, not cold/full codegen/build/application speed. PGO remains held for650 unresolved warning causes; no PGO data or claims; no source/default/tag/release edits in worker. Publication/sanitization/review remains parent.",
+  "administrative_amendment": {
+    "supersedes_sha256": "55d48d023605baeeceba32f110589c563597b518cf813885fdd03fac53ff2dbd",
+    "original_attempt_timed": 0,
+    "original_attempt_warmups": 0,
+    "label_map": {
+      "stock-1.99.1": "stock-1-99-1"
+    },
+    "reason": "runner lane grammar ASCII alphanumeric/hyphen; no source, tools, workload, sample counts, statistical methods, thresholds or inference change",
+    "complete_static_spec_preflight_required": true
+  },
+  "environment_amendment": {
+    "supersedes_sha256": "03ded0d92bd0bf9add7e29942ac3ff88fd11d82e37729b7a3af624452411d27c",
+    "prior_attempt_timed": 0,
+    "prior_attempt_warmup": 0,
+    "change": "sandbox adds private --dev /dev and --proc /proc after owned root bind, unchanged UID and security settings; no host policy or credential changes",
+    "evidence_sha256": "b85d549b433a5de5aa97cf7251deb72f13e1a2d9ff4f3e4ea01834a1ab5c1af2",
+    "mandatory_pre_data_gate": "same pinned collector, real child spawning and Cargo probes inside exact namespace"
+  }
+}

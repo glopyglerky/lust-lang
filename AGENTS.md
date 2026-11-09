@@ -34,7 +34,8 @@ Use one additional full Rust compiler family before proposing more independent f
 
 ## Work layout and validation
 
-`crates/lustr` is the independently installable coordinator. Its own build must not require tcc, nightly Rust, or registry dependencies. Upstream compiler sources remain in `src/` and `library/`.
+`crates/lustr` is the independently installable coordinator. Its own build must not require tcc, nightly Rust, or registry dependencies. Required native compiler sources remain in `compiler/native/src/` and
+`compiler/native/library/`, as described in the primary README.
 
 Read `docs/compiler-set/design.md` and `docs/compiler-set/roadmap.md` before changing routing or claiming coverage. The upstream `DESIGN.md`, `docs/ARCH.md`, and `docs/PLAN.md` contain historical plans. Check executable code and tests before treating those plans as implemented behavior.
 

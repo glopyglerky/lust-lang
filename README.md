@@ -101,7 +101,18 @@ separate evidence.
 The runner also supports [optional Linux CPU and peak-RSS observations](docs/compiler-set/proofs/benchmark-resources.md).
 Fresh collectors preserve payload outcomes and avoid cumulative-peak leakage.
 RSS means the largest waited process, so it cannot establish aggregate build
-memory. Historical datasets remain wall-time-only; this extension adds no speedup claim.
+memory. The historical shared-v2 dataset remains wall-time-only. The matched pilot below
+records CPU and scoped RSS; the collector itself removes no compiler work.
+
+The [matched CGU16/ThinLTO pilot](docs/compiler-set/measurements/2026-11-09-cgu16-thinlto-v3/README.md)
+completed 108 timed root checks plus nine excluded warmups. The optimized stage2
+package used 17.9% less wall time than the matched no-PGO stage2 control across
+the three fixed cases, with conditional candidate/control interval [0.7995, 0.8401].
+It still used more time than stock Rust 1.99.1 on every workload. That secondary
+comparison has unequal compiler/Cargo versions. The report includes every command
+record, CPU and scoped RSS, regressions, independent review, a Rust replay and
+[mathematical arguments](docs/compiler-set/proofs/cgu16-thinlto.md). These are
+metadata-only checks, not full-build or application-speed results.
 
 The [2026-11-09 public-repository dataset](docs/compiler-set/measurements/2026-11-09-shared-v2/README.md)
 contains 72 timed root checks and nine excluded warmups. Explicit four-thread

@@ -73,3 +73,15 @@ and generation path, the TinyCC interface, C ABI qualification fixtures, and
 build/test/research helpers used by current development. Rust source, licenses
 and the relevant compiler fixtures are retained. These exceptions preserve the
 working toolchain while the native Rust migration remains future work.
+
+## Matched compiler configuration study
+
+The [CGU16/ThinLTO study](measurements/2026-11-09-cgu16-thinlto-v3/README.md)
+compares stage2 compiler packages from the same source and Cargo. It changes
+compiler CGU256/off-LTO to CGU16/ThinLTO, retaining std CGU256 and project settings.
+Preparation and native build effects belong to the joint treatment. Lustr's
+default routing and frontend settings remain unchanged. The numerical decision
+passed for three metadata-only roots; stock Rust remained faster on those cases.
+Full-build performance and individual knob effects require separate experiments.
+The [study proofs](proofs/cgu16-thinlto.md) distinguish deterministic arithmetic
+properties from statistical assumptions and compiler-correctness evidence.
