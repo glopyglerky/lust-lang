@@ -15,6 +15,7 @@ Coordinate Lust subset compilation and full Rust projects.
 Usage:
   lustr [+toolchain] [--engine ENGINE] <command> [arguments...]
   lustr --bluefe-root /absolute/sysroot <command> [arguments...]
+  lustr --bluefe-root /absolute/sysroot --frontend-jobs N rustc [Cargo arguments] [-- rustc arguments]
   cargo lustr [--engine ENGINE] <command> [arguments...]
   cargo lust [--engine auto|rustc|cranelift|lust] <command> [arguments...]
   cargo-lust [+toolchain] [--engine ENGINE] <command> [arguments...]
@@ -38,9 +39,16 @@ Coordinator options must precede the command. All arguments after it are passed
 through unchanged, including arguments after --. Plan/--explain prints JSON and
 runs no compiler, Cargo command, build script or project program.
 
+--frontend-jobs is an opt-in experiment for one Cargo rustc target. It appends
+-Zunstable-options and --jobs-frontend=N to that target's compiler arguments.
+Use --profile check for metadata checking. Cargo still selects project flags,
+wrappers, features and dependencies. Other commands are rejected in this mode;
+no workspace-wide Rust flag or wrapper configuration is replaced.
+
 No toolchains are installed or selected automatically. No compilation or program
 is retried after failure. The coordinator does not change panic, features, target,
-optimization, source, dependency versions, configuration files or Rust flags.
+optimization, source, dependency versions, configuration files or Rust flags
+except the explicitly requested frontend job options above.
 Cranelift selection uses command-scoped Cargo --config arguments, so nested Cargo
 processes do not inherit backend profile environment variables from this tool.
 Auto currently uses Cargo/rustc because arbitrary Lust/Cargo interoperability has
@@ -105,6 +113,7 @@ pub struct Request {
     pub explain: bool,
     pub toolchain: Option<OsString>,
     pub bluefe_root: Option<PathBuf>,
+    pub frontend_jobs: Option<usize>,
     pub args: Vec<OsString>,
 }
 
@@ -123,6 +132,7 @@ pub fn parse(args: &[OsString]) -> Result<Action, String> {
     let mut explain = false;
     let mut toolchain = None;
     let mut bluefe_root = None;
+    let mut frontend_jobs = None;
     let mut index = 0;
     while index < args.len() {
         let arg = &args[index];
@@ -139,6 +149,20 @@ pub fn parse(args: &[OsString]) -> Result<Action, String> {
             engine = Engine::parse(args.get(index).ok_or("--engine requires a value")?)?;
         } else if let Some(value) = arg.to_str().and_then(|s| s.strip_prefix("--engine=")) {
             engine = Engine::parse(OsStr::new(value))?;
+        } else if arg == "--frontend-jobs" || arg.to_str().is_some_and(|s| s.starts_with("--frontend-jobs=")) {
+            let value = if arg == "--frontend-jobs" {
+                index += 1;
+                args.get(index).and_then(|value| value.to_str())
+            } else {
+                arg.to_str().and_then(|value| value.strip_prefix("--frontend-jobs="))
+            };
+            let jobs = value
+                .and_then(|value| value.parse::<usize>().ok())
+                .filter(|jobs| *jobs > 0)
+                .ok_or("--frontend-jobs requires a positive integer")?;
+            if frontend_jobs.replace(jobs).is_some() {
+                return Err("specify --frontend-jobs only once".to_owned());
+            }
         } else if arg == "--bluefe-root" {
             index += 1;
             let value = args.get(index).filter(|value| !value.is_empty()).ok_or("--bluefe-root requires a sysroot directory")?;
@@ -172,7 +196,38 @@ pub fn parse(args: &[OsString]) -> Result<Action, String> {
     if bluefe_root.as_ref().is_some_and(|root| !root.is_absolute()) {
         return Err("--bluefe-root must be an absolute sysroot path".to_owned());
     }
-    Ok(Action::Execute(Request { engine, explain, toolchain, bluefe_root, args: args[index..].to_vec() }))
+    let request = Request { engine, explain, toolchain, bluefe_root, frontend_jobs, args: args[index..].to_vec() };
+    validate_frontend_request(&request)?;
+    Ok(Action::Execute(request))
+}
+
+fn validate_frontend_request(request: &Request) -> Result<(), String> {
+    if let Some(jobs) = request.frontend_jobs {
+        if jobs == 0
+            || request.bluefe_root.is_none()
+            || !matches!(request.engine, Engine::Auto | Engine::Rustc)
+            || request.args.first().is_none_or(|arg| arg != "rustc")
+        {
+            return Err("--frontend-jobs requires --bluefe-root and the Cargo rustc command with engine auto or rustc".to_owned());
+        }
+        let compiler_args: Vec<_> = request.args.iter().skip_while(|arg| *arg != "--").skip(1).collect();
+        if compiler_args.iter().enumerate().any(|(index, arg)| {
+            arg.to_str().is_some_and(|arg| {
+                arg == "--jobs-frontend"
+                    || arg.starts_with("--jobs-frontend=")
+                    || arg == "-Zthreads"
+                    || arg.starts_with("-Zthreads=")
+                    || (arg == "-Z"
+                        && compiler_args
+                            .get(index + 1)
+                            .and_then(|next| next.to_str())
+                            .is_some_and(|next| next == "threads" || next.starts_with("threads=")))
+            })
+        }) {
+            return Err("frontend job options already occur in the explicit rustc arguments; select them in one place".to_owned());
+        }
+    }
+    Ok(())
 }
 
 #[derive(Debug)]
@@ -217,6 +272,7 @@ pub struct Plan {
 /// This is deliberately conservative: only known dev/test commands receive a
 /// different backend. Cargo itself resolves graph, configuration and profiles.
 pub fn plan(request: &Request, mut programs: Programs) -> Result<Plan, String> {
+    validate_frontend_request(request)?;
     if request.bluefe_root.is_some() && (request.toolchain.is_some() || request.engine == Engine::Lust) {
         return Err("--bluefe-root cannot be combined with +toolchain or --engine lust".to_owned());
     }
@@ -299,6 +355,15 @@ pub fn plan(request: &Request, mut programs: Programs) -> Result<Plan, String> {
         Engine::Lust => unreachable!(),
     };
     args.extend(forwarded_args.iter().cloned());
+    let reason = if let Some(jobs) = request.frontend_jobs {
+        if !request.args.iter().any(|arg| arg == "--") {
+            args.push("--".into());
+        }
+        args.extend(["-Zunstable-options".into(), format!("--jobs-frontend={jobs}").into()]);
+        "experimental explicit frontend scheduling for one Cargo rustc target; all caller arguments, project settings and compiler wrappers are preserved"
+    } else {
+        reason
+    };
     Ok(Plan {
         requested_engine: request.engine,
         selected_engine,
@@ -308,7 +373,7 @@ pub fn plan(request: &Request, mut programs: Programs) -> Result<Plan, String> {
         environment,
         environment_remove,
         codegen_backend,
-        experimental: selected_engine == Engine::Cranelift,
+        experimental: selected_engine == Engine::Cranelift || request.frontend_jobs.is_some(),
     })
 }
 

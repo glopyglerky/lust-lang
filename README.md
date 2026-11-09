@@ -9,10 +9,12 @@ The default Cargo workspace builds only Lustr's dependency-free Rust coordinator
 The native subset compiler and the experimental semantic driver are separate
 components with their own requirements.
 
-```sh
-cargo build --release --locked
-cargo install --path crates/lustr --locked
+For versioned binary bundles, see [BlueFe releases](https://github.com/glopyglerky/blueFe/releases)
+and [Lustr releases](https://github.com/glopyglerky/lustr/releases). Use a release's
+recorded platform, component manifest and checksums. Keep the extracted toolchain
+at a versioned absolute path; ordinary project builds do not rebuild the compiler.
 
+```sh
 lustr --bluefe-root /absolute/toolchain build --workspace
 lustr --bluefe-root /absolute/toolchain test --workspace
 lustr --bluefe-root /absolute/toolchain build --target wasm32-unknown-unknown
@@ -29,6 +31,26 @@ An explicit Cranelift engine provides development code generation when a matchin
 unwind-enabled backend has passed qualification. WebAssembly builds use
 LLVM. A separately pinned backend cannot be loaded into a different BlueFe compiler.
 The default forwarding path removes no compiler work by itself.
+
+An experimental, explicit frontend job option applies to one selected Cargo
+`rustc` target without replacing project flags or compiler wrappers:
+
+```sh
+lustr --bluefe-root /absolute/toolchain --frontend-jobs 4 \
+  rustc --profile check -p your-package --lib
+```
+
+Select an actual package/target and a bounded CPU budget. More threads can regress
+small targets or increase memory. The [argument-preservation proof and executable
+checks](docs/compiler-set/proofs/frontend-scheduling.md) state the guarantees and
+limits; measured speed claims require fixed-workload evidence.
+
+Building the coordinator itself is optional contributor work:
+
+```sh
+cargo build --release --locked
+cargo install --path crates/lustr --locked
+```
 
 ## Source map
 

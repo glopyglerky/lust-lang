@@ -193,6 +193,7 @@ fn command_scoped_profile_defaults_survive_later_cargo_config_overrides() {
         explain: false,
         toolchain: None,
         bluefe_root: None,
+        frontend_jobs: None,
         args: [
             "build",
             "--offline",
