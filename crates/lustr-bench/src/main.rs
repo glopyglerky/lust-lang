@@ -314,7 +314,7 @@ impl Runner {
             publish(&request_path, &bytes)?;
             binding = Some((hex(&Sha256::digest(&bytes)), collector_hash));
             let mut command = Command::new(collector);
-            command.arg("--internal-resource-collector-v1").arg(&request_path).arg(&usage_path);
+            command.arg("--internal-resource-collector-v2").arg(&request_path).arg(&usage_path);
             command
         } else {
             let mut command = Command::new(exe);
@@ -957,7 +957,7 @@ fn publish(path: &Path, bytes: &[u8]) -> R<()> {
 }
 fn main() -> R<()> {
     let args: Vec<_> = std::env::args_os().collect();
-    if args.get(1).is_some_and(|a| a == "--internal-resource-collector-v1") {
+    if args.get(1).is_some_and(|a| a == "--internal-resource-collector-v2") {
         if args.len() != 4 {
             return fail("invalid collector invocation");
         }
@@ -981,7 +981,9 @@ fn main() -> R<()> {
     let mut report = json!({"schema":1,"runner_version":env!("CARGO_PKG_VERSION"),"runner_sha256":hash(&std::env::current_exe()?)?,"spec_sha256":hex(&Sha256::digest(&bytes)),"spec":s,"status":"failed","summaries":null,"order_method":order::METHOD,"metadata_comparison_rule":"cargo-optional-min-opt-level-none-v1","metadata_comparison_projections":[],"memory_energy":"not measured","inference_assumptions":"equivalent work; independent pairs for bootstrap; sign exchangeability under null; exploratory unadjusted comparisons"});
     report["resource_measurement"] = resources::metadata(s.resource_mode);
     if s.resource_mode != resources::Mode::Disabled {
-        report["memory_energy"] = json!("per-command CPU/largest waited-process peak RSS collection enabled; availability in records; aggregate RSS and energy not measured");
+        report["memory_energy"] = json!(
+            "per-command CPU/largest waited-process peak RSS collection enabled; availability in records; aggregate RSS and energy not measured"
+        );
     }
     let metadata = s.force_root.as_ref().map(|p| fs::metadata(s.source.join(p))).transpose()?;
     let result = study(&mut r, &s, &mut report);

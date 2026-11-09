@@ -20,6 +20,35 @@ status-inconsistent reports. Real tiny-project gates additionally exercise
 runner timeout/output-cap failure with unavailable usage and null summaries.
 These synthetic observations qualify machinery; they are not compiler benchmarks.
 
+Protocol v2 separates collector completion from payload outcome. Assume the
+pinned collector wrote the bound report, no outside writer replaced it, and the
+OS wait status is reliable. A valid report with collector exit zero returns the
+payload status s unchanged. Qualification then requires s.code() to equal the
+expected numeric exit. For every signalled s, s.code() is absent, so that equality
+is false. Thus a successful collector cannot turn a signal into an accepted
+numeric failure. Collector failure or an invalid report yields no conclusion.
+This is a conditional argument about the protocol, not compiler correctness or
+authentication against malicious same-user payloads.
+
+Real regressions exercise SIGPIPE using a Rust payload compiled by the selected
+nightly with default broken-pipe termination, and SIGTERM with an inherited
+blocked collector mask. An isolated fixture verifies that a non-leader collector
+rejects its invocation before starting lease cleanup and leaves its sibling alive.
+All affected process groups belong to the fixtures. The group-leader condition
+prevents that misuse; deliberately joined groups and detached sessions remain
+outside a universal ownership or containment claim.
+
+The corrected protocol passed 13 runner unit tests, one gate unit test and seven
+enabled integration tests, including both resource tests. Four statistics replay
+checks also passed. Formatting and matching Clippy with warnings denied passed.
+Qualification used an unreleased matched stage2 control built from BlueFe
+`1b74388e196ee8813f38ba9eeb6d4ab43b6b1071`, Rust 1.102.0-dev, with official
+Cargo 1.99.1. Its runtime manifest SHA256 is
+`cd7ca233f21093aa3f18be2a6318fe305eeae787b837c00d676079400a6c78e4`.
+An outer-runner regression retained SIGPIPE as signal 13 with available usage
+and null conclusions, matching the disabled protocol's payload outcome.
+These are Linux qualification observations, not new public workload timings.
+
 Private delivery evidence records actual tool/source/dependency hashes, commands,
 passed/failed/unrun checks, first failures, retained artifacts and cleanup. It is
 not embedded in public source because host paths and raw output are private.

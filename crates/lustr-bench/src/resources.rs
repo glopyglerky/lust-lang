@@ -5,7 +5,7 @@ use nix::sys::{
     signal::{Signal, killpg},
     time::TimeValLike,
 };
-use nix::unistd::getpgrp;
+use nix::unistd::{getpgrp, getpid};
 use std::process::ExitStatus;
 
 pub const SCOPE: &str = "linux-rusage-children-v1: CPU sums waited children; descendants only through fully waited ancestry; peak RSS is largest waited process in KiB, not aggregate tree memory";
@@ -45,18 +45,22 @@ pub fn metadata(mode: Mode) -> Value {
     if mode == Mode::Disabled {
         return json!({"mode":"disabled","availability":"not measured"});
     }
-    json!({"mode":"linux-waited","scope":SCOPE,"energy":"not measured","aggregate_rss":"not measured","resource_thresholds":"none; cannot satisfy aggregate memory gates","wall_protocol":"outer wall includes collector startup, payload and report; collector CPU reported separately; identical protocol required for all lanes","collector":"reexec runner; identity bound to runner_sha256 and each request"})
+    json!({"mode":"linux-waited","scope":SCOPE,"completion_protocol":"v2: collector exits zero after publishing usage; payload exit/signal comes from the validated raw wait status","energy":"not measured","aggregate_rss":"not measured","resource_thresholds":"none; cannot satisfy aggregate memory gates","wall_protocol":"outer wall includes collector startup, payload and report; collector CPU reported separately; identical protocol required for all lanes","collector":"reexec runner; identity bound to runner_sha256 and each request"})
 }
 pub fn collect(request: &Path, report: &Path) -> R<i32> {
+    let group = getpgrp();
+    if group != getpid() {
+        return fail("collector must lead its process group");
+    }
     if report.try_exists()? {
         return fail("resource report already exists");
     }
     // FD 0 is a lease, never the payload stdin. FD 1/2 stay inherited byte streams.
     // Closing the parent's pipe kills this entire owned process group, including us.
-    std::thread::spawn(|| {
+    std::thread::spawn(move || {
         let mut byte = [0];
         let _ = std::io::stdin().read(&mut byte);
-        let _ = killpg(getpgrp(), Signal::SIGKILL);
+        let _ = killpg(group, Signal::SIGKILL);
     });
     let bytes = fs::read(request)?;
     let req: Request = serde_json::from_slice(&bytes)?;
@@ -82,7 +86,7 @@ pub fn collect(request: &Path, report: &Path) -> R<i32> {
     let children = getrusage(UsageWho::RUSAGE_CHILDREN)?;
     let own = getrusage(UsageWho::RUSAGE_SELF)?;
     let usage = Usage {
-        schema: 1,
+        schema: 2,
         scope: SCOPE.into(),
         request_sha256: hex(&Sha256::digest(&bytes)),
         collector_sha256: req.collector_sha256,
@@ -96,16 +100,14 @@ pub fn collect(request: &Path, report: &Path) -> R<i32> {
         payload_wall_seconds: wall,
     };
     publish(report, &serde_json::to_vec(&usage)?)?;
-    if let Some(code) = status.code() {
-        return Ok(code);
-    }
-    nix::sys::signal::raise(Signal::try_from(status.signal().ok_or("missing signal")?)?)?;
-    fail("collector could not mirror payload signal")
+    // Collector completion and payload success are different protocol fields.
+    // Reporting the wait status avoids changing inherited signal dispositions.
+    Ok(0)
 }
 pub fn read(report: &Path, request_hash: &str, collector_hash: &str, pid: u32, wrapper: ExitStatus) -> R<Usage> {
     let u: Usage = serde_json::from_slice(&fs::read(report)?)?;
     let status = ExitStatus::from_raw(u.raw_status);
-    if u.schema != 1
+    if u.schema != 2
         || u.scope != SCOPE
         || u.request_sha256 != request_hash
         || u.collector_sha256 != collector_hash
@@ -122,8 +124,7 @@ pub fn read(report: &Path, request_hash: &str, collector_hash: &str, pid: u32, w
         || u.raw_status < 0
         || u.raw_status > 65535
         || status.signal().is_some_and(|signal| !(1..=64).contains(&signal) || u.raw_status & !255 != 0)
-        || wrapper.code() != status.code()
-        || wrapper.signal() != status.signal()
+        || !wrapper.success()
     {
         return fail("invalid or mismatched resource report");
     }
@@ -145,17 +146,17 @@ mod tests {
         assert!(read(&path, "req", "collector", 42, ok).is_err());
         fs::write(&path, b"{").unwrap();
         assert!(read(&path, "req", "collector", 42, ok).is_err());
-        let valid = json!({"schema":1,"scope":SCOPE,"request_sha256":"req","collector_sha256":"collector","collector_pid":42,"raw_status":0,"user_microseconds":1,"system_microseconds":2,"peak_rss_kib":3,"collector_user_microseconds":4,"collector_system_microseconds":5,"payload_wall_seconds":0.01});
+        let valid = json!({"schema":2,"scope":SCOPE,"request_sha256":"req","collector_sha256":"collector","collector_pid":42,"raw_status":0,"user_microseconds":1,"system_microseconds":2,"peak_rss_kib":3,"collector_user_microseconds":4,"collector_system_microseconds":5,"payload_wall_seconds":0.01});
         fs::write(&path, serde_json::to_vec(&valid).unwrap()).unwrap();
         assert!(read(&path, "req", "collector", 42, ok).is_ok());
         for (key, value) in [
-            ("schema", json!(2)),
+            ("schema", json!(1)),
             ("scope", json!("aggregate")),
             ("request_sha256", json!("old")),
             ("collector_sha256", json!("old")),
             ("collector_pid", json!(41)),
-            ("raw_status", json!(15)),
-            ("raw_status", json!(256)),
+            ("raw_status", json!(65535)),
+            ("raw_status", json!(65536)),
             ("peak_rss_kib", json!(-1)),
             ("user_microseconds", json!(-1)),
         ] {
@@ -164,10 +165,13 @@ mod tests {
             fs::write(&path, serde_json::to_vec(&bad).unwrap()).unwrap();
             assert!(read(&path, "req", "collector", 42, ok).is_err(), "{key}");
         }
-        let mut signal = valid;
-        signal["raw_status"] = json!(15);
-        fs::write(&path, serde_json::to_vec(&signal).unwrap()).unwrap();
-        assert!(read(&path, "req", "collector", 42, ExitStatus::from_raw(15)).is_ok());
-        assert!(read(&path, "req", "collector", 42, ExitStatus::from_raw(1 << 8)).is_err());
+        for raw in [13, 15, 7 << 8] {
+            let mut payload = valid.clone();
+            payload["raw_status"] = json!(raw);
+            fs::write(&path, serde_json::to_vec(&payload).unwrap()).unwrap();
+            assert_eq!(read(&path, "req", "collector", 42, ok).unwrap().raw_status, raw);
+            assert!(read(&path, "req", "collector", 42, ExitStatus::from_raw(raw)).is_err());
+            assert!(read(&path, "req", "collector", 42, ExitStatus::from_raw(1 << 8)).is_err());
+        }
     }
 }

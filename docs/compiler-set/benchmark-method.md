@@ -314,13 +314,20 @@ wrapper. Owned Rust forbids unsafe code; nix/libc and Linux remain upstream OS
 compatibility dependencies, not evidence of whole-toolchain memory safety.
 The request binds raw argument/environment bytes, working directory, unique report
 path and collector executable hash. The fresh report binds the request hash,
-collector hash/PID, protocol scope, raw wait status and measurements. Its status
-must agree with the collector's mirrored exit or signal. Missing, malformed,
+collector hash/PID, protocol scope, raw wait status and measurements. Protocol v2
+requires a zero collector exit after report publication. The report preserves
+the payload exit or signal separately, including SIGPIPE and inherited blocked
+signals, without re-raising it in the collector. A nonzero or signalled collector
+exit invalidates the report. The runner still rejects a signalled payload and
+uses the payload exit code when checking expected failures. Missing, malformed,
 stale, mismatched or interrupted reports fail qualification with null summaries.
 Requests and raw reports remain available beside byte-preserving stdout/stderr.
 The payload receives exactly the direct-command environment and null stdin;
 collector control uses arguments and its own stdin lease, not environment markers.
-Lease closure kills the owned process group. Existing process-group limitations
+The internal entry point requires process-group leadership before starting the
+lease thread; ordinary runner invocation creates that group. Lease closure kills
+the checked group. This precondition prevents inherited-group misuse; it does
+not prove universal group ownership. Existing process-group limitations
 still apply: deliberately detached sessions are not a whole-system tracing scope.
 
 Linux defines user/system CPU in seconds plus microseconds; records use integer
@@ -338,7 +345,9 @@ the difference is zero, although the child used 20 MiB. A fresh collector per
 command avoids that contamination. Synthetic large-then-small tests exercise it.
 
 Outer wall time includes collector startup, payload execution and report
-publication. Payload wall time covers spawn through wait. Collector user/system
+publication. Parent-side executable hashing and request serialization/publication
+happen before that wall interval and are excluded. Payload wall time covers
+spawn through wait. Collector user/system
 CPU is a separate RUSAGE_SELF observation taken before serialization/publication;
 it is a partial overhead observation, excluding the final write and exit.
 Overhead is not assumed zero or subtracted from wall samples. Existing paired

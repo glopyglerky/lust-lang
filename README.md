@@ -98,6 +98,11 @@ do not establish compiler equivalence or an unmeasured speedup. The runner's tin
 fixture qualifies the measurement machinery; public-repository campaigns remain
 separate evidence.
 
+The runner also supports [optional Linux CPU and peak-RSS observations](docs/compiler-set/proofs/benchmark-resources.md).
+Fresh collectors preserve payload outcomes and avoid cumulative-peak leakage.
+RSS means the largest waited process, so it cannot establish aggregate build
+memory. Historical datasets remain wall-time-only; this extension adds no speedup claim.
+
 The [2026-11-09 public-repository dataset](docs/compiler-set/measurements/2026-11-09-shared-v2/README.md)
 contains 72 timed root checks and nine excluded warmups. Explicit four-thread
 BlueFe beat stock on t3code-ls, with a paired ratio of 1.268, but regressed by

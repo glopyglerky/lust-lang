@@ -36,6 +36,29 @@ fn main() {
         "signal" => {
             nix::sys::signal::raise(nix::sys::signal::Signal::SIGTERM).unwrap();
         }
+        "signal-unblock" => {
+            assert!(nix::sys::signal::SigSet::thread_get_mask().unwrap().contains(nix::sys::signal::Signal::SIGTERM));
+            let mut signals = nix::sys::signal::SigSet::empty();
+            signals.add(nix::sys::signal::Signal::SIGTERM);
+            signals.thread_unblock().unwrap();
+            nix::sys::signal::raise(nix::sys::signal::Signal::SIGTERM).unwrap();
+        }
+        "collector-misuse" => {
+            // This fixture leads an isolated test group. Its child collector does not.
+            let mut sentinel = Command::new(&args[0]).arg("sleep").spawn().unwrap();
+            let result = Command::new(&args[2])
+                .arg("--internal-resource-collector-v2")
+                .args(&args[3..5])
+                .stdin(std::process::Stdio::null())
+                .output();
+            let alive = sentinel.try_wait().unwrap().is_none();
+            let _ = sentinel.kill();
+            sentinel.wait().unwrap();
+            let result = result.unwrap();
+            assert_eq!(result.status.code(), Some(1));
+            assert!(String::from_utf8_lossy(&result.stderr).contains("collector must lead its process group"));
+            assert!(alive, "collector signalled its sibling");
+        }
         "sleep" => std::thread::sleep(std::time::Duration::from_secs(30)),
         "output" => loop {
             std::io::stdout().write_all(&[42; 4096]).unwrap();
