@@ -59,6 +59,7 @@ cargo install --path crates/lustr --locked
 | `crates/lustr` | Primary command, Cargo integration, BlueFe selection, qualification and performance tools. |
 | `compiler/native` | Lustr's native subset compiler, derived from Lust. TinyCC, its fixtures and native build helpers remain here. The `lust` and `lust-core` executable names preserve compatibility with that compiler's tools. |
 | `crates/lustr-semantic` | Optional version-pinned rustc inspection. It exports inspection data, not executable MIR. |
+| `crates/lustr-bench` | Standalone paired benchmark runner and correctness gates. It is outside the coordinator workspace. |
 | `docs/compiler-set` | Current design, decisions, divergence records, measured evidence and future work. |
 
 The coordinator does not depend on TinyCC or registry packages. `cargo-lustr` and
@@ -77,6 +78,14 @@ See the [integration and performance model](docs/compiler-set/bluefe-performance
 [design](docs/compiler-set/design.md), and [roadmap](docs/compiler-set/roadmap.md).
 Performance claims are workload-specific. No-op, edit, rejection and executed-test
 costs count alongside cold compilation. Slower candidates remain in the evidence.
+
+The [measurement protocol](docs/compiler-set/benchmark-method.md) records exact
+tools, dependency selection, compiler commands, correctness gates and every
+paired sample. Its [mathematical analysis](docs/compiler-set/proofs/benchmark-analysis.md)
+proves estimator invariants and conditional statistical properties. These proofs
+do not establish compiler equivalence or an unmeasured speedup. The runner's tiny
+fixture qualifies the measurement machinery; public-repository campaigns remain
+separate evidence.
 
 ## Fork ownership
 
