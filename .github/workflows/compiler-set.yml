@@ -4,13 +4,19 @@ on:
   push:
     branches: [next]
     paths:
-      - 'tools/cargo-lust/**'
-      - 'tools/lustr-semantic/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'compiler/native/**'
+      - 'crates/lustr/**'
+      - 'crates/lustr-semantic/**'
       - '.github/workflows/compiler-set.yml'
   pull_request:
     paths:
-      - 'tools/cargo-lust/**'
-      - 'tools/lustr-semantic/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'compiler/native/**'
+      - 'crates/lustr/**'
+      - 'crates/lustr-semantic/**'
       - '.github/workflows/compiler-set.yml'
   workflow_dispatch:
 
@@ -30,11 +36,11 @@ jobs:
       - name: Install pinned compiler development libraries
         run: rustup toolchain install nightly-2026-11-05 --profile minimal --component rustc-dev --component rust-src --component llvm-tools --component rustfmt
       - name: Format check
-        run: cargo +nightly-2026-11-05 fmt --manifest-path tools/lustr-semantic/Cargo.toml -- --check
+        run: cargo +nightly-2026-11-05 fmt --manifest-path crates/lustr-semantic/Cargo.toml -- --check
       - name: Build pinned inspection tool
-        run: cargo +nightly-2026-11-05 build --manifest-path tools/lustr-semantic/Cargo.toml --locked --offline
+        run: cargo +nightly-2026-11-05 build --manifest-path crates/lustr-semantic/Cargo.toml --locked --offline
       - name: Verify actual compiler semantics and artifact interoperability
-        run: python3 tools/lustr-semantic/tests/test_probe.py -v
+        run: python3 crates/lustr-semantic/tests/test_probe.py -v
 
   compatibility:
     name: Cargo compatibility (${{ matrix.os }})
@@ -48,9 +54,11 @@ jobs:
       - name: Install Rust
         run: rustup toolchain install 1.99.1 --profile minimal --component rustfmt
       - name: Format check
-        run: cargo +1.99.1 fmt --manifest-path tools/cargo-lust/Cargo.toml -- --check
+        run: cargo +1.99.1 fmt --manifest-path crates/lustr/Cargo.toml -- --check
+      - name: Check paired statistical methods
+        run: python3 -m unittest discover -s crates/lustr/bench -p "test_*.py" -v
       - name: Compile and execute full Rust qualification
-        run: cargo +1.99.1 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline
+        run: cargo +1.99.1 test --manifest-path crates/lustr/Cargo.toml --locked --offline
 
   minimum-rust:
     name: Coordinator minimum Rust
@@ -60,7 +68,7 @@ jobs:
       - name: Install minimum supported Rust
         run: rustup toolchain install 1.85.0 --profile minimal
       - name: Build and test on minimum Rust
-        run: cargo +1.85.0 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline
+        run: cargo +1.85.0 test --manifest-path crates/lustr/Cargo.toml --locked --offline
 
   lust:
     name: Actual Lust subset qualification
@@ -70,13 +78,13 @@ jobs:
       - name: Install Rust
         run: rustup toolchain install 1.99.1 --profile minimal
       - name: Build pinned tcc
-        run: scripts/build-tcc.sh
+        run: compiler/native/scripts/build-tcc.sh
       - name: Build upstream Lust
-        run: cargo +1.99.1 build --profile gate --locked
+        run: cargo +1.99.1 build --manifest-path compiler/native/Cargo.toml --profile gate --locked
       - name: Verify Lust execution and honest rejection
         env:
-          LUST_TEST_LUST: ${{ github.workspace }}/target/gate/lust
-        run: cargo +1.99.1 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test qualification actual_lust -- --ignored --nocapture
+          LUST_TEST_LUST: ${{ github.workspace }}/compiler/native/target/gate/lust
+        run: cargo +1.99.1 test --manifest-path crates/lustr/Cargo.toml --locked --offline --test qualification actual_lust -- --ignored --nocapture
 
   cranelift:
     name: Cranelift with unwinding qualification
@@ -87,27 +95,27 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build pinned backend with unwind support
         run: |
-          bash tools/cargo-lust/scripts/build-cranelift.sh
-          source tools/cargo-lust/target/complement/env.sh
+          bash crates/lustr/scripts/build-cranelift.sh
+          source crates/lustr/target/complement/env.sh
           printf 'LUST_CRANELIFT_BACKEND=%s\n' "$LUST_CRANELIFT_BACKEND" >> "$GITHUB_ENV"
       - name: Verify full Rust, panic recovery, and tests
-        run: cargo +nightly-2026-11-05 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test qualification actual_cranelift -- --ignored --nocapture
+        run: cargo +nightly-2026-11-05 test --manifest-path crates/lustr/Cargo.toml --locked --offline --test qualification actual_cranelift -- --ignored --nocapture
       - name: Verify both Rust ABI directions across LLVM and Cranelift
         env:
           LUST_TEST_ABI_EVIDENCE: ${{ github.workspace }}/compiler-set-mixed-abi
-        run: cargo +nightly-2026-11-05 test --manifest-path tools/cargo-lust/Cargo.toml --locked --offline --test mixed_abi actual_cranelift -- --ignored --nocapture
+        run: cargo +nightly-2026-11-05 test --manifest-path crates/lustr/Cargo.toml --locked --offline --test mixed_abi actual_cranelift -- --ignored --nocapture
       - name: Compile and test the coordinator with its complementary backend
-        run: tools/cargo-lust/target/debug/cargo-lust --engine cranelift test --manifest-path tools/cargo-lust/Cargo.toml --target-dir tools/cargo-lust/target/complement-tests --locked --offline
+        run: target/debug/cargo-lust --engine cranelift test --manifest-path crates/lustr/Cargo.toml --target-dir crates/lustr/target/complement-tests --locked --offline
       - name: Build coordinator for measurement
-        run: cargo +nightly-2026-11-05 build --manifest-path tools/cargo-lust/Cargo.toml --release --locked --offline
+        run: cargo +nightly-2026-11-05 build --manifest-path crates/lustr/Cargo.toml --release --locked --offline
       - name: Measure the selected backend
-        run: python3 tools/cargo-lust/bench/measure.py --coordinator tools/cargo-lust/target/release/cargo-lust --engine cranelift --samples 6 --output compiler-set-cranelift.json
+        run: python3 crates/lustr/bench/measure.py --coordinator target/release/cargo-lust --engine cranelift --samples 6 --output compiler-set-cranelift.json
       - name: Build native dependency for real-project qualification
-        run: scripts/build-tcc.sh
+        run: compiler/native/scripts/build-tcc.sh
       - name: Compile, test, and measure unchanged Lust with both backends
         env:
-          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
-        run: python3 tools/cargo-lust/bench/measure-project.py --coordinator "$GITHUB_WORKSPACE/tools/cargo-lust/target/release/cargo-lust" --project . --samples 2 --output compiler-set-lust-project.json
+          LUST_TCC_HOME: ${{ github.workspace }}/compiler/native/third_party/tcc
+        run: python3 crates/lustr/bench/measure-project.py --coordinator "$GITHUB_WORKSPACE/target/release/cargo-lust" --project compiler/native --samples 2 --output compiler-set-lust-project.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -115,5 +123,5 @@ jobs:
           path: |
             compiler-set-cranelift.json
             compiler-set-lust-project.json
-            tools/cargo-lust/target/complement/backend.json
+            crates/lustr/target/complement/backend.json
             compiler-set-mixed-abi

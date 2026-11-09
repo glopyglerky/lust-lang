@@ -1,16 +1,6 @@
-/target
-/third_party/tinycc
-/third_party/tcc
-# lust's own local state. The cache is trusted local data: never commit it.
-.lust-cache/
-.lust-daemon*.sock
-.lust-daemon*.sock.lock
-/tests/cargo-proj/target
-/tests/cargo-proj/Cargo.lock
-__pycache__/
-/bench/slices/items/target
-/bench/slices/items/Cargo.lock
-# boat-run.sh --fetch results (local only; never packed into the next job)
-/boat-out/
-# scripts/release.sh output
-/dist/
+/target/
+/crates/lustr/target/
+/crates/lustr-semantic/target/
+**/__pycache__/
+**/.lust-cache/
+**/.lust-daemon-*.sock*

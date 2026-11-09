@@ -38,7 +38,7 @@ These principles come from the [upstream README](https://github.com/t3dotgg/lust
 
 ## Why arbitrary Rust libraries cannot be mixed today
 
-The current Lust driver explicitly rejects building a library target because it has no rlib format. It can check a library and compile source dependencies within a selected binary's closure. That is different from producing a library that Cargo can supply to a rustc-dependent crate. See [`src/driver/compile.rs`](../../src/driver/compile.rs).
+The current Lust driver explicitly rejects building a library target because it has no rlib format. It can check a library and compile source dependencies within a selected binary's closure. That is different from producing a library that Cargo can supply to a rustc-dependent crate. See [`src/driver/compile.rs`](../../compiler/native/src/driver/compile.rs).
 
 Rust libraries carry more than object code. Their metadata contains compiler identity, crate identities, exported types and traits, macros, and sometimes MIR. Cargo can use emitted metadata to start dependent compilation before object generation finishes. The metadata format and Rust ABI cannot be replaced by a C object file and an empty metadata file. See the [Rust compiler metadata guide](https://rustc-dev-guide.rust-lang.org/backend/libs-and-metadata.html).
 
@@ -88,7 +88,7 @@ The most promising route to coordinated code generation inside arbitrary crates 
 
 Initially rustc must remain responsible for metadata publication and Cargo's contract. A C ABI experiment can test a narrow adapter, but cannot establish general Rust ABI compatibility. Moving Lust's code generator behind this interface requires an actual mapping from rustc MIR to Lust's code-generation expectations. That mapping does not exist in this commit.
 
-The first executable step is [`lustr-semantic`](../../tools/lustr-semantic), an
+The first executable step is [`lustr-semantic`](../../crates/lustr-semantic), an
 opt-in driver bound to the pinned compiler installation. It obtains actual
 monomorphized items, symbol identities, function-call ABI, type layouts, drop
 requirements and cleanup edges from rustc queries. The normal backend continues

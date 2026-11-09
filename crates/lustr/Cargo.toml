@@ -1,0 +1,24 @@
+[package]
+name = "lustr"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+description = "Lustr compiler coordinator for BlueFe and complete Cargo projects"
+publish = false
+default-run = "lustr"
+
+[lib]
+name = "cargo_lust"
+
+[[bin]]
+name = "cargo-lust"
+path = "src/main.rs"
+
+[[bin]]
+name = "cargo-lustr"
+path = "src/bin/cargo-lustr.rs"
+
+[[bin]]
+name = "lustr"
+path = "src/bin/lustr.rs"

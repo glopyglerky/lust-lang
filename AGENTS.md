@@ -1,5 +1,19 @@
 # Work on this fork
 
+## Current priority and ownership
+
+The user clarified on 2026-11-08 that working Lustr/BlueFe builds come first.
+Independent full Rust compilation and migration toward memory-safe Rust are
+future goals pursued through measured iteration. Their open compiler-design
+items do not block delivery of the current usable coordinator and toolchain.
+
+The primary Rust workspace is `crates/lustr`. Required native implementation,
+fixtures and helpers live in the separate `compiler/native` workspace. The
+optional pinned semantic driver is `crates/lustr-semantic`. Keep the primary
+README, source map, decisions and divergence records about this fork's actual
+behavior. Preserve required upstream compatibility, licensing and source history.
+Do not claim complete native Rust or whole-toolchain memory safety prematurely.
+
 ## Product contract
 
 This fork develops a coordinated compiler set that can compile an unchanged, complete Rust project and reduce its development compilation time. Keep upstream Lust's supported subset, rejection rules, daemon design, and differential testing discipline. Complement it where full Rust requires more machinery. A wrapper that delegates everything to rustc is a compatibility starting point, not completion of this goal.
@@ -20,7 +34,7 @@ Use one additional full Rust compiler family before proposing more independent f
 
 ## Work layout and validation
 
-`tools/cargo-lust` is the independently installable coordinator. Its own build must not require tcc, nightly Rust, or registry dependencies. Upstream compiler sources remain in `src/` and `library/`.
+`crates/lustr` is the independently installable coordinator. Its own build must not require tcc, nightly Rust, or registry dependencies. Upstream compiler sources remain in `src/` and `library/`.
 
 Read `docs/compiler-set/design.md` and `docs/compiler-set/roadmap.md` before changing routing or claiming coverage. The upstream `DESIGN.md`, `docs/ARCH.md`, and `docs/PLAN.md` contain historical plans. Check executable code and tests before treating those plans as implemented behavior.
 

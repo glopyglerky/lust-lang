@@ -1,36 +1,8 @@
-[package]
-name = "lust"
-version = "0.2.0"
-edition = "2024"
-description = "A Rust subset compiler for fast dev checks and builds"
-
-[[bin]]
-name = "lust"
-path = "src/client.rs"
-
-[[bin]]
-name = "lust-core"
-path = "src/main.rs"
-
-[dependencies]
-mimalloc = { version = "0.1.52", default-features = false }
-# Direct, for its C source: build.rs amalgamates it for musl release builds (src/cc.rs).
-libmimalloc-sys = { version = "0.1.49", default-features = false }
+[workspace]
+resolver = "3"
+members = ["crates/lustr"]
+default-members = ["crates/lustr"]
+exclude = ["compiler/native", "crates/lustr-semantic"]
 
 [profile.release]
-opt-level = 3
-codegen-units = 1
-lto = "thin"
-debug = "line-tables-only"
-
-# Fast-to-build profile for correctness work: the gate's test boxes and test runs
-# (`scripts/build.sh`). Release minus the single codegen unit and debug info. Measured on boat
-# xlarge (build-speed): bins build in 24-32 s (release: 114-150 s), a one-line edit rebuilds in
-# about 14 s (release: 119 s), and lust runs as fast as release. Opt-level 1 or no LTO built
-# 5-8 s faster but made the realish fuzz lane, the gate's longest, 10-30% slower. Not for timing
-# lust: perfcheck and real releases use [profile.release].
-[profile.gate]
-inherits = "release"
-codegen-units = 16
-debug = false
-incremental = true
+strip = true
