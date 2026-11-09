@@ -5,10 +5,23 @@ use std::process::{Command, Output};
 /// Inspect installed tools. This never invokes a project build, installs a
 /// component, changes a toolchain, or claims that availability is qualification.
 pub fn run() -> i32 {
-    let programs = crate::Programs::from_environment();
-    let rustc = std::env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc"));
+    run_for_root(None)
+}
+
+pub(crate) fn run_for_root(root: Option<&Path>) -> i32 {
+    let mut programs = crate::Programs::from_environment();
+    if let Some(root) = root {
+        programs.cargo = crate::toolchain::program(root, "cargo").into_os_string();
+    }
+    let rustc = root
+        .map(|root| crate::toolchain::program(root, "rustc").into_os_string())
+        .unwrap_or_else(|| std::env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc")));
     let cargo = probe(&programs.cargo, &["--version"]);
     let compiler = probe(&rustc, &["--version", "--verbose"]);
+    let rustdoc = root
+        .map(|root| crate::toolchain::program(root, "rustdoc").into_os_string())
+        .unwrap_or_else(|| std::env::var_os("RUSTDOC").unwrap_or_else(|| OsString::from("rustdoc")));
+    let documentation = probe(&rustdoc, &["--version", "--verbose"]);
     let lust = probe(&programs.lust, &["--version"]);
     let sysroot = probe(&rustc, &["--print", "sysroot"]);
     let host = compiler.stdout.lines().find_map(|line| line.strip_prefix("host: ")).unwrap_or("");
@@ -29,11 +42,12 @@ pub fn run() -> i32 {
             )
         })
         .unwrap_or_else(|| "null".to_owned());
-    let ready = cargo.success && compiler.success;
+    let ready = cargo.success && compiler.success && (root.is_none() || documentation.success);
     println!(
-        "{{\"format_version\":1,\"cargo\":{},\"rustc\":{},\"lust\":{},\"cranelift\":{{\"nightly_compiler\":{},\"preview_library_present\":{},\"preview_libraries\":[{}],\"configured_backend\":{},\"qualified\":false}},\"automatic_lust_routing\":false,\"notes\":[{},{}]}}",
+        "{{\"format_version\":1,\"cargo\":{},\"rustc\":{},\"rustdoc\":{},\"lust\":{},\"cranelift\":{{\"nightly_compiler\":{},\"preview_library_present\":{},\"preview_libraries\":[{}],\"configured_backend\":{},\"qualified\":false}},\"automatic_lust_routing\":false,\"notes\":[{},{}]}}",
         cargo.json(),
         compiler.json(),
+        documentation.json(),
         lust.json(),
         nightly,
         !backend_libraries.is_empty(),
@@ -43,7 +57,7 @@ pub fn run() -> i32 {
             "Availability is not qualification. The stock preview lacks required unwind support; configure an explicitly built unwind-enabled backend with LUST_CRANELIFT_BACKEND."
         ),
         json(
-            "Compiler probes use PATH and RUSTC. Cargo configuration, custom wrappers, or LUST_CARGO may select a different compiler; this command does not build a project to resolve them."
+            "Compiler probes use --bluefe-root when supplied, otherwise PATH, RUSTC and RUSTDOC. Cargo configuration and custom wrappers may select a different compiler; this command does not build a project to resolve them."
         ),
     );
     i32::from(!ready)

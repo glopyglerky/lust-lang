@@ -1,6 +1,7 @@
 //! Cargo owns the dependency graph and all Rust artefacts. This module chooses an
 //! entire invocation, never pieces of source or incompatible library formats.
 mod doctor;
+mod toolchain;
 
 use std::ffi::{OsStr, OsString};
 use std::io;
@@ -12,6 +13,7 @@ Coordinate Lust subset compilation and full Rust projects.
 
 Usage:
   lustr [+toolchain] [--engine ENGINE] <command> [arguments...]
+  lustr --bluefe-root /absolute/sysroot <command> [arguments...]
   cargo lustr [--engine ENGINE] <command> [arguments...]
   cargo lust [--engine auto|rustc|cranelift|lust] <command> [arguments...]
   cargo-lust [+toolchain] [--engine ENGINE] <command> [arguments...]
@@ -51,6 +53,10 @@ LUST_CRANELIFT_BACKEND is required only when the Cranelift dev/test route is use
 Its path must be valid UTF-8 for Cargo's command-scoped TOML configuration.
 Choosing a backend path does not certify its features, ABI, or program correctness.
 The lustr, cargo-lustr, and cargo-lust executables use the same coordinator.
+--bluefe-root selects bin/cargo, bin/rustc and bin/rustdoc for this invocation.
+It preserves arguments, flags, profiles and compiler wrappers, installs nothing,
+and cannot be combined with +toolchain or --engine lust. Plans run no probes;
+doctor reports availability rather than semantic or backend qualification.
 ";
 
 /// Shared command entry point for the direct and both Cargo extension names.
@@ -97,6 +103,7 @@ pub struct Request {
     pub engine: Engine,
     pub explain: bool,
     pub toolchain: Option<OsString>,
+    pub bluefe_root: Option<PathBuf>,
     pub args: Vec<OsString>,
 }
 
@@ -114,6 +121,7 @@ pub fn parse(args: &[OsString]) -> Result<Action, String> {
     let mut engine = Engine::Auto;
     let mut explain = false;
     let mut toolchain = None;
+    let mut bluefe_root = None;
     let mut index = 0;
     while index < args.len() {
         let arg = &args[index];
@@ -130,6 +138,12 @@ pub fn parse(args: &[OsString]) -> Result<Action, String> {
             engine = Engine::parse(args.get(index).ok_or("--engine requires a value")?)?;
         } else if let Some(value) = arg.to_str().and_then(|s| s.strip_prefix("--engine=")) {
             engine = Engine::parse(OsStr::new(value))?;
+        } else if arg == "--bluefe-root" {
+            index += 1;
+            let value = args.get(index).filter(|value| !value.is_empty()).ok_or("--bluefe-root requires a sysroot directory")?;
+            if bluefe_root.replace(PathBuf::from(value)).is_some() {
+                return Err("specify --bluefe-root only once".to_owned());
+            }
         } else if arg.to_str().is_some_and(|s| s.starts_with('+')) {
             if arg == "+" {
                 return Err("+toolchain requires a toolchain name".to_owned());
@@ -151,7 +165,13 @@ pub fn parse(args: &[OsString]) -> Result<Action, String> {
     if engine == Engine::Lust && toolchain.is_some() {
         return Err("+toolchain selects Cargo, not the Lust compiler; omit it for --engine lust".to_owned());
     }
-    Ok(Action::Execute(Request { engine, explain, toolchain, args: args[index..].to_vec() }))
+    if bluefe_root.is_some() && (toolchain.is_some() || engine == Engine::Lust) {
+        return Err("--bluefe-root selects a full Rust toolchain; do not combine it with +toolchain or --engine lust".to_owned());
+    }
+    if bluefe_root.as_ref().is_some_and(|root| !root.is_absolute()) {
+        return Err("--bluefe-root must be an absolute sysroot path".to_owned());
+    }
+    Ok(Action::Execute(Request { engine, explain, toolchain, bluefe_root, args: args[index..].to_vec() }))
 }
 
 #[derive(Debug)]
@@ -195,7 +215,14 @@ pub struct Plan {
 /// Construct a complete invocation without reading a project or running tools.
 /// This is deliberately conservative: only known dev/test commands receive a
 /// different backend. Cargo itself resolves graph, configuration and profiles.
-pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
+pub fn plan(request: &Request, mut programs: Programs) -> Result<Plan, String> {
+    if request.bluefe_root.is_some() && (request.toolchain.is_some() || request.engine == Engine::Lust) {
+        return Err("--bluefe-root cannot be combined with +toolchain or --engine lust".to_owned());
+    }
+    let environment = request.bluefe_root.as_deref().map(toolchain::environment).unwrap_or_default();
+    if let Some(root) = &request.bluefe_root {
+        programs.cargo = toolchain::program(root, "cargo").into_os_string();
+    }
     if request.engine == Engine::Lust {
         if programs.lust.is_empty() {
             return Err("LUSTC must be a nonempty executable path when set".to_owned());
@@ -277,7 +304,7 @@ pub fn plan(request: &Request, programs: Programs) -> Result<Plan, String> {
         reason,
         program,
         args,
-        environment: Vec::new(),
+        environment,
         environment_remove,
         codegen_backend,
         experimental: selected_engine == Engine::Cranelift,
@@ -442,6 +469,17 @@ pub fn run(args: &[OsString]) -> i32 {
             return 2;
         }
     };
+    if !request.explain {
+        if let Some(root) = &request.bluefe_root {
+            if let Err(error) = toolchain::validate(root) {
+                eprintln!("cargo-lust: {error}");
+                return 2;
+            }
+        }
+        if request.args == [OsString::from("doctor")] {
+            return doctor::run_for_root(request.bluefe_root.as_deref());
+        }
+    }
     let plan = match plan(&request, Programs::from_environment()) {
         Ok(plan) => plan,
         Err(error) => {
