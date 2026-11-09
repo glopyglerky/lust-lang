@@ -108,6 +108,19 @@ unexpected success or wrong failure cannot satisfy a rejection gate. Include
 this helper's binary hash among the recorded tools. These gates are bounded
 conformance checks, not proofs of arbitrary program equivalence.
 
+For an explicit coordinator/backend route, use
+`tests-via <absolute-lustr> --bluefe-root <absolute-root> --engine <auto|rustc|cranelift> test <Cargo arguments>`.
+All three `CARGO`, `RUSTC` and `RUSTDOC` selectors must exactly match that root's
+`bin` paths. The helper refuses a mismatch before execution and forwards the
+remaining Cargo argument vector unchanged. It records the child status and raw
+streams, then emits the same test comparison JSON as the direct-Cargo mode.
+Include the coordinator's executable hash and the matching backend as a hashed
+external input. The [route-binding statement and native checks](proofs/routed-test-gates.md)
+describe the scope. A requested engine still needs actual compiler-command and
+backend-load evidence; caller profiles/configuration retain their normal effect.
+This permits scoped Cranelift test gates without granting the runner arbitrary
+CLI `--config` overrides or adding Cargo profile backend environment overrides.
+
 | Scenario | What it measures |
 | --- | --- |
 | `no-op` | Already primed target, no forced source timestamp change. |

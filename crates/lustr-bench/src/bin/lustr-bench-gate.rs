@@ -37,50 +37,93 @@ fn has_error_code(stderr: &[u8], code: &str) -> bool {
     })
 }
 
+fn validate_tests(args: &[OsString]) -> Result<(), &'static str> {
+    if args.first().is_none_or(|arg| arg != "test") || args.iter().any(|arg| arg == "--no-run") {
+        return Err("tests gate requires an executing Cargo test command");
+    }
+    Ok(())
+}
+
+fn routed_tests(mut args: impl Iterator<Item = OsString>) -> Result<Command, Box<dyn std::error::Error>> {
+    let coordinator = args.next().ok_or("missing coordinator executable")?;
+    if !Path::new(&coordinator).is_absolute() {
+        return Err("coordinator must be absolute".into());
+    }
+    if args.next().as_deref() != Some(std::ffi::OsStr::new("--bluefe-root")) {
+        return Err("routed tests require --bluefe-root".into());
+    }
+    let root = args.next().ok_or("missing toolchain root")?;
+    if !Path::new(&root).is_absolute() {
+        return Err("toolchain root must be absolute".into());
+    }
+    if args.next().as_deref() != Some(std::ffi::OsStr::new("--engine")) {
+        return Err("routed tests require an explicit --engine".into());
+    }
+    let engine = args.next().ok_or("missing engine")?;
+    if !["auto", "rustc", "cranelift"].iter().any(|name| engine == *name) {
+        return Err("routed tests require auto, rustc or cranelift".into());
+    }
+    let cargo_args: Vec<_> = args.collect();
+    validate_tests(&cargo_args)?;
+    for (variable, executable) in [("CARGO", "cargo"), ("RUSTC", "rustc"), ("RUSTDOC", "rustdoc")] {
+        let selected = std::env::var_os(variable).ok_or("explicit tool selection is required")?;
+        if selected.as_os_str() != Path::new(&root).join("bin").join(executable).as_os_str() {
+            return Err(format!("routed {variable} selection must match --bluefe-root").into());
+        }
+    }
+    let mut command = Command::new(coordinator);
+    command.arg("--bluefe-root").arg(root).arg("--engine").arg(engine).args(cargo_args);
+    Ok(command)
+}
+
 fn execute() -> Result<u8, Box<dyn std::error::Error>> {
     let mut args = std::env::args_os().skip(1);
-    let mode = args.next().ok_or("usage: lustr-bench-gate tests <Cargo args...> | reject <source>")?;
+    let mode = args.next().ok_or("usage: lustr-bench-gate tests <Cargo args...> | tests-via <coordinator> --bluefe-root <root> --engine <engine> test <args...> | reject <source>")?;
     if mode == "--version" && args.next().is_none() {
         println!("lustr-bench-gate {}", env!("CARGO_PKG_VERSION"));
         return Ok(0);
     }
     let rejection = mode == "reject";
-    let variable = if rejection {
-        "RUSTC"
-    } else if mode == "tests" {
-        "CARGO"
+    let mut command = if mode == "tests-via" {
+        routed_tests(args)?
     } else {
-        return Err("unknown gate".into());
+        let variable = if rejection {
+            "RUSTC"
+        } else if mode == "tests" {
+            "CARGO"
+        } else {
+            return Err("unknown gate".into());
+        };
+        let program = std::env::var_os(variable).ok_or("explicit tool selection is required")?;
+        if !Path::new(&program).is_absolute() {
+            return Err("gate tool must be absolute".into());
+        }
+        let mut command = Command::new(program);
+        if rejection {
+            let source = args.next().ok_or("missing rejection source")?;
+            if args.next().is_some() {
+                return Err("unexpected rejection argument".into());
+            }
+            let target = std::env::var_os("CARGO_TARGET_DIR").ok_or("runner-owned output required")?;
+            command.args([
+                OsString::from("--edition=2024"),
+                OsString::from("--error-format=json"),
+                source,
+                OsString::from("--emit=metadata"),
+                OsString::from("--out-dir"),
+                target,
+            ]);
+        } else {
+            let args: Vec<_> = args.collect();
+            validate_tests(&args)?;
+            command.args(args);
+        }
+        command
     };
-    let program = std::env::var_os(variable).ok_or("explicit tool selection is required")?;
-    if !Path::new(&program).is_absolute() {
-        return Err("gate tool must be absolute".into());
-    }
-    let mut command = Command::new(program);
-    if rejection {
-        let source = args.next().ok_or("missing rejection source")?;
-        if args.next().is_some() {
-            return Err("unexpected rejection argument".into());
-        }
-        let target = std::env::var_os("CARGO_TARGET_DIR").ok_or("runner-owned output required")?;
-        command.args([
-            OsString::from("--edition=2024"),
-            OsString::from("--error-format=json"),
-            source,
-            OsString::from("--emit=metadata"),
-            OsString::from("--out-dir"),
-            target,
-        ]);
-    } else {
-        let args: Vec<_> = args.collect();
-        if args.first().is_none_or(|arg| arg != "test") || args.iter().any(|arg| arg == "--no-run") {
-            return Err("tests gate requires an executing Cargo test command".into());
-        }
-        command.args(args);
-    }
     let output = command.output()?;
     // Raw streams remain in the runner's evidence; only comparison output is normalized.
     let mut diagnostic = std::io::stderr().lock();
+    writeln!(diagnostic, "raw status: {}", output.status)?;
     writeln!(diagnostic, "raw stdout: {} bytes", output.stdout.len())?;
     diagnostic.write_all(&output.stdout)?;
     writeln!(diagnostic, "\nraw stderr: {} bytes", output.stderr.len())?;

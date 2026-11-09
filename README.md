@@ -113,6 +113,12 @@ blocks. Its [position theorem and checks](docs/compiler-set/proofs/order-balance
 prove the count bound, without claiming to remove cache effects or establish a
 speedup. Published historical measurements keep their original order and limits.
 
+Backend campaigns can use the [routed test gate](docs/compiler-set/proofs/routed-test-gates.md)
+with an explicit Lustr toolchain and engine. It checks the core tool selectors;
+the native fixture observes LLVM and matching Cranelift compiler commands and
+tests panic cleanup. Project-specific gates and matching backend artifacts are
+still required before reporting performance.
+
 ## Fork ownership
 
 Lustr owns this layout, its entry points and its documentation. Required inherited
