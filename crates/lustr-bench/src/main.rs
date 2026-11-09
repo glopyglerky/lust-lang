@@ -228,6 +228,26 @@ fn env(l: &Lane, target: &Path) -> R<BTreeMap<OsString, OsString>> {
     e.insert("CARGO_TARGET_DIR".into(), target.as_os_str().into());
     Ok(e)
 }
+fn host_context() -> R<Value> {
+    let load = fs::read_to_string("/proc/loadavg")?;
+    let load: Vec<_> = load.split_whitespace().take(3).map(str::to_owned).collect();
+    let stat = fs::read_to_string("/proc/stat")?;
+    let cpu: Vec<_> = stat.lines().filter(|line| line.starts_with("cpu")).map(str::to_owned).collect();
+    let status = fs::read_to_string("/proc/self/status")?;
+    let affinity =
+        status.lines().find_map(|line| line.strip_prefix("Cpus_allowed_list:")).ok_or("CPU affinity observation missing")?.trim();
+    if load.len() != 3 || cpu.is_empty() || affinity.is_empty() {
+        return fail("incomplete host observation");
+    }
+    Ok(json!({
+        "cpu_affinity":affinity,
+        "load_average":load,
+        "cpu_time_counters":cpu,
+        "cpu_pressure":fs::read_to_string("/proc/pressure/cpu")?,
+        "io_pressure":fs::read_to_string("/proc/pressure/io")?,
+    }))
+}
+
 #[derive(Serialize)]
 struct Record {
     lane: String,
@@ -245,6 +265,8 @@ struct Record {
     stderr_sha256: String,
     stdout_bytes: u64,
     stderr_bytes: u64,
+    host_before: Value,
+    host_after: Value,
 }
 struct Runner {
     dir: PathBuf,
@@ -267,6 +289,7 @@ impl Runner {
         let ep = self.dir.join(&errname);
         let out = OpenOptions::new().write(true).create_new(true).open(&op)?;
         let err = OpenOptions::new().write(true).create_new(true).open(&ep)?;
+        let host_before = host_context()?;
         let start = Instant::now();
         let child = Command::new(exe)
             .args(&args[1..])
@@ -298,6 +321,7 @@ impl Runner {
         let seconds = start.elapsed().as_secs_f64();
         // Kill lingering descendants even when the direct child succeeded.
         kill_group(pid)?;
+        let host_after = host_context()?;
         let ob = fs::metadata(&op)?.len();
         let eb = fs::metadata(&ep)?.len();
         limit |= ob.saturating_add(eb) > s.output_limit_bytes;
@@ -319,6 +343,8 @@ impl Runner {
             stderr_sha256: eh,
             stdout_bytes: ob,
             stderr_bytes: eb,
+            host_before,
+            host_after,
         });
         if timeout || limit || status.code() != Some(c.expected_exit) {
             return fail(format!("{} {phase}: command failed; raw evidence retained", l.name));
@@ -361,6 +387,23 @@ fn normalize(l: &Lane, raw: &[u8]) -> Vec<u8> {
         out = next;
     }
     out
+}
+fn metadata_for_comparison(l: &Lane, raw: &[u8]) -> R<(Value, Vec<Value>)> {
+    let mut value: Value = serde_json::from_slice(&normalize(l, raw))?;
+    if value.get("version") != Some(&json!(1)) {
+        return fail("metadata comparison requires Cargo format version 1");
+    }
+    let mut changes = Vec::new();
+    for package in value.get_mut("packages").and_then(Value::as_array_mut).ok_or("metadata packages must be an array")? {
+        let id = package.get("id").cloned().unwrap_or(Value::Null);
+        if let Some(hints) = package.get_mut("hints").and_then(Value::as_object_mut)
+            && hints.get("min-opt-level").is_some_and(Value::is_null)
+        {
+            hints.remove("min-opt-level");
+            changes.push(json!({"package":id,"field":"/hints/min-opt-level","observed":null,"comparison":"absent"}));
+        }
+    }
+    Ok((value, changes))
 }
 fn tools(l: &Lane) -> R<Value> {
     let mut rows = Vec::new();
@@ -671,6 +714,7 @@ fn study(r: &mut Runner, s: &Spec, report: &mut Value) -> R<()> {
     let mut dependency_roots = BTreeSet::new();
     let mut dependency_before = BTreeMap::new();
     let mut selections = Vec::new();
+    let mut metadata_projections = Vec::new();
     let mut gates: Vec<Vec<Vec<u8>>> = Vec::new();
     let mut identities = Vec::new();
     for l in &s.lanes {
@@ -699,7 +743,10 @@ fn study(r: &mut Runner, s: &Spec, report: &mut Value) -> R<()> {
             }
         }
         report["dependency_sources_before"] = json!(dependency_before);
-        selections.push(normalize(l, &selection));
+        let (comparison, changes) = metadata_for_comparison(l, &selection)?;
+        selections.push(comparison);
+        metadata_projections.push(json!({"lane":l.name,"changes":changes}));
+        report["metadata_comparison_projections"] = json!(metadata_projections);
         evidence(r, s, l, &target, "compiler-evidence-before")?;
         let mut values = Vec::new();
         for g in &l.gates {
@@ -737,7 +784,7 @@ fn study(r: &mut Runner, s: &Spec, report: &mut Value) -> R<()> {
     if gates.iter().any(|x| *x != gates[0]) {
         return fail("normalized correctness results differ");
     }
-    let mut times = vec![vec![0.; s.pairs]; s.lanes.len()];
+    let mut times: Vec<Vec<f64>> = (0..s.lanes.len()).map(|_| Vec::with_capacity(s.pairs)).collect();
     let mut order = Vec::new();
     // AB/BA in adjacent pairs; seed selects the first direction in each block.
     let mut rng = s.seed;
@@ -766,7 +813,7 @@ fn study(r: &mut Runner, s: &Spec, report: &mut Value) -> R<()> {
                     verify_evidence(s, l, &stderr)?;
                 }
                 if !warm {
-                    times[i][pair] = elapsed;
+                    times[i].push(elapsed);
                 }
                 if source(s)? != before {
                     return fail("source/external inputs mutated during run");
@@ -820,6 +867,9 @@ fn study(r: &mut Runner, s: &Spec, report: &mut Value) -> R<()> {
         fingerprints.insert(l.name.clone(), rows);
     }
     report["actual_cargo_fingerprints"] = json!(fingerprints);
+    if times.iter().any(|lane| lane.len() != s.pairs) {
+        return fail("incomplete paired sample cardinality");
+    }
     let mut summaries = Vec::new();
     for i in 1..s.lanes.len() {
         let pairs: Vec<_> = times[0].iter().copied().zip(times[i].iter().copied()).collect();
@@ -876,7 +926,7 @@ fn main() -> R<()> {
     fs::create_dir(&out)?;
     publish(&out.join("spec.original.json"), &bytes)?;
     let mut r = Runner { dir: out.clone(), records: Vec::new() };
-    let mut report = json!({"schema":1,"runner_version":env!("CARGO_PKG_VERSION"),"runner_sha256":hash(&std::env::current_exe()?)?,"spec_sha256":hex(&Sha256::digest(&bytes)),"spec":s,"status":"failed","summaries":null,"memory_energy":"not measured","inference_assumptions":"equivalent work; independent pairs for bootstrap; sign exchangeability under null; exploratory unadjusted comparisons"});
+    let mut report = json!({"schema":1,"runner_version":env!("CARGO_PKG_VERSION"),"runner_sha256":hash(&std::env::current_exe()?)?,"spec_sha256":hex(&Sha256::digest(&bytes)),"spec":s,"status":"failed","summaries":null,"metadata_comparison_rule":"cargo-optional-min-opt-level-none-v1","metadata_comparison_projections":[],"memory_energy":"not measured","inference_assumptions":"equivalent work; independent pairs for bootstrap; sign exchangeability under null; exploratory unadjusted comparisons"});
     let metadata = s.force_root.as_ref().map(|p| fs::metadata(s.source.join(p))).transpose()?;
     let result = study(&mut r, &s, &mut report);
     let restored = if let (Some(p), Some(m)) = (&s.force_root, metadata) {
@@ -929,6 +979,33 @@ fn main() -> R<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn only_the_known_unset_metadata_hint_is_projected() {
+        let s: Spec = serde_json::from_str(include_str!("../sample-spec.json")).unwrap();
+        let l = &s.lanes[0];
+        let old = json!({"version":1,"packages":[{"id":"example","hints":{"mostly-unused":true}}],"resolve":{"features":["default"]}});
+        let mut unset = old.clone();
+        unset["packages"][0]["hints"]["min-opt-level"] = Value::Null;
+        let project = |v: &Value| metadata_for_comparison(l, &serde_json::to_vec(v).unwrap()).unwrap();
+        assert_eq!(project(&old).0, project(&unset).0);
+        assert_eq!(project(&unset).1.len(), 1);
+        assert_eq!(project(&old).1.len(), 0);
+        for v in [json!(0), json!(1), json!(2), json!(3), json!("s"), json!(false), json!({})] {
+            let mut material = unset.clone();
+            material["packages"][0]["hints"]["min-opt-level"] = v;
+            assert_ne!(project(&old).0, project(&material).0);
+        }
+        for material in [
+            json!({"version":1,"packages":[{"id":"example","hints":{"mostly-unused":false}}],"resolve":{"features":["default"]}}),
+            json!({"version":1,"packages":[{"id":"example","hints":{"mostly-unused":true,"future-hint":null}}],"resolve":{"features":["default"]}}),
+            json!({"version":1,"packages":[{"id":"example","hints":{"mostly-unused":true}}],"resolve":{"features":["extra"]}}),
+        ] {
+            assert_ne!(project(&old).0, project(&material).0);
+        }
+        let mut future = old.clone();
+        future["version"] = json!(2);
+        assert!(metadata_for_comparison(l, &serde_json::to_vec(&future).unwrap()).is_err());
+    }
     #[test]
     fn os_bytes_and_normalization() {
         assert_eq!(Arg::Bytes { hex: "61ff62".into() }.os().unwrap().as_bytes(), &[b'a', 255, b'b']);

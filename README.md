@@ -91,7 +91,9 @@ costs count alongside cold compilation. Slower candidates remain in the evidence
 The [measurement protocol](docs/compiler-set/benchmark-method.md) records exact
 tools, dependency selection, compiler commands, correctness gates and every
 paired sample. Its [mathematical analysis](docs/compiler-set/proofs/benchmark-analysis.md)
-proves estimator invariants and conditional statistical properties. These proofs
+proves estimator invariants and conditional statistical properties. The
+[metadata comparison proof](docs/compiler-set/proofs/metadata-compatibility.md)
+states the one supported absent/null schema equivalence and its limits. These proofs
 do not establish compiler equivalence or an unmeasured speedup. The runner's tiny
 fixture qualifies the measurement machinery; public-repository campaigns remain
 separate evidence.

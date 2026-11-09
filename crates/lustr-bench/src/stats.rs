@@ -43,8 +43,7 @@ fn median(xs: &[f64]) -> f64 {
 }
 pub fn summarize(pairs: &[(f64, f64)], resamples: usize, seed: u64) -> Result<Summary, String> {
     if pairs.is_empty()
-        || resamples < 100
-        || resamples > 1_000_000
+        || !(100..=1_000_000).contains(&resamples)
         || pairs.len() > 10000
         || pairs.iter().any(|(a, b)| !a.is_finite() || !b.is_finite() || *a <= 0.0 || *b <= 0.0)
     {

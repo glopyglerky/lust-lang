@@ -126,7 +126,18 @@ Before timing, the runner checks tool binary hashes, records version outputs,
 hashes source and external inputs, captures actual resolved dependency selection,
 hashes selected dependency source trees outside the root, captures actual compiler
 commands, and runs correctness gates. It compares normalized metadata and gate
-results across lanes. All source files except top-level `.git` are included,
+results across lanes. The metadata comparison parses JSON and applies only the
+versioned `cargo-optional-min-opt-level-none-v1` compatibility rule to Cargo
+format version 1; other or missing versions are refused. A null
+`packages[*].hints.min-opt-level` compares as an absent field. Each application
+is recorded in `metadata_comparison_projections`; complete raw JSON and its hash
+remain in the command records. Non-null values, other hints, unknown fields,
+features and dependency graph values remain subject to equality. JSON object key
+order has no meaning; array order remains significant. The
+[conditional projection proof](proofs/metadata-compatibility.md) binds this rule
+to the pinned Cargo source. No other null fields are removed.
+
+All source files except top-level `.git` are included,
 including manifests, Cargo.lock, hidden configuration and vendored dependencies;
 paths are represented by their exact hex bytes and file values contain mode plus
 content SHA256. Symlinks/special files are rejected: use a complete materialized
@@ -163,6 +174,22 @@ Output is checked periodically, so a burst can exceed the threshold before the
 child is killed. This is a cancellation threshold, not a hard filesystem quota.
 RSS, energy and total process-group peak memory are not measured.
 
+Each command records `host_before` and `host_after` outside its wall-time
+interval. These contain the runner's allowed CPU list, the three load averages,
+raw `/proc/stat` CPU counter rows and CPU/I/O pressure observations from
+[Linux PSI](https://docs.kernel.org/accounting/psi.html). The final observation
+follows descendant cleanup. These bracket observations are not continuous
+monitoring or complete child-process accounting. Reading them may also affect
+scheduling/cache state. Linux proc/PSI access is required for this runner.
+
+Label each campaign's host model before timing. A shared-host exploratory study
+retains existing services and background work, uses a fixed CPU set/budget and
+records admission context plus every command observation. It does not satisfy a
+quiet-host study's admission gate or establish isolated causal speedups. Retain
+load spikes and unfavorable observations; do not remove samples after seeing
+ratios. Bootstrap and randomization assumptions remain conditional under either
+host model. Never stop unrelated services or jobs to manufacture admission.
+
 ## Report schema and publication
 
 `report.json` schema 1 contains `runner_version`, `runner_sha256`,
@@ -170,6 +197,7 @@ RSS, energy and total process-group peak memory are not measured.
 `source_before`, `source_after` (when reached), `final_source_observation`,
 `final_tools_observation`, `identities`, `dependency_sources_before/after`,
 `compiler_or_cargo_identity_confounders`, `actual_cargo_fingerprints`, `order`,
+`metadata_comparison_rule`, `metadata_comparison_projections`,
 `memory_energy`, `inference_assumptions`, and `summaries`. Failure adds `error`,
 sets `summaries` to null, and retains completed records and raw output. A rejected
 spec/setup before output creation has no run report. OS-level failure to write a
@@ -221,6 +249,12 @@ LUSTR_BENCH_TEST_OUTPUT=<new-test-output> \
 <toolchain>/bin/lustr --bluefe-root <toolchain> test --locked \
   --manifest-path crates/lustr-bench/Cargo.toml --target-dir <build-output> -j 2
 ```
+
+Set `LUSTR_BENCH_TEST_STOCK_CARGO` to an absolute second Cargo executable to
+run the additional real-version metadata regression. Both lanes use the same
+explicit produced Rust compiler. The test accepts the observed unset optional
+hint, then adds a real non-null hint and requires a failed report with null
+summaries and no timed samples. Its fixture timings validate machinery only.
 
 Campaign workloads can include bluefin `ferrofin-model` at
 `b7d124a22d49bacf19f6c3c940333f508d647fb6`, t3code-ls core/storage at

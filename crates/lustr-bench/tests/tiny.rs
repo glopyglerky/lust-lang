@@ -69,6 +69,14 @@ fn actual_bluefe_tiny() {
     assert_eq!(report["summaries"][0]["analysis"]["pairs"], 8);
     assert_eq!(report["source_before"], report["source_after"]);
     assert_eq!(report["records"].as_array().unwrap().iter().filter(|r| r["phase"] == "timed").count(), 16);
+    for record in report["records"].as_array().unwrap().iter().filter(|r| r["phase"] == "timed") {
+        for key in ["host_before", "host_after"] {
+            assert!(record[key]["cpu_affinity"].as_str().is_some_and(|value| !value.is_empty()), "missing per-command CPU affinity");
+            assert!(!record[key]["cpu_time_counters"].as_array().expect("CPU observation").is_empty());
+            assert_eq!(record[key]["load_average"].as_array().expect("load observation").len(), 3);
+            assert!(record[key]["cpu_pressure"].as_str().is_some_and(|value| value.contains("avg10=")));
+        }
+    }
     assert!(!Command::new(exe).arg(&path).arg(out.join("passed")).status().unwrap().success());
     // Profile values cannot hide a feature difference from operation comparison.
     let mut unequal = spec.clone();
