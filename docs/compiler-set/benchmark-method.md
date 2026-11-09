@@ -300,3 +300,49 @@ reports and small logs. Remove only owned disposable target/cache/staging trees
 after checking active processes, descriptors, mounts and the Cargo build lock.
 Record actual available-space before/after; shared concurrent work can confound
 the filesystem delta. Do not move build junk to media storage or reserved disks.
+
+## Optional Linux CPU and peak RSS
+
+A spec may set `"resource_mode": "linux-waited"`; omission or `"disabled"`
+preserves the direct-command protocol. Enable the same mode for every lane before
+collecting a campaign. There are no resource thresholds or automatic gate advances.
+Historical wall-time datasets remain unchanged; they have no resource observations.
+
+Each command gets a fresh reexecution of the hashed runner as a collector. It
+waits for the payload and calls the pinned nix safe `getrusage(RUSAGE_CHILDREN)`
+wrapper. Owned Rust forbids unsafe code; nix/libc and Linux remain upstream OS
+compatibility dependencies, not evidence of whole-toolchain memory safety.
+The request binds raw argument/environment bytes, working directory, unique report
+path and collector executable hash. The fresh report binds the request hash,
+collector hash/PID, protocol scope, raw wait status and measurements. Its status
+must agree with the collector's mirrored exit or signal. Missing, malformed,
+stale, mismatched or interrupted reports fail qualification with null summaries.
+Requests and raw reports remain available beside byte-preserving stdout/stderr.
+The payload receives exactly the direct-command environment and null stdin;
+collector control uses arguments and its own stdin lease, not environment markers.
+Lease closure kills the owned process group. Existing process-group limitations
+still apply: deliberately detached sessions are not a whole-system tracing scope.
+
+Linux defines user/system CPU in seconds plus microseconds; records use integer
+microseconds. CPU is the sum for terminated, waited children, including deeper
+descendants only when every intervening parent waited. Unwaited or detached
+work is outside this scope. Linux peak RSS is in KiB and is the largest waited
+process peak, **not simultaneous aggregate process-tree or cgroup memory**.
+These semantics follow [Linux getrusage(2)](https://man7.org/linux/man-pages/man2/getrusage.2.html).
+For peaks p_i, this collector reports max_i(p_i); it does not report
+max_t(sum_i RSS_i(t)). It cannot satisfy an aggregate RAM gate. Energy is unmeasured.
+
+A long-lived collector cannot recover command peak RSS by subtracting counters:
+M_after = max(M_before, M_child). With M_before = 100 MiB and M_child = 20 MiB,
+the difference is zero, although the child used 20 MiB. A fresh collector per
+command avoids that contamination. Synthetic large-then-small tests exercise it.
+
+Outer wall time includes collector startup, payload execution and report
+publication. Payload wall time covers spawn through wait. Collector user/system
+CPU is a separate RUSAGE_SELF observation taken before serialization/publication;
+it is a partial overhead observation, excluding the final write and exit.
+Overhead is not assumed zero or subtracted from wall samples. Existing paired
+wall log-ratio statistics and their assumptions are unchanged. Resource values
+are raw observations, with no resource log-ratio inference or universal compiler
+speed claim; any later resource analysis must preregister scope, thresholds,
+zero handling and paired-sample assumptions independently.

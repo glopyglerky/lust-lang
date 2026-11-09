@@ -1,6 +1,7 @@
 //! Linux-only qualification runner. No shell, unsafe code, inherited environment or fallback.
 #![forbid(unsafe_code)]
 mod order;
+mod resources;
 mod stats;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -87,6 +88,8 @@ struct Lane {
 #[serde(deny_unknown_fields)]
 struct Spec {
     schema: u32,
+    #[serde(default)]
+    resource_mode: resources::Mode,
     source: PathBuf,
     repository: String,
     revision: String,
@@ -268,6 +271,7 @@ struct Record {
     stderr_bytes: u64,
     host_before: Value,
     host_after: Value,
+    resources: Value,
 }
 struct Runner {
     dir: PathBuf,
@@ -291,19 +295,45 @@ impl Runner {
         let out = OpenOptions::new().write(true).create_new(true).open(&op)?;
         let err = OpenOptions::new().write(true).create_new(true).open(&ep)?;
         let host_before = host_context()?;
+        let usage_path = self.dir.join(format!("{id:05}.usage.json"));
+        let request_path = self.dir.join(format!("{id:05}.request.json"));
+        let enabled = s.resource_mode == resources::Mode::LinuxWaited;
+        let mut binding = None;
+        let mut command = if enabled {
+            let collector = std::env::current_exe()?;
+            let collector_hash = hash(&collector)?;
+            let encode = |v: OsString| Arg::Bytes { hex: hex(v.as_bytes()) };
+            let request = resources::Request {
+                argv: c.argv.clone(),
+                env: env(l, target)?.into_iter().map(|(k, v)| (encode(k), encode(v))).collect(),
+                cwd: s.source.clone(),
+                collector_sha256: collector_hash.clone(),
+                report_path: usage_path.clone(),
+            };
+            let bytes = serde_json::to_vec(&request)?;
+            publish(&request_path, &bytes)?;
+            binding = Some((hex(&Sha256::digest(&bytes)), collector_hash));
+            let mut command = Command::new(collector);
+            command.arg("--internal-resource-collector-v1").arg(&request_path).arg(&usage_path);
+            command
+        } else {
+            let mut command = Command::new(exe);
+            command.args(&args[1..]);
+            command
+        };
         let start = Instant::now();
-        let child = Command::new(exe)
-            .args(&args[1..])
+        let child = command
             .current_dir(&s.source)
             .env_clear()
-            .envs(env(l, target)?)
-            .stdin(Stdio::null())
+            .envs(if enabled { BTreeMap::new() } else { env(l, target)? })
+            .stdin(if enabled { Stdio::piped() } else { Stdio::null() })
             .stdout(out)
             .stderr(err)
             .process_group(0)
             .spawn()?;
         let mut scope = ChildScope(child);
         let child = &mut scope.0;
+        let _lease = child.stdin.take();
         let pid = child.id();
         let mut timeout = false;
         let mut limit = false;
@@ -328,14 +358,35 @@ impl Runner {
         limit |= ob.saturating_add(eb) > s.output_limit_bytes;
         let oh = hash(&op)?;
         let eh = hash(&ep)?;
+        let mut resource_error = None;
+        let mut payload_status = status;
+        let resource = if let Some((request_hash, collector_hash)) = binding {
+            let usage = if timeout || limit {
+                fail("command interrupted: resources unavailable")
+            } else {
+                resources::read(&usage_path, &request_hash, &collector_hash, pid, status)
+            };
+            match usage {
+                Ok(u) => {
+                    payload_status = std::process::ExitStatus::from_raw(u.raw_status);
+                    json!({"availability":"available","collector_exit":status.code(),"collector_signal":status.signal(),"report":format!("{id:05}.usage.json"),"report_sha256":hash(&usage_path)?,"usage":u})
+                }
+                Err(e) => {
+                    resource_error = Some(e.to_string());
+                    json!({"availability":"unavailable","collector_exit":status.code(),"collector_signal":status.signal(),"scope":resources::SCOPE,"error":e.to_string(),"usage":null,"raw_report":format!("{id:05}.usage.json")})
+                }
+            }
+        } else {
+            json!({"availability":"disabled","usage":null})
+        };
         self.records.push(Record {
             lane: l.name.clone(),
             phase: phase.into(),
             pair,
             argv: c.argv.clone(),
             wall_seconds: seconds,
-            exit: status.code(),
-            signal: status.signal(),
+            exit: if resource_error.is_some() { None } else { payload_status.code() },
+            signal: if resource_error.is_some() { None } else { payload_status.signal() },
             timed_out: timeout,
             output_limit: limit,
             stdout: outname,
@@ -346,8 +397,9 @@ impl Runner {
             stderr_bytes: eb,
             host_before,
             host_after,
+            resources: resource,
         });
-        if timeout || limit || status.code() != Some(c.expected_exit) {
+        if resource_error.is_some() || timeout || limit || payload_status.code() != Some(c.expected_exit) {
             return fail(format!("{} {phase}: command failed; raw evidence retained", l.name));
         }
         Ok((seconds, fs::read(op)?, fs::read(ep)?))
@@ -905,6 +957,12 @@ fn publish(path: &Path, bytes: &[u8]) -> R<()> {
 }
 fn main() -> R<()> {
     let args: Vec<_> = std::env::args_os().collect();
+    if args.get(1).is_some_and(|a| a == "--internal-resource-collector-v1") {
+        if args.len() != 4 {
+            return fail("invalid collector invocation");
+        }
+        std::process::exit(resources::collect(Path::new(&args[2]), Path::new(&args[3]))?);
+    }
     if args.len() != 3 {
         return fail("usage: lustr-bench SPEC.json NEW-ABSOLUTE-REPORT-DIRECTORY");
     }
@@ -921,6 +979,10 @@ fn main() -> R<()> {
     publish(&out.join("spec.original.json"), &bytes)?;
     let mut r = Runner { dir: out.clone(), records: Vec::new() };
     let mut report = json!({"schema":1,"runner_version":env!("CARGO_PKG_VERSION"),"runner_sha256":hash(&std::env::current_exe()?)?,"spec_sha256":hex(&Sha256::digest(&bytes)),"spec":s,"status":"failed","summaries":null,"order_method":order::METHOD,"metadata_comparison_rule":"cargo-optional-min-opt-level-none-v1","metadata_comparison_projections":[],"memory_energy":"not measured","inference_assumptions":"equivalent work; independent pairs for bootstrap; sign exchangeability under null; exploratory unadjusted comparisons"});
+    report["resource_measurement"] = resources::metadata(s.resource_mode);
+    if s.resource_mode != resources::Mode::Disabled {
+        report["memory_energy"] = json!("per-command CPU/largest waited-process peak RSS collection enabled; availability in records; aggregate RSS and energy not measured");
+    }
     let metadata = s.force_root.as_ref().map(|p| fs::metadata(s.source.join(p))).transpose()?;
     let result = study(&mut r, &s, &mut report);
     let restored = if let (Some(p), Some(m)) = (&s.force_root, metadata) {

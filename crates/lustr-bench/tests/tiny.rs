@@ -48,7 +48,7 @@ fn actual_bluefe_tiny() {
     let mut lanes = Vec::new();
     for name in ["baseline", "control"] {
         let target = out.join("passed/targets").join(name);
-        lanes.push(json!({"name":name,"env":{"PATH":format!("{}:/usr/bin:/bin",root.join("bin").display()),"HOME":out,"CARGO_HOME":out.join("cargo-home"),"RUSTC":rustc,"RUSTDOC":root.join("bin/rustdoc"),"CARGO":cargo,"CARGO_BUILD_JOBS":"2","CARGO_NET_OFFLINE":"true","CARGO_TERM_COLOR":"never"},"tools":tools,
+        lanes.push(json!({"name":name,"env":{"PATH":format!("{}:/usr/bin:/bin",root.join("bin").display()),"HOME":out,"CARGO_HOME":out.join("cargo-home"),"RUSTC":rustc,"RUSTDOC":root.join("bin/rustdoc"),"CARGO":cargo,"CARGO_BUILD_JOBS":"1","CARGO_NET_OFFLINE":"true","CARGO_TERM_COLOR":"never"},"tools":tools,
             "command":cmd(json!([coordinator,"--bluefe-root",root,"check","--locked","--offline","-vv"]),0),
             "selection":cmd(json!([cargo,"metadata","--format-version","1","--locked","--offline"]),0),
             "evidence":cmd(json!([coordinator,"--bluefe-root",root,"check","--locked","--offline","-vv"]),0),
@@ -58,7 +58,10 @@ fn actual_bluefe_tiny() {
                 {"name":"invalid-borrow","kind":"rejection","compare":"stdout","command":cmd(json!([gate,"reject","reject.rs"]),1)}],
             "normalize":[[target,"<TARGET>"]]}));
     }
-    let spec = json!({"schema":1,"source":fixture,"repository":"https://github.com/glopyglerky/lustr","revision":"fixture bytes in runner source manifest","package":"bench-tiny","root_crate":"bench_tiny","profile":"dev","target":"x86_64-unknown-linux-gnu","features":[],"semantic_settings":{"panic":"unwind","debug":"2","overflow-checks":"true"},"external_inputs":[],"scenario":"primed-root-check","force_root":"src/main.rs","snapshot_mtime_authorized":true,"pairs":8,"warmup_pairs":1,"seed":6757,"bootstrap_resamples":1000,"timeout_seconds":30,"output_limit_bytes":1048576,"lanes":lanes});
+    let mut spec = json!({"schema":1,"source":fixture,"repository":"https://github.com/glopyglerky/lustr","revision":"fixture bytes in runner source manifest","package":"bench-tiny","root_crate":"bench_tiny","profile":"dev","target":"x86_64-unknown-linux-gnu","features":[],"semantic_settings":{"panic":"unwind","debug":"2","overflow-checks":"true"},"external_inputs":[],"scenario":"primed-root-check","force_root":"src/main.rs","snapshot_mtime_authorized":true,"pairs":8,"warmup_pairs":1,"seed":6757,"bootstrap_resamples":1000,"timeout_seconds":30,"output_limit_bytes":1048576,"lanes":lanes});
+    if std::env::var_os("LUSTR_BENCH_TEST_RESOURCES").is_some() {
+        spec["resource_mode"] = json!("linux-waited");
+    }
     let path = out.join("spec.json");
     fs::write(&path, serde_json::to_vec_pretty(&spec).unwrap()).unwrap();
     let exe = env!("CARGO_BIN_EXE_lustr-bench");
@@ -69,6 +72,42 @@ fn actual_bluefe_tiny() {
     assert_eq!(report["summaries"][0]["analysis"]["pairs"], 8);
     assert_eq!(report["source_before"], report["source_after"]);
     assert_eq!(report["records"].as_array().unwrap().iter().filter(|r| r["phase"] == "timed").count(), 16);
+    if spec["resource_mode"] == "linux-waited" {
+        assert_eq!(report["resource_measurement"]["mode"], "linux-waited");
+        for record in report["records"].as_array().unwrap() {
+            assert_eq!(record["resources"]["availability"], "available");
+        }
+        let fixture_tool = PathBuf::from(env!("CARGO_BIN_EXE_lustr-bench-resource-fixture"));
+        for mode in ["sleep", "output", "signal", "failed"] {
+            let mut interrupted = spec.clone();
+            interrupted["timeout_seconds"] = json!(5);
+            interrupted["output_limit_bytes"] = json!(1048576);
+            for lane in interrupted["lanes"].as_array_mut().unwrap() {
+                lane["tools"]
+                    .as_array_mut()
+                    .unwrap()
+                    .push(json!({"path":fixture_tool,"sha256":digest(&fixture_tool),"version_args":["small"]}));
+                lane["gates"][0]["command"] = cmd(json!([fixture_tool, mode]), 0);
+            }
+            let input = out.join(format!("resource-{mode}.json"));
+            let output = out.join(format!("resource-{mode}"));
+            fs::write(&input, serde_json::to_vec(&interrupted).unwrap()).unwrap();
+            assert!(!Command::new(exe).arg(input).arg(&output).status().unwrap().success());
+            let failed: Value = serde_json::from_slice(&fs::read(output.join("report.json")).unwrap()).unwrap();
+            assert!(failed["summaries"].is_null());
+            let record = failed["records"].as_array().unwrap().last().unwrap();
+            if mode == "sleep" || mode == "output" {
+                assert_eq!(record[if mode == "sleep" { "timed_out" } else { "output_limit" }], true);
+                assert_eq!(record["resources"]["availability"], "unavailable");
+                assert!(record["resources"]["usage"].is_null());
+            } else if mode == "signal" {
+                assert_eq!(record["signal"], 15);
+                assert!(record["exit"].is_null());
+            } else {
+                assert_eq!(record["exit"], 7);
+            }
+        }
+    }
     for record in report["records"].as_array().unwrap().iter().filter(|r| r["phase"] == "timed") {
         for key in ["host_before", "host_after"] {
             assert!(record[key]["cpu_affinity"].as_str().is_some_and(|value| !value.is_empty()), "missing per-command CPU affinity");
