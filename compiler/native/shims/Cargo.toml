@@ -20,7 +20,7 @@ edition = "2024"
 description = "Rust cdylib shim for ts-rust system dependencies (lust W-SHIM)"
 publish = false
 
-# Never a staticlib through tcc: spikes/RESULTS.md K6 shows a Rust
+# Never a staticlib through tcc: the historical K6 results retained in Git shows a Rust
 # staticlib final-linked by tcc aborts on caught panics and thread spawn.
 # A cdylib linked by tcc or libtcc passes every semantic test.
 [lib]

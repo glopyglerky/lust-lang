@@ -16,7 +16,7 @@ sh test.sh                               # both builds, every test
 ```
 
 `test.sh` builds both variants, links `tests/test_shim.c` with the
-pinned tcc CLI against the cdylib (the link path spikes/RESULTS.md
+pinned tcc CLI against the cdylib (the link path [the historical K6 results](https://github.com/glopyglerky/lustr/blob/39349b63b976e76702ca14fbb5f19718eaf0ed2d/compiler/native/spikes/RESULTS.md)
 K6-4 proves) and once with the system `cc`, runs the C test against
 both builds, and diffs the `ORACLE` value lines against
 `src/bin/oracle.rs`, a small Rust program that does the same probe

@@ -59,3 +59,17 @@ as they land; do not use the future goal to block a working toolchain.
 The same ownership and evidence policy applies when working on the user's other
 forks. Public repositories can supply frozen performance workloads without
 changing their source, default branches, services or deployment state.
+
+## Retired native experiments
+
+The old `compiler/native/spikes` directory contained standalone C/FFI probes
+and their drivers. No active compiler, manifest, CI gate or qualification helper
+references that directory. These unneeded inherited experiments were removed
+from the default source tree. Their complete source and results remain in
+[the prior source snapshot](https://github.com/glopyglerky/lustr/tree/39349b63b976e76702ca14fbb5f19718eaf0ed2d/compiler/native/spikes).
+
+Required non-Rust code remains explicit: the current native compiler's C runtime
+and generation path, the TinyCC interface, C ABI qualification fixtures, and
+build/test/research helpers used by current development. Rust source, licenses
+and the relevant compiler fixtures are retained. These exceptions preserve the
+working toolchain while the native Rust migration remains future work.

@@ -26,7 +26,7 @@ compiler wrappers and failure status remain effective. Builds install nothing
 and failed programs are never retried through another compiler.
 
 An explicit Cranelift engine provides development code generation when a matching,
-unwind-enabled backend has passed qualification. Native WebAssembly builds use
+unwind-enabled backend has passed qualification. WebAssembly builds use
 LLVM. A separately pinned backend cannot be loaded into a different BlueFe compiler.
 The default forwarding path removes no compiler work by itself.
 
