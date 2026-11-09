@@ -240,8 +240,19 @@ fn forget_used(dir: &Path) {
 /// family): such a request never enters this cache, since its key
 /// cannot see env vars or included files (added for W-MACRO).
 fn src_reads_outside(src: &[u8]) -> bool {
-    const NEEDLES: &[&[u8]] = &[b"env!", b"option_env!", b"include!", b"include_str!", b"include_bytes!"];
-    NEEDLES.iter().any(|n| src.windows(n.len()).any(|w| w == *n))
+    // Macro names stay contiguous, but comments and whitespace may separate
+    // the name from `!`. Raw substring matching missed those invocations.
+    if ![b"env".as_slice(), b"include".as_slice()].iter().any(|name| src.windows(name.len()).any(|word| word == *name)) {
+        return false;
+    }
+    let Ok(text) = std::str::from_utf8(src) else { return true };
+    let interner = crate::intern::Interner::default();
+    let Ok(lexed) = crate::lexer::lex(text, crate::diag::FileId(0), 0, &interner) else { return true };
+    lexed.tokens.windows(2).any(|pair| {
+        matches!(pair[0].tok, crate::lexer::Tok::Ident(name)
+            if matches!(interner.get(name), "env" | "option_env" | "include" | "include_str" | "include_bytes"))
+            && pair[1].tok == crate::lexer::Tok::Bang
+    })
 }
 
 impl Cache {
@@ -313,7 +324,12 @@ impl Cache {
     }
 
     fn note_used(&self, name: String) {
-        USED.lock().unwrap_or_else(|e| e.into_inner()).get_or_insert_with(Default::default).entry(self.dir.clone()).or_default().insert(name);
+        USED.lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .get_or_insert_with(Default::default)
+            .entry(self.dir.clone())
+            .or_default()
+            .insert(name);
     }
 
     /// The size-cap eviction of a build that stored unit objects, run once after them.
@@ -379,7 +395,7 @@ impl Cache {
         // the root file's bytes alone: module files and Cargo inputs are
         // outside this key, so those requests skip the cache entirely
         // until the per-node disk cache of section 8.4 exists.
-        if src_reads_outside(src) || req.session.krate.manifest_path.is_some() || src_needs_resolve(src) {
+        if req.session.krate.manifest_path.is_some() || src_reads_outside(src) || src_needs_resolve(src) {
             return None;
         }
         let key = request_key(self.id, req, src);
@@ -401,10 +417,10 @@ impl Cache {
     /// A successful response keeps no stderr: its only stderr text is `--timings` output,
     /// which must not replay. After the write, oldest entries are evicted past the cap.
     pub fn store(&self, req: &Request, src: &[u8], resp: &Response) {
-        if resp.code == 3 || src_reads_outside(src) {
+        if resp.code == 3 || req.session.krate.manifest_path.is_some() || src_reads_outside(src) {
             return;
         }
-        if req.session.krate.manifest_path.is_some() || src_needs_resolve(src) {
+        if src_needs_resolve(src) {
             return;
         }
         let key = request_key(self.id, req, src);
@@ -524,6 +540,21 @@ mod tests {
     use super::*;
     use crate::protocol::SessionKey;
 
+    #[test]
+    fn external_input_macros_bypass_cache_by_tokens() {
+        for name in ["env", "option_env", "include", "include_str", "include_bytes"] {
+            for gap in ["", " ", "\n", "/* comment */", "// comment\n"] {
+                assert!(src_reads_outside(format!("{name}{gap}! (\"input\")").as_bytes()), "{name} {gap:?}");
+            }
+            assert!(src_reads_outside(format!("r#{name} /*gap*/ ! (\"input\")").as_bytes()));
+        }
+        for source in ["// env!(\"x\")\nfn main() {}", "fn main() { println!(\"include!(x) env!(x)\"); }", "fn myenv() {}", "fn main() {}"]
+        {
+            assert!(!src_reads_outside(source.as_bytes()), "{source}");
+        }
+        assert!(src_reads_outside(b"env \xff !"));
+    }
+
     fn req(cmd: Cmd, json: bool, debug: bool) -> Request {
         Request {
             cmd,
@@ -536,7 +567,8 @@ mod tests {
             emit_c: None,
             max_errors: 20,
             run_args: None,
-            harness: false, cc: false,
+            harness: false,
+            cc: false,
             client: Default::default(),
         }
     }
@@ -576,7 +608,13 @@ mod tests {
     #[test]
     fn request_keys_hold_the_lust_settings() {
         let vars = |v: &[(&str, &str)]| v.iter().map(|(k, x)| (k.to_string(), x.to_string())).collect::<Vec<_>>().into_iter();
-        let key = env_key(vars(&[("LUST_RELEASE_C", "1"), ("PATH", "/bin"), ("LUST_NO_DAEMON", "1"), ("LUST_UNWIND_TABLES", "1"), ("LUST_THREADS", "4")]));
+        let key = env_key(vars(&[
+            ("LUST_RELEASE_C", "1"),
+            ("PATH", "/bin"),
+            ("LUST_NO_DAEMON", "1"),
+            ("LUST_UNWIND_TABLES", "1"),
+            ("LUST_THREADS", "4"),
+        ]));
         assert_eq!(key, "LUST_RELEASE_C=1\nLUST_UNWIND_TABLES=1\n");
         assert_eq!(key, env_key(vars(&[("LUST_UNWIND_TABLES", "1"), ("LUST_RELEASE_C", "1")])));
         assert_eq!(env_key(vars(&[("LUST_CACHE_DIR", "/c"), ("HOME", "/h")])), "");

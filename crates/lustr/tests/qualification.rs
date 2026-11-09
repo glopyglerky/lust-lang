@@ -287,6 +287,67 @@ fn actual_lust_accepts_its_subset_and_keeps_unsupported_rust_rejected() {
     );
 }
 
+#[test]
+#[ignore = "requires a built Lust compiler; set LUST_TEST_LUST to its executable"]
+fn actual_lust_invalidates_external_reads_with_comments_before_macro_bang() {
+    let lust = std::env::var_os("LUST_TEST_LUST").expect("set LUST_TEST_LUST");
+    let rustc = std::env::var_os("RUSTC").unwrap_or_else(|| "rustc".into());
+    let scratch = Scratch::new("cache-external-reads");
+    let source = scratch.0.join("main.rs");
+    let mut sources = Vec::new();
+    for name in ["env", "option_env"] {
+        sources.push(format!("fn main() {{ println!(\"{{:?}}\", {name} /* gap */ ! (\"LUSTR_CACHE_INPUT\")); }}\n"));
+    }
+    sources.push("fn main() { println!(\"{:?}\", include_str /* gap */ ! (\"input.txt\")); }\n".to_owned());
+    for (index, text) in sources.iter().enumerate() {
+        fs::write(&source, text).unwrap();
+        for value in [None, Some("first"), Some("second")] {
+            fs::write(scratch.0.join("input.txt"), value.unwrap_or("unset")).unwrap();
+            let mut observed = Vec::new();
+            for native in [false, true] {
+                let output = scratch.0.join(if native { "native-program" } else { "reference-program" });
+                let mut build = if native {
+                    let mut command = Command::new(env!("CARGO_BIN_EXE_cargo-lust"));
+                    command
+                        .env("LUSTC", &lust)
+                        .env("LUST_NO_DAEMON", "1")
+                        .env("LUST_NO_CACHE", "0")
+                        .env("LUST_CACHE_DIR", scratch.0.join(format!("cache-{index}")))
+                        .args(["--engine", "lust", "build"]);
+                    command
+                } else {
+                    let mut command = Command::new(&rustc);
+                    command.args(["--edition=2024", "-Cpanic=abort", "-Coverflow-checks=on"]);
+                    command
+                };
+                build.arg(&source).arg("-o").arg(&output).current_dir(&scratch.0);
+                if let Some(value) = value {
+                    build.env("LUSTR_CACHE_INPUT", value);
+                } else {
+                    build.env_remove("LUSTR_CACHE_INPUT");
+                }
+                let built = execute(&mut build);
+                let expected_success = index != 0 || value.is_some();
+                assert_eq!(
+                    built.status.success(),
+                    expected_success,
+                    "native={native} value={value:?}: {}",
+                    String::from_utf8_lossy(&built.stderr)
+                );
+                if expected_success {
+                    let run = execute(&mut Command::new(output));
+                    success(&run);
+                    observed.push(run.stdout);
+                }
+            }
+            if !observed.is_empty() {
+                assert_eq!(observed.len(), 2);
+                assert_eq!(observed[0], observed[1], "stale native macro result for source {index}, value {value:?}");
+            }
+        }
+    }
+}
+
 fn required_cranelift_backend() -> OsString {
     let backend = std::env::var_os("LUST_CRANELIFT_BACKEND")
         .expect("set LUST_CRANELIFT_BACKEND to the matching custom backend built with --features unwinding");
