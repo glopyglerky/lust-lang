@@ -190,6 +190,15 @@ load spikes and unfavorable observations; do not remove samples after seeing
 ratios. Bootstrap and randomization assumptions remain conditional under either
 host model. Never stop unrelated services or jobs to manufacture admission.
 
+Forward/reverse order does not balance every position with three or more lanes.
+For example, the middle lane stays in the middle in a three-lane campaign;
+pairing and bootstrap resampling do not remove position/cache confounding.
+Also verify the actual options used by correctness gates. A direct Cargo gate
+does not automatically inherit frontend options supplied only to a coordinator's
+timed `rustc` command. Passing that gate qualifies its actual invocation, not
+every timed scheduling configuration. The
+[2026-11-09 dataset](measurements/2026-11-09-shared-v2/README.md) records both limits.
+
 ## Report schema and publication
 
 `report.json` schema 1 contains `runner_version`, `runner_sha256`,

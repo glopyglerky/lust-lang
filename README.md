@@ -98,6 +98,16 @@ do not establish compiler equivalence or an unmeasured speedup. The runner's tin
 fixture qualifies the measurement machinery; public-repository campaigns remain
 separate evidence.
 
+The [2026-11-09 public-repository dataset](docs/compiler-set/measurements/2026-11-09-shared-v2/README.md)
+contains 72 timed root checks and nine excluded warmups. Explicit four-thread
+BlueFe beat stock on t3code-ls, with a paired ratio of 1.268, but regressed by
+point estimate on gitr and bluefin. One-thread BlueFe regressed on all three.
+Same-compiler N1/N4 ratios were 2.345, 1.342 and 1.802. Unequal toolchain versions,
+shared-host effects and fixed middle position for N1 limit interpretation;
+runtime gates did not apply the timed frontend options. These are metadata-only
+root checks, not default whole-build results. Full samples, conditional intervals,
+regressions, scoped proofs and a Rust statistics replay command accompany the data.
+
 ## Fork ownership
 
 Lustr owns this layout, its entry points and its documentation. Required inherited
