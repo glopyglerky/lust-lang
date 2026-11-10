@@ -2,13 +2,21 @@
 
 ## Current priority and ownership
 
-The user clarified on 2026-11-08 that working Lustr/BlueFe builds come first.
-Independent full Rust compilation and migration toward memory-safe Rust are
-future goals pursued through measured iteration. Their open compiler-design
-items do not block delivery of the current usable coordinator and toolchain.
+The user's later clarification makes native compiler expansion the current
+requirement: start with Lust, retain its fast compilation path for everything it
+supports, and extend that pipeline through Lustr to cover the full Rust language.
+blueFe delivers the combined toolchain. A coordinator that forwards full Rust
+to rustc and rustc build tuning do not complete this requirement. Migration
+toward memory-safe Rust remains a separate, later optimization goal.
 
-The primary Rust workspace is `crates/lustr`. Required native implementation,
-fixtures and helpers live in the separate `compiler/native` workspace. The
+`compiler/native` is the exact upstream Lust baseline, not an unrestricted
+Lustr editing area. Keep its complete tracked tree identical to `upstream/lust.pin`.
+Lustr-owned expansion, fixtures and helpers belong outside that tree. No generated
+overlay, vendored copy rename or build-time patch may conceal a Lust divergence.
+Any proposed Lust change needs both a reproducible necessity case and faster
+equivalent-workload results before admission. Correctness tests alone are insufficient.
+The current root Cargo workspace builds the transitional coordinator in
+`crates/lustr`; do not mistake that layout for completed native coverage. The
 optional pinned semantic driver is `crates/lustr-semantic`. Keep the primary
 README, source map, decisions and divergence records about this fork's actual
 behavior. Preserve required upstream compatibility, licensing and source history.
@@ -16,9 +24,12 @@ Do not claim complete native Rust or whole-toolchain memory safety prematurely.
 
 ## Product contract
 
-This fork develops a coordinated compiler set that can compile an unchanged, complete Rust project and reduce its development compilation time. Keep upstream Lust's supported subset, rejection rules, daemon design, and differential testing discipline. Complement it where full Rust requires more machinery. A wrapper that delegates everything to rustc is a compatibility starting point, not completion of this goal.
-
-Use one additional full Rust compiler family before proposing more independent frontends. Add a compiler or split a compilation stage only when equivalent-workload measurements show a useful improvement and conformance tests cover the new interface.
+Follow [the native compiler contract](docs/compiler-set/native-contract.md).
+Use unchanged upstream Lust for its supported code and implement missing support
+in Lustr-owned code through explicit, qualified interfaces. Preserve accepted behavior and differential testing
+discipline. Added features must execute through native compilation, with actual
+runtime and rejection evidence. Do not rewrite applications into the subset,
+disable required checks, or count a rustc fallback as native feature support.
 
 ## Correctness rules
 

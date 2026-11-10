@@ -24,8 +24,7 @@ use std::path::{Path, PathBuf};
 unsafe extern "C" {
     fn setsid() -> i32;
     fn flock(fd: i32, operation: i32) -> i32;
-    // The third argument is variadic even when F_SETFD supplies an integer.
-    fn fcntl(fd: i32, cmd: i32, ...) -> i32;
+    fn fcntl(fd: i32, cmd: i32, arg: i32) -> i32;
 }
 const LOCK_EX: i32 = 2;
 const LOCK_NB: i32 = 4;

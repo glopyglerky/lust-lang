@@ -1,85 +1,115 @@
-# Compiler-set implementation roadmap
+# Native compiler implementation roadmap
 
-This roadmap preserves the full Rust acceleration goal. Each item has an executable acceptance condition. The initial coordinator is a starting point; tasks remain open until their own code and evidence exist.
+The [native compiler contract](native-contract.md) states the project requirement.
+Start with unchanged upstream Lust and add Lustr-owned support for full Rust while
+retaining and expanding its fast development compilation. Existing Lust support
+must keep using the native path. Lustr supplies the missing native support;
+blueFe delivers the combined compiler. Follow the [upstream preservation policy](upstream-lust.md);
+every proposed Lust divergence requires both necessity and faster-results evidence.
 
-## Implementation status
+The earlier Cargo/rustc coordinator work is transitional compatibility tooling.
+It must remain accurately identified and cannot close native compiler tasks.
 
-The [verification report](verification.md) identifies the exact tested commits and retains the measurements and failures.
+## Current implementation
 
-| Item | Current status |
+| Area | Status |
 | --- | --- |
-| 1. Cargo entry point | Implemented. Ordinary Cargo qualification passes on Linux, macOS, Windows, and Rust 1.85. Actual native Lust and pinned Cranelift execution gates pass on Linux x86_64. |
-| 2. Backend qualification | Partial. Panic recovery, destructors, full-language fixtures, nested Cargo, and bidirectional LLVM/Cranelift Rust ABI tests pass with the pinned backend. The new mixed gate covers aggregates, generics, trait objects, niches, allocation ownership, exact unwind cleanup order, atomics, TLS, and C ABI callbacks. The broader feature and platform matrix below remains open. |
-| 3. Workload measurements | Initial evidence is retained for the small fixture and unchanged upstream Lust. The full-project run passed both 391-test suites and all build/runtime gates; two cold pairs measured 59.54 s with LLVM versus 39.40 s with Cranelift. No-op builds regressed. The broader census and profiling requirements below remain open. |
-| 4. Automatic Lust routing | Open. Native Lust selection remains explicit and applies to complete supported targets. |
-| 5. Shared semantic interface | Partial. The pinned `lustr-semantic` driver reads checked monomorphized items, symbols, function ABIs, layouts and cleanup edges. Twelve real-compiler integration tests pass. Reports are inspection-only, not executable IR or complete cache keys. Native Lust lowering and host/target separation remain open. |
-| 6. Lust generation from full Rust IR | Open. Native Lust does not participate inside Cargo's Rust library graph. |
-| 7. Persistent full Rust frontend | Open. The complement still invokes rustc for full-language analysis. |
-| 8. Additional compiler workers | No further independent frontend selected. A split requires the measurements and equivalence checks below. |
-| 9. Installation and release qualification | Partial. The coordinator installs independently, and the pinned backend has a Linux setup helper. A complete supported release bundle and broader host/target qualification remain open. |
+| Native compiler | Exact upstream Lust baseline in `compiler/native`. Full Rust coverage and the Lustr-owned extension interface remain incomplete. |
+| Native frontend | Existing parser, expansion, resolution, trait/type checking, borrow checking and monomorphization. Remaining language gaps must be reproduced and implemented here. |
+| Native libraries and generation | Existing source libraries, adapters and C/TinyCC generation. Missing APIs and semantic support remain native implementation work. |
+| Fast edit path | Existing daemon, query reads, retained state and caches. Every expansion needs warm/cold and edit invalidation checks. |
+| Cargo/crate support | Partial native resolver and whole-target compilation. Native Rust rlib emission and general artifact interoperability remain open. |
+| Full Rust compatibility | Currently supplied by rustc through the separate coordinator. This is not native compiler coverage. |
+| Packaged previews | `preview-2026.11.09-2` contains a rustc-based toolchain and no native Lust compiler. Native compiler packaging and default selection remain open. |
 
-The [matched CGU16/ThinLTO pilot](measurements/2026-11-09-cgu16-thinlto-v3/README.md)
-adds 108 timed metadata-only root checks, optional waited CPU/scoped RSS and a
-reproducible numerical decision. Its 17.9% aggregate time reduction is against
-the matched stage2 control. Stock remained faster; full-build and broader
-workload gates remain open. The Linux GNU x86_64 packaged preview supplies a
-reusable compiler and matching tools; other hosts, native Lust packaging and the
-broader release qualification in item 9 remain incomplete.
+## 1. Reproduce native coverage gaps
 
-## 1. Cargo entry point
+Use unchanged public project snapshots and native compilation to identify the
+first real language, library, macro and crate blockers. Keep exact source,
+features, target and profile selections. A static feature scanner is navigation
+evidence, not proof that a program compiles or runs correctly.
 
-Deliver a dependency-free, independently installable `cargo-lust` binary. Default builds use the selected Cargo toolchain with its exact arguments. Expose explicit Rust, Cranelift, and whole-target Lust paths, and a plan view that explains the decision.
+Acceptance requires reproducible native failures and corresponding rustc oracle
+results. Dependency availability and incorrect target selection are separate
+failures; they cannot count as language coverage observations.
 
-Acceptance: real offline workspaces exercise build scripts, proc macros, async, unsafe/raw pointers, generic associated types, const generics, cross-crate traits, panic recovery, and tests. Invalid Rust remains rejected. Check process arguments, stdout/stderr, exit status, signals, profile selection, runtime arguments, and no automatic command retries. No tcc dependency for installing the coordinator.
+## 2. Extend the native implementation
 
-## 2. Backend qualification
+Implement missing behavior in Lustr-owned native parsing, resolution, type/borrow
+checking, const evaluation, libraries, lowering and generation through explicit
+interfaces to unchanged Lust. Any required Lust patch must first pass the separate
+necessity and faster-results gate. Do not replace valid
+application code with subset-specific rewrites or suppress required checks.
 
-Pin and test a rustc/Cranelift pair on each advertised platform. Add rejection and runtime probes for panic unwinding and drops, SIMD/intrinsics, inline assembly, TLS, atomics, FFI, allocation across crates, target features, debug information, coverage, sanitizer flags, LTO, and cross compilation. Run ordinary Cargo and candidate builds from the same source and configuration.
+Acceptance requires failing-first regression cases, native artifacts, matching
+runtime behavior and invalid-program rejection. Test programs must combine
+existing Lust-supported constructs with the new features. rustc is the oracle,
+not the compiler producing the candidate's accepted artifact.
 
-Acceptance: full results name each supported configuration, unsupported combination, and remaining gap. A backend is selected automatically only within its verified contract. A runtime failure is never retried as a compiler fallback. Unsupported cases retain a complete Cargo path.
+## 3. Preserve fast incremental compilation
 
-## 3. Workload census and measurements
+Specify positive and negative semantic reads for new operations. Track changed
+trait candidates, lifetimes, types, constants, macros, generated source and
+crate metadata. Retained state must remain valid after edits; uncertain reuse
+must recompute native work rather than return stale answers.
 
-Inventory representative small CLIs, large libraries, macro-heavy services, async runtimes, embedded/no_std crates, and workspaces with native dependencies. Begin with small reproducible fixtures, then real projects. Use exact upstream revisions and record modifications; prefer unchanged projects.
+Acceptance requires edit sequences comparing warm native answers with cold
+native compilation and the Rust oracle. Include accepted-to-rejected and
+rejected-to-accepted transitions, correct ownership/drop behavior, and recovery
+after errors. Bound retained memory and keep all first failures.
 
-Acceptance: raw, interleaved cold/warm/body/signature/type/macro/rejection samples, medians and p95, peak memory, artifact sizes, and compile-plus-test times. Record hardware, jobs, toolchain/backend identities, profile, features, and panic strategy. Include regressions. Use profiles to choose the next compiler work.
+## 4. Complete crates and the Rust language contract
 
-## 4. Automatic complete-target Lust routing
+Handle unchanged workspace targets, dependencies, features, build scripts,
+procedural macros, tests and documentation. Complete missing Rust language and
+standard-library semantics. Implement the required native crate artifacts,
+metadata, linkage, layouts, calling conventions and unwinding behavior.
 
-Design and implement a versioned qualification record tied to the selected Cargo unit and its complete transitive closure. Identify adapter substitutions, excluded features, build-script inputs, generated source, target/profile assumptions, and unsafe/proc-macro dependencies. Reuse Lust's existing session keys and read tracking where their contract applies.
+Acceptance requires real projects and Rust compatibility tests, including
+cross-crate generics, trait objects, macro-generated code, const evaluation,
+unsafe/FFI boundaries, allocation ownership, panic recovery, TLS and atomics.
+Native library checking is not rlib emission. A C ABI demonstration or metadata
+placeholder does not establish Rust artifact compatibility.
 
-Acceptance: supported complete targets use Lust automatically without changing requested behavior; unqualified requests take Cargo. A workspace with several targets builds every requested target. Changing any tracked input invalidates the record. Fuzz edits against both cold Lust and rustc. Do not pretend Lust libraries have Rust metadata.
+## 5. Deliver the native compiler through blueFe
 
-## 5. Shared full Rust semantic interface
+Package the native compiler, its matching libraries and required TinyCC assets
+with correct notices, relocation behavior, source bindings and privacy checks.
+Make the native compiler the primary product entry point as its command and
+artifact contracts become usable. Preserve existing compatibility tools during
+that transition and identify their use explicitly.
 
-Prototype a version-pinned rustc driver/backend integration that exposes checked monomorphized bodies and authoritative ABI/layout information. Keep metadata, symbol identity, generic instantiation ownership, and Cargo artifact production with rustc. Specify drop/unwind edges, intrinsics, static initialization, atomics, TLS, and diagnostics before handing work to a new backend.
+Acceptance requires clean installation, offline repeated compilation, actual
+native execution, upgrade/cache invalidation, rollback and every advertised
+host/target. The existing rustc-based preview is not this delivery.
 
-Acceptance: compile and link both directions across the real Rust crate interface, including generic calls, trait objects, enums with niches, returned aggregates, unwinding with destructors, proc-macro generated code, and host/target separation. Tests must fail when compiler/ABI versions mismatch. A C ABI demonstration alone does not close this item.
+## 6. Establish full-project speed
 
-## 6. Lust code generation behind the shared interface
+Compare native Lust, expanded native Lustr and stock Rust on equivalent work.
+Measure cold compilation, warm/no-op requests, body/signature/type/macro edits,
+invalid edits, linking and compile-plus-test time separately. Bind exact
+compiler identities, configuration, source and cache state.
 
-Adapt the useful parts of Lust's C generation, runtime, and fast compilation to input from item 5. Preserve the original Lust frontend as its own fast family. Unsupported operations fall back before publishing output and before executing user code. Define whether mixed backend code uses one allocator/runtime and who owns every generic instance and drop function.
+Acceptance requires retained raw measurements, regressions, representative
+unchanged projects and replayable analysis. Preserve Lust's native supported
+path and measure the cost of added features. Shared-host intervals and narrow
+mathematical arguments must retain their assumptions. An upstream subset ratio
+does not prove full Rust speed, and a compiler-build benchmark cannot substitute
+for native application compilation.
 
-Acceptance: differential build/run/reject tests across mixed codegen units, correct metadata and linker outputs, stable debug locations, and real compile-plus-test improvement. No duplicate semantic frontend work on the accelerated route.
+## Retained compatibility research
 
-## 7. Persistent full Rust frontend
+Earlier work remains useful evidence within its original scope:
 
-Use measurements from item 3 to select retained semantic computations. Specify lifetimes and ownership of retained state. Track positive and negative reads of names, impl candidates, signatures, constants, macro expansions, build-script observations, and external metadata. Start with one edit class and expand only with evidence.
+- The [verification report](verification.md) records coordinator and explicit
+  native/Cranelift qualification, including failures and runtime checks.
+- The [matched CGU16/ThinLTO experiment](measurements/2026-11-09-cgu16-thinlto-v3/README.md)
+  measured 108 rustc-based metadata-only root checks. Its 17.9% time reduction
+  was against a matched stage2 control. Stock remained faster on all three
+  workloads. These are not native Lust/Lustr measurements.
+- `lustr-semantic` inspects a pinned rustc's checked information. It emits
+  inspection reports, not native executable IR or full cache keys.
 
-Acceptance: randomized long edit sequences match fresh-process rustc acceptance, diagnostics, and executable behavior. Type, trait, feature, target, generated-source, and toolchain changes cannot reuse stale answers. Bound retained memory and recover from compiler crashes without publishing a successful result.
-
-## 8. Decide whether more compiler workers help
-
-Compare a single full Rust complement with parallel function/codegen-unit workers. Only consider another frontend if a measured semantic partition can avoid duplicated analysis. Keep worker communication explicit and versioned.
-
-Acceptance: same inputs and results, meaningful end-to-end improvement including serialization/linking, no jobserver oversubscription, bounded memory, and stable p95. Remove a split that adds cost. Worker count follows the workload and available resources.
-
-## 9. Installation and release qualification
-
-Package the coordinator, compatible Lust runtime/tcc assets, and clearly identified complementary backend requirements. Preserve upstream licenses and isolate upstream sync changes from fork code. Keep release profiles and program runtime performance in the test matrix.
-
-Acceptance: installation from a clean supported host, offline repeat builds, upgrades without stale cache reuse, documented rollback to ordinary Cargo, and end-to-end tests on every advertised platform. Do not call an installer universal merely because its coordinator compiles on several operating systems.
-
-## Closure rule
-
-Do not close the full project objective while full-language semantics come only from a compatibility fallback with no demonstrated acceleration. Do not close artifact interoperability, full frontend persistence, or automatic selection when only plans or mocked tests exist. Keep the current implementation, evidence, and remaining work visible in the README and verification report.
+The project remains incomplete until the native compiler meets the language,
+execution, artifact and performance requirements above. Memory-safety migration
+is later work and must preserve the working implementation's behavior.

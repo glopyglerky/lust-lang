@@ -9,6 +9,8 @@ on:
       - 'compiler/native/**'
       - 'crates/lustr/**'
       - 'crates/lustr-semantic/**'
+      - 'upstream/lust.pin'
+      - 'tools/lust-upstream-check.rs'
       - '.github/workflows/compiler-set.yml'
   pull_request:
     paths:
@@ -17,6 +19,8 @@ on:
       - 'compiler/native/**'
       - 'crates/lustr/**'
       - 'crates/lustr-semantic/**'
+      - 'upstream/lust.pin'
+      - 'tools/lust-upstream-check.rs'
       - '.github/workflows/compiler-set.yml'
   workflow_dispatch:
 
@@ -28,6 +32,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  upstream-lust:
+    name: Unchanged upstream Lust source
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: rustup toolchain install 1.99.1 --profile minimal
+      - name: Check upstream source identity
+        run: |
+          rustc +1.99.1 --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
+          "$RUNNER_TEMP/lust-upstream-check"
+      - name: Verify the source guard rejects drift
+        run: |
+          rustc +1.99.1 --edition=2024 --test tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check-tests"
+          "$RUNNER_TEMP/lust-upstream-check-tests"
+
   semantic:
     name: Checked rustc semantic inspection
     runs-on: ubuntu-24.04

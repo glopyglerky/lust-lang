@@ -1,0 +1,4 @@
+[submodule "third_party/ts-rust"]
+	path = third_party/ts-rust
+	url = git@github.com:t3dotgg/ts-rust-lust.git
+	branch = lust

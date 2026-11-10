@@ -148,7 +148,6 @@ unsafe extern "C" {
     fn getenv(name: *const c_char) -> *const c_char;
     fn mmap(addr: *mut c_void, len: usize, prot: c_int, flags: c_int, fd: c_int, off: i64) -> *mut c_void;
     fn munmap(addr: *mut c_void, len: usize) -> c_int;
-    #[cfg(target_os = "linux")]
     fn personality(persona: u64) -> c_int;
     fn writev(fd: c_int, iov: *const IoVec, cnt: c_int) -> isize;
     fn lseek(fd: c_int, off: i64, whence: c_int) -> i64;
@@ -156,8 +155,7 @@ unsafe extern "C" {
     fn pwrite(fd: c_int, buf: *const c_void, count: usize, off: i64) -> isize;
     fn copy_file_range(fd_in: c_int, off_in: *mut i64, fd_out: c_int, off_out: *mut i64, len: usize, flags: u32) -> isize;
     fn flock(fd: c_int, op: c_int) -> c_int;
-    // The third argument is variadic even when F_SETFD supplies an integer.
-    fn fcntl(fd: c_int, cmd: c_int, ...) -> c_int;
+    fn fcntl(fd: c_int, cmd: c_int, arg: c_int) -> c_int;
     fn fork() -> c_int;
     fn setsid() -> c_int;
     fn setpriority(which: c_int, who: u32, prio: c_int) -> c_int;
@@ -194,7 +192,6 @@ const MAP_FIXED: c_int = 0x10;
 const MAP_ANONYMOUS: c_int = 0x20;
 const MAP_NORESERVE: c_int = 0x4000;
 const MAP_FIXED_NOREPLACE: c_int = 0x10_0000;
-#[cfg(target_os = "linux")]
 const ADDR_NO_RANDOMIZE: u64 = 0x0040000;
 const LOCK_EX: c_int = 2;
 const F_SETFD: c_int = 2;
@@ -225,7 +222,6 @@ fn restored(p: *mut u8) -> bool {
 /// Runs on the first allocation (on the main thread, before any other
 /// thread exists): in a re-executed image process, maps the arena and
 /// makes it mimalloc's only memory.
-#[cfg(target_os = "linux")]
 #[cold]
 fn start() {
     if MODE.compare_exchange(0, 3, Ordering::AcqRel, Ordering::Acquire).is_err() {
@@ -273,13 +269,6 @@ fn start() {
         }
     }
     MODE.store(mode, Ordering::Release);
-}
-
-/// Other hosts always use plain mimalloc, even with an inherited arena variable.
-#[cfg(not(target_os = "linux"))]
-#[cold]
-fn start() {
-    MODE.store(1, Ordering::Release);
 }
 
 /// A hex address from a NUL-terminated string, without allocating.
@@ -452,7 +441,6 @@ pub fn reexec(dir: &Path) -> String {
     WHY.get_or_init(|| reexec_now(dir)).clone()
 }
 
-#[cfg(target_os = "linux")]
 fn reexec_now(dir: &Path) -> String {
     // The re-executed process itself, when its arena did not start: never
     // again (that would loop).
@@ -494,11 +482,6 @@ fn reexec_now(dir: &Path) -> String {
     format!("re-exec failed: {err}")
 }
 
-#[cfg(not(target_os = "linux"))]
-fn reexec_now(_dir: &Path) -> String {
-    "persistent front-end images require Linux".into()
-}
-
 /// Set in a process that `reexec` started.
 static REEXECED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -511,16 +494,14 @@ pub fn process_start() {
     }
     REEXECED.store(true, Ordering::Relaxed);
     // SAFETY: as in `reexec`; clearing the flag affects only later execs.
-    #[cfg(target_os = "linux")]
+    // remove_var: no other thread exists yet.
     unsafe {
         let p = personality(0xffff_ffff);
         if p >= 0 {
             personality(p as u64 & !ADDR_NO_RANDOMIZE);
         }
+        std::env::remove_var(ARENA_ENV);
     }
-    // SAFETY: no other thread exists yet. Other hosts also remove an
-    // inherited arena variable before running Cargo or user programs.
-    unsafe { std::env::remove_var(ARENA_ENV) };
 }
 
 /// What an image carries besides the session: the process-wide state the
@@ -2806,7 +2787,6 @@ mod tests {
     /// A raw layer packs and unpacks to the same bytes, and its zero pages
     /// stay holes in the memfd. Skipped where libzstd is missing.
     #[test]
-    #[cfg(target_os = "linux")]
     fn pack_round_trip() {
         let Some(z) = zstd() else { return };
         let dir = std::env::temp_dir().join(format!("lust-pack-{}", std::process::id()));

@@ -62,8 +62,7 @@ unsafe extern "C" {
     fn signal(signum: i32, handler: usize) -> usize;
     fn pipe(fds: *mut i32) -> i32;
     fn write(fd: i32, buf: *const u8, count: usize) -> isize;
-    // The third argument is variadic even when F_SETFD supplies an integer.
-    fn fcntl(fd: i32, cmd: i32, ...) -> i32;
+    fn fcntl(fd: i32, cmd: i32, arg: i32) -> i32;
     fn getuid() -> u32;
     #[cfg(target_os = "linux")]
     fn setpriority(which: i32, who: u32, prio: i32) -> i32;

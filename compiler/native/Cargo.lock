@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "lustr-native"
+name = "lust"
 version = "0.2.0"
 dependencies = [
  "libmimalloc-sys",

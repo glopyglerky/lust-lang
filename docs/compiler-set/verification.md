@@ -2,6 +2,12 @@
 
 Verification date: 2026-11-08.
 
+Current source policy: `compiler/native` has since been restored to the complete
+[pinned upstream tree](upstream-lust.md). Earlier fork overrides and experimental
+coverage changes are excluded from that baseline. The results below retain their
+original source/configuration scope; they do not qualify the restoration or the
+required full Lustr replacement. The rustc-based preview does not include Lust.
+
 ## What this establishes
 
 The coordinator preserves ordinary Cargo behavior for the included full Rust workspace, invokes the actual upstream Lust compiler for a supported target, and keeps an unsupported Lust program rejected. The pinned complementary backend with unwind support compiles and executes the full Rust fixture, passes its tests, and compiles and tests the coordinator itself. It also builds the unchanged upstream Lust compiler with a measured cold-development-build reduction, passes the same 391 upstream unit tests, and matches its runtime probes. These results establish the exercised Linux configuration, not an independent full Rust frontend, arbitrary Lust/rustc library interoperability, automatic fast-path selection, or a general Rust speedup.

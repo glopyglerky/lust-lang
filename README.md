@@ -1,13 +1,34 @@
 # Lustr
 
-Lustr is a compiler coordinator for BlueFe and ordinary Cargo projects. Its
-current priority is a working development toolchain with measured improvements.
-Full native Rust compilation and the migration to memory-safe Rust are future
-work, developed without breaking the usable compiler path.
+Lustr is being developed to extend the native [Lust compiler](https://github.com/t3dotgg/lust-lang)
+to full Rust while retaining its fast frontend, incremental daemon and
+development code generation. blueFe is the toolchain integration project.
 
-The default Cargo workspace builds only Lustr's dependency-free Rust coordinator.
-The native subset compiler and the experimental semantic driver are separate
-components with their own requirements.
+Existing Lust-supported code must use unchanged upstream Lust. Lustr must supply
+the missing Rust language, library and crate support in its own code. Full, unchanged Rust
+projects with measured fast compilation are the requirement. Forwarding them to
+rustc does not satisfy it. See the [native compiler contract](docs/compiler-set/native-contract.md).
+
+Full native Rust coverage and the Lustr expansion interface are incomplete.
+`compiler/native` is the unchanged upstream Lust source, pinned by
+[`upstream/lust.pin`](upstream/lust.pin). Lustr-owned expansion belongs outside
+that baseline. No Lust divergence is admitted. Any exception must demonstrate
+both necessity and faster results under the [upstream preservation policy](docs/compiler-set/upstream-lust.md).
+The current root Cargo workspace still builds the separate
+compatibility coordinator. That workspace and the published rustc-based previews
+are transitional tools, not the completed native compiler.
+
+Build the native compiler with an existing Rust bootstrap toolchain and the
+pinned TinyCC assets. Keep generated output outside the source checkout:
+
+```sh
+LUST_TCC_HOME=/absolute/tcc CARGO_TARGET_DIR=/absolute/lustr-native-build \
+  cargo build --manifest-path compiler/native/Cargo.toml --release --locked
+/absolute/lustr-native-build/release/lust check unchanged.rs
+/absolute/lustr-native-build/release/lust build unchanged.rs -o application
+```
+
+## Compatibility toolchain
 
 For versioned binary bundles, see [BlueFe releases](https://github.com/glopyglerky/blueFe/releases)
 and [Lustr releases](https://github.com/glopyglerky/lustr/releases). Use a release's
@@ -16,12 +37,14 @@ at a versioned absolute path; ordinary project builds do not rebuild the compile
 
 [Preview 2026.11.09-2](https://github.com/glopyglerky/lustr/releases/tag/preview-2026.11.09-2)
 is available for Linux x86_64 GNU with GLIBC 2.39 and GLIBCXX_3.4.32. Download all
-six assets and verify `SHA256SUMS`. It includes the matched BlueFe compiler,
-native/Wasm libraries, Clippy/rustfmt and experimental unwind-enabled Cranelift.
+six assets and verify `SHA256SUMS`. It includes the matched rustc-based BlueFe
+compiler, host/Wasm libraries, Clippy/rustfmt and experimental unwind-enabled Cranelift.
 Other hosts and Wasm execution are unqualified. The release records coordinator
 source `07470b2`; the later default-branch benchmark/docs commit leaves that
 coordinator source unchanged. See the
 [exact release record](https://github.com/glopyglerky/blueFe/blob/main/docs/bluefe/releases/preview-2026.11.09-2.md).
+It does not include native Lust. Its measurements do not measure native Lust
+acceleration or establish full native Lustr coverage.
 
 ```sh
 lustr --bluefe-root /absolute/toolchain build --workspace
@@ -65,15 +88,16 @@ cargo install --path crates/lustr --locked
 
 | Path | Responsibility |
 | --- | --- |
-| `crates/lustr` | Primary command, Cargo integration, BlueFe selection, qualification and performance tools. |
-| `compiler/native` | Lustr's native subset compiler, derived from Lust. TinyCC, its fixtures and native build helpers remain here. The `lust` and `lust-core` executable names preserve compatibility with that compiler's tools. |
+| `compiler/native` | Exact pinned upstream Lust source, including its native compiler, libraries, TinyCC integration and differential fixtures. No Lustr-owned edits are admitted here. |
+| `crates/lustr` | Transitional Cargo/rustc coordinator, BlueFe tool selection and compatibility qualification. |
+| `upstream/lust.pin` and `tools/lust-upstream-check.rs` | Upstream revision/tree identity and the Rust source-preservation guard. |
 | `crates/lustr-semantic` | Optional version-pinned rustc inspection. It exports inspection data, not executable MIR. |
 | `crates/lustr-bench` | Standalone paired benchmark runner and correctness gates. It is outside the coordinator workspace. |
 | `docs/compiler-set` | Current design, decisions, divergence records, measured evidence and future work. |
 
 The coordinator does not depend on TinyCC or registry packages. `cargo-lustr` and
 `cargo-lust` remain command aliases. The native component has a separate Cargo
-workspace so its C dependencies do not become prerequisites for installing Lustr.
+workspace so its C dependencies do not become prerequisites for installing the compatibility coordinator.
 
 ## Working contract and research
 

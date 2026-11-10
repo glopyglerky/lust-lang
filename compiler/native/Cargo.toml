@@ -1,8 +1,8 @@
 [package]
-name = "lustr-native"
+name = "lust"
 version = "0.2.0"
 edition = "2024"
-description = "Lustr native subset compiler, retaining the Lust compatibility commands"
+description = "A Rust subset compiler for fast dev checks and builds"
 
 [[bin]]
 name = "lust"
@@ -34,6 +34,3 @@ inherits = "release"
 codegen-units = 16
 debug = false
 incremental = true
-
-# Native dependencies stay outside the dependency-free coordinator workspace.
-[workspace]

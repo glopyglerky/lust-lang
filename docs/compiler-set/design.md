@@ -1,24 +1,24 @@
-# Coordinated Rust compilers
+# Native Lustr compiler design
 
-Status: initial implementation and development contract, 2026-11-08.
+Status: native compiler requirement, following the user's clarification.
 
 ## Goal
 
-An unchanged Rust project should be able to select this compiler set with one command. The set should use Lust where its narrow frontend and warm daemon are correct and useful, and a complementary compiler for the rest of Rust. The goal includes complete Cargo workspaces, their dependencies, build scripts, proc macros, tests, and release builds. It does not require application authors to rewrite their project into Lust's subset.
+Keep upstream Lust unchanged and supply full Rust support through Lustr-owned native implementation while retaining and expanding Lust's fast compilation model. Every construct Lust already supports must use Lust. Lustr supplies the missing language, library and crate support through qualified interfaces. blueFe delivers the combined compiler. This includes Cargo workspaces, dependencies, build scripts, proc macros, tests and release builds. Application rewrites into the subset do not satisfy the goal.
 
-Compatibility and acceleration are separate properties. The initial Cargo path obtains compatibility by using the project's existing Rust toolchain. It does not replace rustc's frontend or make that path faster by itself. Cranelift is an explicit development backend experiment. Existing Lust remains the fast subset compiler. Automatic coordination between those compiler families is further work with explicit acceptance gates.
+The [native compiler contract](native-contract.md) and [upstream preservation policy](upstream-lust.md) are authoritative. No Lust divergence is admitted without demonstrated necessity and faster results. The existing Cargo coordinator obtains compatibility through rustc and does not replace its frontend. Cranelift and rustc build tuning are compatibility research. They do not implement full native Lustr coverage, and their speed measurements cannot be transferred to the native compiler.
 
 ## Decision
 
-Keep two compiler families and three compilation paths:
+The required execution paths are:
 
 | Path | Semantic frontend | Code generation | Intended use |
 | --- | --- | --- | --- |
-| Lust | Upstream Lust subset | Lust C output and tcc | Qualified complete targets and warm edits |
-| Full Rust development | rustc | Cranelift | Full-language development builds on verified backend configurations |
-| Full Rust compatibility | rustc | Project-selected backend, normally LLVM | Compatibility, release optimization, unsupported fast paths |
+| Existing Lust support | Native Lust frontend | Native C output and TinyCC | Retain accepted behavior and the fast edit path |
+| Lustr expansions | Lustr-owned native support outside the upstream baseline | Qualified native generation with the required Rust behavior | Add missing Rust features without rewriting applications or hiding Lust patches |
+| Explicit compatibility tools | rustc | Project-selected backend | Bootstrap, differential oracle and transitional compatibility; excluded from native coverage |
 
-The full Rust development and compatibility paths share the same semantic frontend. They are not two new independent implementations of the Rust language. This is deliberate. Reusing the compiler's existing resolver, trait solver, borrow checker, const evaluator, layout rules, monomorphization, and metadata gives the complement a viable starting point.
+Lustr's extension interface remains unimplemented. It must preserve resolution, trait selection, borrow checking, const evaluation, layout, monomorphization and incremental invalidation as coverage grows. Mixed programs containing existing Lust features and Lustr expansions must compile and execute natively. The current native coverage remains incomplete; routing a program to rustc does not close a native implementation gap.
 
 Do not create separate unsafe, async, generic, or proc-macro compilers. Those features overlap in the same functions and types. For example, a generic async function may hold a borrow across a suspension point, call an unsafe operation, and use a trait implementation emitted by a proc macro. Dividing that source by keywords would require the compilers to reconstruct the same global semantic decisions. It offers no demonstrated speed benefit.
 
@@ -44,14 +44,14 @@ Rust libraries carry more than object code. Their metadata contains compiler ide
 
 Type layout and function-call ABI are also separate obligations. Matching a struct's size does not establish ABI compatibility. Generic instances, trait objects, enum niches, closure environments, drop glue, unwinding, thread-local storage, and allocator ownership need agreement. The [Rust layout reference](https://doc.rust-lang.org/reference/type-layout.html) explicitly limits its guarantees.
 
-The initial coordinator therefore has two real interfaces:
+The existing compatibility coordinator has two real interfaces:
 
 - A Cargo invocation remains a Cargo invocation. Cargo owns resolution, features, target units, build scripts, proc macros, metadata, artifact freshness, linking, tests, and documentation.
 - An explicit Lust invocation remains a complete Lust target invocation. Lust owns its frontend, adapters, runtime, cache, and daemon. The coordinator does not tell Cargo that this output is a Rust library.
 
-The coordinator does not parse application source or recreate Cargo's dependency graph merely to choose a compiler.
+Those interfaces remain usable during development. They are not the target architecture or proof of full native compilation. The coordinator does not parse application source or recreate Cargo's dependency graph merely to choose a compiler.
 
-## Cranelift policy
+## Existing Cranelift compatibility experiment
 
 Use the [official Cargo profile backend mechanism](https://doc.rust-lang.org/cargo/reference/unstable.html#codegen-backend). Keep the selected Rust toolchain. Do not install a nightly, use `RUSTC_BOOTSTRAP`, change the user's default toolchain, or rewrite project manifests during a build.
 
@@ -67,9 +67,9 @@ The coordinator must not change panic strategy, suppress overflow checks, remove
 
 `cargo check` usually avoids ordinary native code generation, so changing the backend does not address most of its work. Upstream Lust's own plan records a ts-rust case where Cranelift took 53.8 seconds against 43.0 seconds for rustc's normal backend. That is a useful counterexample to a universal speed claim, not a prediction about other workloads.
 
-## Automatic target qualification
+## Native coverage and execution qualification
 
-Before selecting Lust automatically, a qualification record must identify the exact requested target and dependency closure. It must include:
+A native coverage claim must identify the exact requested target and dependency closure. It must include:
 
 - Compiler, runtime, adapter, and toolchain identities.
 - Target triple, edition, features, profile, panic strategy, overflow checks, and debug settings.
@@ -82,11 +82,11 @@ A successful Lust compile is insufficient. A fallback on rejection would miss in
 
 Qualification is configuration-specific. A changed feature, adapter, build script, compiler, target, dependency, or semantic assumption invalidates it. A certificate covering yesterday's complete source snapshot does not prove tomorrow's arbitrary edit correct. Warm invalidation rules must be separately tested.
 
-## Shared semantic interface
+## Existing rustc semantic inspection experiment
 
-The most promising route to coordinated code generation inside arbitrary crates is a rustc-backed, versioned semantic interface. Start with a fixed compiler revision and pass checked, monomorphized bodies with authoritative layouts, calling conventions, symbols, drop/unwind operations, intrinsics, and linkage requirements to the chosen backend.
+An earlier experiment considered a rustc-backed semantic interface for checked, monomorphized bodies, layouts, calling conventions, symbols, drop/unwind operations, intrinsics and linkage. The existing inspection prototype is retained as research and does not implement the native compiler requirement.
 
-Initially rustc must remain responsible for metadata publication and Cargo's contract. A C ABI experiment can test a narrow adapter, but cannot establish general Rust ABI compatibility. Moving Lust's code generator behind this interface requires an actual mapping from rustc MIR to Lust's code-generation expectations. That mapping does not exist in this commit.
+That prototype leaves metadata publication and Cargo's contract with rustc. A C ABI experiment cannot establish general Rust ABI compatibility. No executable mapping from its reports to native Lust generation exists. Full native crate and metadata support remain required implementation work.
 
 The first executable step is [`lustr-semantic`](../../crates/lustr-semantic), an
 opt-in driver bound to the pinned compiler installation. It obtains actual
@@ -106,11 +106,11 @@ host. The report deliberately lacks complete MIR execution semantics and cache
 inputs; it cannot authorize native code generation or reuse. Inspection adds
 overhead and is kept outside the coordinator's normal route.
 
-A persistent full Rust frontend is a separate compiler project. It must account for macro expansion, coherence, negative lookups, trait candidate changes, build-script generated code, const evaluation, and cross-crate metadata. Reusing a rustc query context beyond its valid lifetime is not a daemon implementation. Retained work needs explicit ownership and invalidation rules, plus cold-session equivalence tests.
+Extending Lust's persistent frontend to full Rust must account for macro expansion, coherence, negative lookups, trait candidate changes, generated source, const evaluation and cross-crate metadata. Retained work needs explicit ownership and invalidation rules, plus cold-session equivalence tests.
 
 ## Performance decisions
 
-Add a specialized compiler only when it removes enough measured work to pay for dispatch, serialization, duplicate analysis, cache invalidation, linking, memory use, and slower generated programs. Compare one complement against further partitioning on the same workload. The default design is one full-language complement because there is no evidence yet that several independent frontends would help.
+Native expansions must remove enough work to preserve Lust's fast development model after checking, invalidation, code generation, linking and executed tests. Keep compiler dispatch, duplicate analysis and optional compatibility work outside native speed claims. Do not infer a gain from the number of compilation paths.
 
 For a baseline compilation time `T`, if fraction `p` is accelerated by factor `s`, the ideal time before coordination overhead is `T * ((1 - p) + p / s)`. Even infinitely fast code generation cannot remove frontend time. Real benchmarks must include coordination overhead and the runtime of executed tests.
 
@@ -118,6 +118,6 @@ Record cold compilation, fresh-process cache reuse, no-op builds, body edits, si
 
 ## Completion criteria
 
-This project is complete only when ordinary full Rust projects can use the set without source rewrites, the selected fast paths are semantically qualified, artifacts interoperate where promised, and equivalent-workload measurements show an improvement on representative projects. The coordinator, a few passing fixtures, or integration with an existing fast backend alone does not meet that definition.
+This project is complete only when unchanged full Rust projects compile through the extended native Lust/Lustr implementation, existing Lust-supported behavior retains its native path, artifacts interoperate where promised, and representative equivalent-workload measurements establish the required fast compilation. A rustc fallback, coordinator, a few fixtures or a separately optimized rustc build does not meet that definition.
 
 The implementation sequence and its gates are in [the roadmap](roadmap.md).

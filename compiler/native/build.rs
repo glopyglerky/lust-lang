@@ -16,10 +16,7 @@ fn inline_includes(file: &Path, dirs: &[PathBuf], seen: &mut Vec<PathBuf>, out: 
         // `#include "x"`, or `#include <x>` of a header in `dirs` (mimalloc.h names its own
         // mimalloc-stats.h that way); system headers stay.
         let t = line.trim_start();
-        let name = t
-            .strip_prefix("#include \"")
-            .and_then(|r| r.split('"').next())
-            .or_else(|| t.strip_prefix("#include <").and_then(|r| r.split('>').next()));
+        let name = t.strip_prefix("#include \"").and_then(|r| r.split('"').next()).or_else(|| t.strip_prefix("#include <").and_then(|r| r.split('>').next()));
         let found = name.and_then(|n| {
             let here = file.parent().map(|d| d.join(n));
             here.into_iter().chain(dirs.iter().map(|d| d.join(n))).find(|p| p.is_file())
@@ -98,27 +95,9 @@ fn main() {
     let mut h = std::collections::hash_map::DefaultHasher::new();
     hash_tree(&mut h, &root.join("src"));
     hash_tree(&mut h, &root.join("library"));
-    for name in ["Cargo.toml", "Cargo.lock", "build.rs"] {
-        name.hash(&mut h);
-        std::fs::read(root.join(name)).expect("compiler build input must be readable").hash(&mut h);
-        println!("cargo:rerun-if-changed={name}");
+    if let Ok(bytes) = std::fs::read(root.join("Cargo.toml")) {
+        bytes.hash(&mut h);
     }
-    // A release client must not attach to a debug compiler's daemon. Include
-    // the build recipe as well as source, and distinguish compiler versions.
-    for name in
-        ["PROFILE", "OPT_LEVEL", "DEBUG", "HOST", "TARGET", "CARGO_ENCODED_RUSTFLAGS", "RUSTC", "RUSTC_WRAPPER", "RUSTC_WORKSPACE_WRAPPER"]
-    {
-        name.hash(&mut h);
-        std::env::var_os(name).hash(&mut h);
-        println!("cargo:rerun-if-env-changed={name}");
-    }
-    let mut cfgs: Vec<_> = std::env::vars_os().filter(|(name, _)| name.to_string_lossy().starts_with("CARGO_CFG_")).collect();
-    cfgs.sort();
-    cfgs.hash(&mut h);
-    let rustc = std::env::var_os("RUSTC").expect("Cargo must identify the compiler");
-    let identity = std::process::Command::new(rustc).arg("-vV").output().expect("identify compiler used for this build");
-    assert!(identity.status.success(), "compiler identity query failed");
-    identity.stdout.hash(&mut h);
     hash_tree(&mut h, &tcc.join("bin"));
     hash_tree(&mut h, &lib);
     println!("cargo:rustc-env=LUST_BUILD_HASH={:016x}", h.finish());

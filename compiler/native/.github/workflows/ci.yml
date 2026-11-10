@@ -1,0 +1,74 @@
+name: CI
+
+# There is no git remote yet, so this workflow has never run. It is kept
+# valid (actionlint) and runs the same scripts/ci.sh gate as a dev box.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-x86_64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache pinned tcc
+        id: tcc
+        uses: actions/cache@v4
+        with:
+          path: |
+            third_party/tcc
+            third_party/tinycc
+          key: tcc-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-tcc.sh') }}
+      - name: Build pinned tcc
+        if: steps.tcc.outputs.cache-hit != 'true'
+        run: scripts/build-tcc.sh
+      - name: Install rustc 1.99
+        run: |
+          rustup set profile minimal
+          rustup toolchain install 1.99.0
+          rustup default 1.99.0
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Run CI gate
+        env:
+          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
+        run: bash scripts/ci.sh
+
+  macos-arm64:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache pinned tcc
+        id: tcc
+        uses: actions/cache@v4
+        with:
+          path: |
+            third_party/tcc
+            third_party/tinycc
+          key: tcc-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-tcc.sh') }}
+      - name: Build pinned tcc
+        if: steps.tcc.outputs.cache-hit != 'true'
+        run: scripts/build-tcc.sh
+      - name: Install rustc 1.99
+        run: |
+          rustup set profile minimal
+          rustup toolchain install 1.99.0
+          rustup default 1.99.0
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      # Known macOS risks, tracked outside this file: tcc Mach-O output,
+      # the hardcoded libbase.so name, and BSD userland differences in
+      # bench scripts. This job exists to find them; expect red at first.
+      - name: Run CI gate
+        env:
+          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
+        run: bash scripts/ci.sh

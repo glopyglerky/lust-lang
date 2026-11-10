@@ -90,8 +90,7 @@ pub fn parse_output(text: &str) -> BuildOutput {
 
 /// One recorded build-script run: what its outputs depend on, re-checked
 /// per session, and the outputs consumers read. Stored as text lines in
-/// the disk cache dir (magic `LBS5`; `LBS4` could silently record empty
-/// output under Cargo's new artifact layout; `LBS3` lacked the script's compile,
+/// the disk cache dir (magic `LBS4`; `LBS3` lacked the script's compile,
 /// and `LBS2` the script's other sources, the manifests, a rerun-if-changed
 /// dir's files, Cargo's default package files, the setup and the OUT_DIR
 /// re-check); W-DRIVER
@@ -358,7 +357,7 @@ impl Record {
     /// fails to read back is a miss, never a wrong answer.
     fn encode(&self) -> Vec<u8> {
         let p = |p: &Path| esc(&p.to_string_lossy());
-        let mut s = String::from("LBS5\n");
+        let mut s = String::from("LBS4\n");
         s.push_str(&format!("script {}\n", p(&self.script)));
         for (path, h) in &self.sources {
             s.push_str(&format!("src {h} {}\n", p(path)));
@@ -407,7 +406,7 @@ impl Record {
     /// Reads bytes written by `encode`. None on any malformed line.
     fn decode(text: &str) -> Option<Record> {
         let mut lines = text.lines();
-        if lines.next()? != "LBS5" {
+        if lines.next()? != "LBS4" {
             return None;
         }
         let (mut script, mut setup, mut output_hash) = (None, None, None);
@@ -820,8 +819,8 @@ fn cargo_error(stderr: &str) -> String {
 
 /// Runs the build script through Cargo and builds a fresh record.
 /// `cargo check` already runs build scripts; its JSON messages name
-/// the OUT_DIR, and the script's stdout sits in the sibling `run/stdout`
-/// or legacy `output` file Cargo keeps next to it. With `-vv`, Cargo also prints the
+/// the OUT_DIR, and the script's stdout sits in the sibling `output`
+/// file Cargo keeps next to it. With `-vv`, Cargo also prints the
 /// script's compile and run with the vars it set: the compile names its
 /// dep-info (the script crate's sources, the vars it read) and the run
 /// names rustc. The run is the cheap probe of `resolve::probe` (rustc runs
@@ -892,7 +891,8 @@ fn run_through_cargo(manifest_dir: &Path, script: &Path, cache_dir: &Path, env: 
     let Some(out_dir_path) = out_dir.filter(|d| !d.as_os_str().is_empty()) else {
         return Err("cargo check ran no build script for this manifest".to_string());
     };
-    let text = read_cargo_output(&out_dir_path)?;
+    let output_file = out_dir_path.parent().map(|p| p.join("output"));
+    let text = output_file.as_deref().and_then(|p| std::fs::read_to_string(p).ok()).unwrap_or_default();
     let parsed = parse_output(&text);
     // This package's script compile and run, as Cargo printed them.
     let printed = printed_commands(&stderr);
@@ -903,12 +903,7 @@ fn run_through_cargo(manifest_dir: &Path, script: &Path, cache_dir: &Path, env: 
         printed.iter().find(|(vars, argv)| ours(vars) && argv.windows(2).any(|w| w[0] == "--crate-name" && w[1] == "build_script_build"));
     let run = printed.iter().find(|(vars, argv)| {
         ours(vars)
-            && argv.first().is_some_and(|p| {
-                Path::new(p).file_name().is_some_and(|f| {
-                    let name = f.to_string_lossy();
-                    name.starts_with("build-script-") || name == "build_script_build" || name == "build_script_build.exe"
-                })
-            })
+            && argv.first().is_some_and(|p| Path::new(p).file_name().is_some_and(|f| f.to_string_lossy().starts_with("build-script-")))
     });
     let rustc = run.and_then(|(vars, _)| vars.iter().find(|(k, _)| k == "RUSTC")).map(|(_, v)| PathBuf::from(v));
     let dep = compile.and_then(|(_, argv)| compile_dep_info(argv, script));
@@ -961,45 +956,9 @@ fn run_through_cargo(manifest_dir: &Path, script: &Path, cache_dir: &Path, env: 
     })
 }
 
-/// Cargo's newer layout keeps stdout in `run/stdout`, beside OUT_DIR;
-/// the legacy layout uses `output`. Missing or unreadable output is not an
-/// empty successful script. Only NotFound permits trying the legacy path.
-fn read_cargo_output(out_dir: &Path) -> Result<String, String> {
-    let parent = out_dir.parent().ok_or("build script OUT_DIR has no parent")?;
-    let current = parent.join("run/stdout");
-    match std::fs::read_to_string(&current) {
-        Ok(text) => Ok(text),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            let legacy = parent.join("output");
-            std::fs::read_to_string(&legacy)
-                .map_err(|error| format!("cannot read Cargo build-script output at {} or {}: {error}", current.display(), legacy.display()))
-        }
-        Err(error) => Err(format!("cannot read Cargo build-script output at {}: {error}", current.display())),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn cargo_output_layouts_and_missing_output_are_distinct() {
-        let dir = std::env::temp_dir().join(format!("lust-output-layout-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(dir.join("out")).unwrap();
-        let out = dir.join("out");
-        assert!(read_cargo_output(&out).is_err());
-        std::fs::write(dir.join("output"), "cargo:rustc-cfg=legacy\n").unwrap();
-        assert_eq!(parse_output(&read_cargo_output(&out).unwrap()).rustc_cfg, ["legacy"]);
-        std::fs::create_dir(dir.join("run")).unwrap();
-        std::fs::write(dir.join("run/stdout"), "cargo::rustc-cfg=current\n").unwrap();
-        assert_eq!(parse_output(&read_cargo_output(&out).unwrap()).rustc_cfg, ["current"]);
-        std::fs::write(dir.join("run/stdout"), "").unwrap();
-        assert_eq!(read_cargo_output(&out).unwrap(), "");
-        std::fs::write(dir.join("run/stdout"), [0xff]).unwrap();
-        assert!(read_cargo_output(&out).is_err(), "invalid output must not use a stale legacy file");
-        std::fs::remove_dir_all(dir).unwrap();
-    }
 
     /// Both directive spellings parse, and unrecorded keys are ignored.
     #[test]
@@ -1083,10 +1042,6 @@ mod tests {
         std::fs::remove_file(out.join("gen.rs")).unwrap();
         assert_eq!(back.holds(&cache, Some(&base)), Holds::No, "a file gone from OUT_DIR is stale");
         assert!(Record::decode("junk").is_none());
-        assert!(
-            Record::decode(&String::from_utf8(rec.encode()).unwrap().replacen("LBS5", "LBS4", 1)).is_none(),
-            "old records may have lost directives"
-        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -1126,9 +1081,6 @@ mod tests {
         };
         let o = outputs(&pkg, &cache, Some(&env)).unwrap().unwrap();
         assert_eq!((o.rustc_cfg, o.rustc_env), (vec!["bs_a".to_string()], vec![("BS_DATA".to_string(), "v1".to_string())]));
-        let record = Record::decode(&std::fs::read_to_string(record_path(&cache, &pkg)).unwrap()).unwrap();
-        assert!(record.rustc.is_some(), "record the actual compiler from Cargo's script invocation");
-        assert!(record.compile.is_some(), "retain safe comment-only compile replay");
         assert_eq!(runs(&log), 1, "the first build runs the script");
         check(&pkg, &log, 1, "nothing changed: no run");
         // Comments the compile drops: the same binary, so no run.
