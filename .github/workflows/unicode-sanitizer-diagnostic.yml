@@ -1,0 +1,66 @@
+name: Unicode sanitizer diagnostic
+
+# A one-off diagnostic branch. The normal CI workflow is deliberately unchanged.
+on:
+  push:
+    branches: [diagnostics/unicode-sanitizer-82d7753]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      LUST_TCC_HOME: ${{ github.workspace }}/compiler/native/third_party/tcc
+      RUSTUP_TOOLCHAIN: 1.99.0
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install the existing CI Rust version
+        run: rustup toolchain install 1.99.0 --profile minimal
+      - name: Verify protected upstream source and diagnostic recorder
+        run: |
+          rustc --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
+          "$RUNNER_TEMP/lust-upstream-check"
+          rustc --edition=2024 --test tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check-tests"
+          "$RUNNER_TEMP/lust-upstream-check-tests"
+          python3 -m py_compile tools/diagnose-unicode-sanitizer.py
+          python3 tools/diagnose-unicode-sanitizer.py --self-test
+      - name: Build pinned TinyCC and unchanged release compiler
+        run: |
+          compiler/native/scripts/build-tcc.sh
+          cargo build --manifest-path compiler/native/Cargo.toml --release --locked
+      - name: Collect focused diagnostics at the original 10 second threshold
+        id: diagnostic
+        continue-on-error: true
+        run: python3 tools/diagnose-unicode-sanitizer.py "$RUNNER_TEMP/lustr-unicode-diagnostic"
+      - name: Recheck protected upstream source
+        if: always()
+        run: |
+          if [ -x "$RUNNER_TEMP/lust-upstream-check" ]; then
+            "$RUNNER_TEMP/lust-upstream-check"
+          else
+            echo "Source guard was not built; diagnostic is incomplete"
+            exit 1
+          fi
+      - name: Retain diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unicode-sanitizer-${{ github.sha }}
+          path: ${{ runner.temp }}/lustr-unicode-diagnostic
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Preserve diagnostic failure
+        if: always()
+        env:
+          DIAGNOSTIC_OUTCOME: ${{ steps.diagnostic.outcome }}
+        run: |
+          if [ "$DIAGNOSTIC_OUTCOME" != success ]; then
+            echo "The diagnostic failed or did not finish. A longer run cannot erase a 10 second failure."
+            exit 1
+          fi
+          echo "Focused diagnostic completed. This is not a full CI or full Rust qualification."
