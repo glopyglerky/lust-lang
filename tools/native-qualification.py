@@ -94,6 +94,9 @@ def main():
         parser.error("--output must not exist; previous evidence is never overwritten")
     output.mkdir(parents=True)
     env = os.environ.copy()
+    for key in list(env):
+        if key.startswith(("LD_", "DYLD_")) or key in ("LIBPATH", "SHLIB_PATH", "LDR_PRELOAD"):
+            env.pop(key)
     for key in ("RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "RUSTC_WRAPPER",
                 "RUSTC_WORKSPACE_WRAPPER", "LUST_STD_SRC", "LUST_LIBRARY",
                 "LUST_FRONT_STATE", "LUST_DAEMON_SOCKET"):

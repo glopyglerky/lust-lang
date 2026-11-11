@@ -540,7 +540,15 @@ pub fn run(args: &[OsString]) -> i32 {
         }
     };
     if request.bluefe_root.is_none() && request.toolchain.is_none() && request.engine != Engine::Lust {
-        request.bluefe_root = toolchain::packaged_root();
+        if let Some(root) = toolchain::packaged_root() {
+            if let Some(name) = std::env::var_os("RUSTUP_TOOLCHAIN") {
+                let mut selector = OsString::from("+");
+                selector.push(name);
+                request.toolchain = Some(selector);
+            } else {
+                request.bluefe_root = Some(root);
+            }
+        }
     }
     if !request.explain {
         if let Some(root) = &request.bluefe_root {
@@ -550,7 +558,7 @@ pub fn run(args: &[OsString]) -> i32 {
             }
         }
         if request.args == [OsString::from("doctor")] {
-            return doctor::run_for_root(request.bluefe_root.as_deref());
+            return doctor::run_for_root(request.bluefe_root.as_deref(), request.toolchain.as_deref());
         }
     }
     let plan = match plan(&request, Programs::from_environment()) {

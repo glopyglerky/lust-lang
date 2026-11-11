@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import subprocess
 import tarfile
@@ -66,6 +67,42 @@ def archive_directory(source: Path, destination: Path) -> None:
                     archive.add(path, arcname=str(path.relative_to(source)), recursive=False, filter=normalized)
 
 
+def compatibility_provenance(origin: str, root: Path, compiler_version: str, cargo_version: str) -> dict:
+    identity = dict(line.split(": ", 1) for line in compiler_version.splitlines() if ": " in line)
+    if identity.get("host") != "x86_64-unknown-linux-gnu":
+        raise ValueError("compatibility compiler host does not match the package")
+    if origin == "upstream-rust":
+        if identity.get("release") != "1.99.1" or (root / "bluefe-package.json").exists():
+            raise ValueError("upstream-rust packaging requires the pinned official Rust 1.99.1 toolchain")
+        return {"origin": "upstream-rust", "pinned_release": "1.99.1"}
+    record_path = root / "bluefe-package.json"
+    if not record_path.is_file():
+        raise ValueError("BlueFe origin requires its source-and-qualification record")
+    record = json.loads(record_path.read_text())
+    source = record.get("source", {})
+    qualification = record.get("qualification", {})
+    if (record.get("schema") != "bluefe.pristine-rust-package.v1"
+            or record.get("role") != "rustc-compatibility-component"
+            or record.get("target") != identity["host"]
+            or source.get("repository") != "glopyglerky/blueFe"
+            or not re.fullmatch(r"[0-9a-f]{40}", source.get("commit", ""))
+            or source.get("commit") != identity.get("commit-hash")):
+        raise ValueError("BlueFe record does not match the actual compiler source and host")
+    gates = ("relocated_sysroot", "cargo_workspace_build", "cargo_workspace_tests_and_doctests",
+             "proc_macro", "build_script", "runtime", "panic_recovery_and_drop", "type_error_rejection")
+    if any(qualification.get(gate) is not True for gate in gates):
+        raise ValueError("BlueFe record is missing a required qualification gate")
+    versions = qualification.get("versions", {})
+    actual_versions = {"rustc": compiler_version, "cargo": cargo_version,
+                       "rustdoc": run([root / "bin/rustdoc", "--version", "--verbose"])}
+    if any(versions.get(name, "").strip() != value for name, value in actual_versions.items()):
+        raise ValueError("BlueFe recorded versions differ from the supplied toolchain")
+    actual_hashes = {name: sha256(root / "bin" / name) for name in actual_versions}
+    if record.get("tool_sha256") != actual_hashes:
+        raise ValueError("BlueFe compiler files differ from the qualified binaries")
+    return {"origin": "bluefe", "record_sha256": sha256(record_path), "record": record}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository", type=Path, default=Path(__file__).resolve().parents[1])
@@ -106,6 +143,7 @@ def main() -> None:
         raise ValueError("--rust-root must name the actual compiler sysroot, not a rustup proxy")
     compiler_version = run([rust_root / "bin/rustc", "-vV"])
     cargo_version = run([rust_root / "bin/cargo", "-Vv"])
+    compatibility = compatibility_provenance(args.compatibility_origin, rust_root, compiler_version, cargo_version)
     tcc_revision = run(["git", "rev-parse", "HEAD"], tinycc)
     if tcc_revision != run(["git", "rev-parse", "43c7708"], tinycc):
         raise ValueError("TinyCC does not match the upstream Lust build recipe")
@@ -148,6 +186,7 @@ def main() -> None:
         "native_lust": True,
         "native_full_rust": False,
         "rust_compatibility": args.compatibility_origin,
+        "rust_compatibility_provenance": compatibility,
         "rustc_verbose_version": compiler_version,
         "cargo_verbose_version": cargo_version,
         "lust_revision": pin["revision"],

@@ -32,7 +32,7 @@ pub(crate) fn packaged_root() -> Option<PathBuf> {
     if !root.join("lustr-toolchain.json").is_file() {
         return None;
     }
-    if ["LUST_CARGO", "RUSTC", "RUSTDOC", "RUSTUP_TOOLCHAIN"].iter().any(|name| std::env::var_os(name).is_some()) {
+    if ["LUST_CARGO", "RUSTC", "RUSTDOC"].iter().any(|name| std::env::var_os(name).is_some()) {
         return None;
     }
     if let Some(cargo) = std::env::var_os("CARGO") {

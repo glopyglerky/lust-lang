@@ -4,22 +4,40 @@ use std::process::{Command, Output};
 
 /// Inspect installed tools. This never invokes a project build, installs a
 /// component, changes a toolchain, or claims that availability is qualification.
-pub(crate) fn run_for_root(root: Option<&Path>) -> i32 {
+pub(crate) fn run_for_root(root: Option<&Path>, toolchain: Option<&OsStr>) -> i32 {
+    if root.is_some() && toolchain.is_some() {
+        eprintln!("lustr: --bluefe-root cannot be combined with +toolchain");
+        return 2;
+    }
+    let toolchain = match toolchain {
+        Some(value) => match value.to_str().and_then(|name| name.strip_prefix('+')).filter(|name| !name.is_empty()) {
+            Some(name) => Some(name),
+            None => {
+                eprintln!("lustr: invalid +toolchain");
+                return 2;
+            }
+        },
+        None => None,
+    };
     let mut programs = crate::Programs::from_environment();
+    if toolchain.is_some() && programs.explicit_cargo {
+        eprintln!("lustr: +toolchain cannot be combined with LUST_CARGO; select either a rustup toolchain or a Cargo executable");
+        return 2;
+    }
     if let Some(root) = root {
         programs.cargo = crate::toolchain::program(root, "cargo").into_os_string();
     }
     let rustc = root
         .map(|root| crate::toolchain::program(root, "rustc").into_os_string())
         .unwrap_or_else(|| std::env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc")));
-    let cargo = probe(&programs.cargo, &["--version"]);
-    let compiler = probe(&rustc, &["--version", "--verbose"]);
+    let cargo = rust_probe("cargo", &programs.cargo, &["--version"], toolchain);
+    let compiler = rust_probe("rustc", &rustc, &["--version", "--verbose"], toolchain);
     let rustdoc = root
         .map(|root| crate::toolchain::program(root, "rustdoc").into_os_string())
         .unwrap_or_else(|| std::env::var_os("RUSTDOC").unwrap_or_else(|| OsString::from("rustdoc")));
-    let documentation = probe(&rustdoc, &["--version", "--verbose"]);
+    let documentation = rust_probe("rustdoc", &rustdoc, &["--version", "--verbose"], toolchain);
     let lust = probe(&programs.lust, &["--version"]);
-    let sysroot = probe(&rustc, &["--print", "sysroot"]);
+    let sysroot = rust_probe("rustc", &rustc, &["--print", "sysroot"], toolchain);
     let host = compiler.stdout.lines().find_map(|line| line.strip_prefix("host: ")).unwrap_or("");
     let nightly = compiler
         .stdout
@@ -38,12 +56,13 @@ pub(crate) fn run_for_root(root: Option<&Path>) -> i32 {
             )
         })
         .unwrap_or_else(|| "null".to_owned());
-    let ready = cargo.success && compiler.success && (root.is_none() || documentation.success);
+    let ready = cargo.success && compiler.success && ((root.is_none() && toolchain.is_none()) || documentation.success);
     println!(
-        "{{\"format_version\":1,\"cargo\":{},\"rustc\":{},\"rustdoc\":{},\"lust\":{},\"cranelift\":{{\"nightly_compiler\":{},\"preview_library_present\":{},\"preview_libraries\":[{}],\"configured_backend\":{},\"qualified\":false}},\"automatic_lust_routing\":false,\"notes\":[{},{}]}}",
+        "{{\"format_version\":1,\"cargo\":{},\"rustc\":{},\"rustdoc\":{},\"sysroot\":{},\"lust\":{},\"cranelift\":{{\"nightly_compiler\":{},\"preview_library_present\":{},\"preview_libraries\":[{}],\"configured_backend\":{},\"qualified\":false}},\"automatic_lust_routing\":false,\"notes\":[{},{}]}}",
         cargo.json(),
         compiler.json(),
         documentation.json(),
+        sysroot.json(),
         lust.json(),
         nightly,
         !backend_libraries.is_empty(),
@@ -53,7 +72,7 @@ pub(crate) fn run_for_root(root: Option<&Path>) -> i32 {
             "Availability is not qualification. The stock preview lacks required unwind support; configure an explicitly built unwind-enabled backend with LUST_CRANELIFT_BACKEND."
         ),
         json(
-            "Compiler probes use the explicit or discovered package root when selected, otherwise PATH, RUSTC and RUSTDOC. Cargo configuration and custom wrappers may select a different compiler; this command does not build a project to resolve them."
+            "Compiler probes use the selected +toolchain through rustup run without installation, or the explicit or discovered package root, otherwise PATH, RUSTC and RUSTDOC. Cargo configuration and custom wrappers may select a different compiler; this command does not build a project to resolve them."
         ),
     );
     i32::from(!ready)
@@ -79,6 +98,7 @@ fn is_cranelift_library(name: &str) -> bool {
 
 struct Probe {
     program: String,
+    args: Vec<String>,
     success: bool,
     code: Option<i32>,
     stdout: String,
@@ -88,8 +108,9 @@ struct Probe {
 impl Probe {
     fn json(&self) -> String {
         format!(
-            "{{\"program\":{},\"success\":{},\"exit_code\":{},\"stdout\":{},\"stderr\":{}}}",
+            "{{\"program\":{},\"args\":[{}],\"success\":{},\"exit_code\":{},\"stdout\":{},\"stderr\":{}}}",
             json(&self.program),
+            self.args.iter().map(|argument| json(argument)).collect::<Vec<_>>().join(","),
             self.success,
             self.code.map_or_else(|| "null".to_owned(), |code| code.to_string()),
             json(&self.stdout),
@@ -99,22 +120,31 @@ impl Probe {
 }
 
 fn probe(program: &OsStr, args: &[&str]) -> Probe {
-    match Command::new(program).args(args).output() {
-        Ok(Output { status, stdout, stderr }) => Probe {
-            program: program.to_string_lossy().into_owned(),
-            success: status.success(),
-            code: status.code(),
-            stdout: String::from_utf8_lossy(&stdout).into_owned(),
-            stderr: String::from_utf8_lossy(&stderr).into_owned(),
-        },
-        Err(error) => Probe {
-            program: program.to_string_lossy().into_owned(),
-            success: false,
-            code: None,
-            stdout: String::new(),
-            stderr: error.to_string(),
-        },
+    let mut command = Command::new(program);
+    command.args(args);
+    probe_command(command)
+}
+
+fn rust_probe(tool: &str, default: &OsStr, args: &[&str], toolchain: Option<&str>) -> Probe {
+    if let Some(toolchain) = toolchain {
+        let mut command = Command::new("rustup");
+        command.args(["run", "--", toolchain, tool]).args(args).env_remove("CARGO");
+        probe_command(command)
+    } else {
+        probe(default, args)
     }
+}
+
+fn probe_command(mut command: Command) -> Probe {
+    let program = command.get_program().to_string_lossy().into_owned();
+    let args = command.get_args().map(|argument| argument.to_string_lossy().into_owned()).collect();
+    let (success, code, stdout, stderr) = match command.output() {
+        Ok(Output { status, stdout, stderr }) => {
+            (status.success(), status.code(), String::from_utf8_lossy(&stdout).into_owned(), String::from_utf8_lossy(&stderr).into_owned())
+        }
+        Err(error) => (false, None, String::new(), error.to_string()),
+    };
+    Probe { program, args, success, code, stdout, stderr }
 }
 
 fn json(value: &str) -> String {

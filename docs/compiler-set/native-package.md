@@ -19,10 +19,10 @@ Set the package location to its extracted absolute directory:
 LUSTR_ROOT=/absolute/path/to/lustr-native-preview-x86_64-unknown-linux-gnu
 export PATH="$LUSTR_ROOT/bin:$PATH"
 
-# Native Lust subset: no compiler fallback.
-lustr --engine lust build main.rs -o app
+# Direct native Lust path: no coordinator dispatch or compiler fallback.
+lust build main.rs -o app
 ./app
-lustr --engine lust check main.rs
+lust check main.rs
 
 # Full Rust compatibility using the packaged Rust compiler.
 lustr --bluefe-root "$LUSTR_ROOT" --engine rustc build --locked
@@ -36,6 +36,10 @@ meaningful; the coordinator's help describes their precedence.
 
 Native Lust's client and daemon are the exact upstream executables built from
 the recorded source. Their normal cache and daemon behavior is retained.
+The optional command `lustr --engine lust` reaches the same compiler through
+the coordinator, adding an extra dispatch. Use the direct `lust` command when
+preserving the lowest native latency is the priority. Existing coordinator
+commands and compatibility contracts remain available.
 The package does not set LUST_LIBRARY or LUST_STD_SRC: upstream treats those
 overrides as reasons to avoid its daemon. Runtime assets use upstream's
 relative lib/lust discovery instead.
@@ -76,6 +80,23 @@ record process-cold, daemon no-op and body-edit compilation with actual output
 checks. Order rotates between lanes. Raw results and regressions remain visible.
 This small workload does not prove full-project speed or general preservation
 of every upstream ratio; no such claim follows from passing packaging checks.
+
+The [first package run at f710aa1](https://github.com/glopyglerky/lustr/actions/runs/42975730690)
+recorded these medians, in milliseconds, for seven observations per lane and mode:
+
+| Mode | Pristine Lust | Packaged direct Lust | Packaged coordinator route |
+| --- | ---: | ---: | ---: |
+| Fresh process | 40.21 | 40.03 | 40.48 |
+| Daemon no-op | 4.17 | 4.10 | 4.62 |
+| Daemon body edit | 5.73 | 5.56 | 6.35 |
+
+The coordinator's median paired ratios to pristine Lust were 1.0060, 1.1377 and
+1.0709 respectively. These paired ratios differ from ratios of the displayed
+medians. Direct packaged Lust retained the original executable bytes and was
+close to the baseline on this fixture; the coordinator showed measurable warm
+dispatch overhead. These observations belong to that recorded run, on its shared
+CI host, and do not prove exact speed equality or performance on other programs.
+Every subsequent package run retains its own raw measurements and source binding.
 
 The archive checksum binds the delivered bytes; the manifest binds the recorded
 components. Neither substitutes for a trusted distribution channel. Replacing a

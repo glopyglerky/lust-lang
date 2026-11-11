@@ -21,10 +21,17 @@ def digest(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise ValueError(message)
+
+
 def clean_environment(package: Path, scratch: Path) -> dict[str, str]:
     environment = dict(os.environ)
     for name in list(environment):
-        if name.startswith(("CARGO_", "RUST", "LUST_", "LUSTR_")) or name in {"CARGO", "LUSTC"}:
+        if name.startswith(("CARGO_", "RUST", "LUST_", "LUSTR_")) or name in {
+            "CARGO", "LUSTC", "LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES"
+        }:
             environment.pop(name)
     environment.update({
         "PATH": str(package / "bin") + os.pathsep + "/usr/bin:/bin",
@@ -60,6 +67,7 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     report = {
         "schema": "lustr.package-qualification", "schema_version": 1,
+        "runner_sha256": digest(Path(__file__).resolve()),
         "native_full_rust": False, "full_native_speed_qualified": False,
         "platform": platform.platform(), "cpu_count": os.cpu_count(),
         "source_revision": None, "commands": [], "timings": [],
@@ -105,19 +113,20 @@ def main() -> None:
 
         try:
             manifest = json.loads((package / "lustr-toolchain.json").read_text())
+            report["package_manifest_sha256"] = digest(package / "lustr-toolchain.json")
             report["source_revision"] = manifest["source_revision"]
-            assert manifest["schema"] == "lustr.toolchain-package" and manifest["schema_version"] == 1
-            assert manifest["native_lust"] is True and manifest["native_full_rust"] is False
+            require(manifest["schema"] == "lustr.toolchain-package" and manifest["schema_version"] == 1, "unsupported package schema")
+            require(manifest["native_lust"] is True and manifest["native_full_rust"] is False, "incorrect package coverage claims")
             for entry in manifest["payload"]:
                 path = package / entry["path"]
                 if "symlink" in entry:
-                    assert path.is_symlink() and os.readlink(path) == entry["symlink"]
-                    assert path.resolve().is_relative_to(package)
+                    require(path.is_symlink() and os.readlink(path) == entry["symlink"], "package symlink differs from manifest")
+                    require(path.resolve().is_relative_to(package), "package symlink escapes root")
                 else:
-                    assert digest(path) == entry["sha256"], f"payload mismatch: {entry['path']}"
+                    require(digest(path) == entry["sha256"], f"payload mismatch: {entry['path']}")
             report["checks"].append("complete payload hashes after relocation")
             for name in ("lust", "lust-core"):
-                assert digest(package / "bin" / name) == digest(baseline.with_name(name))
+                require(digest(package / "bin" / name) == digest(baseline.with_name(name)), "native compiler differs from pristine build")
             report["checks"].append("packaged native executables identical to pristine release build")
             hidden_package = original.with_name(original.name + ".qualification-hidden")
             if hidden_package.exists():
@@ -134,7 +143,7 @@ def main() -> None:
                 version = execute(f"{name}-identity", [package / "bin" / name, "--version"])
                 report["compiler_identities"][name] = version.stdout.decode().strip()
             reported_root = execute("relocated-sysroot", [package / "bin/rustc", "--print", "sysroot"])
-            assert Path(reported_root.stdout.decode().strip()).resolve() == package
+            require(Path(reported_root.stdout.decode().strip()).resolve() == package, "compiler did not select relocated sysroot")
             report["checks"].append("Rust sysroot relocates without rustup")
             source = scratch / "source with spaces" / "supported.rs"
             source.parent.mkdir()
@@ -144,15 +153,23 @@ def main() -> None:
             built = scratch / "native-output"
             execute("native-build", [package / "bin/lustr", "--engine", "lust", "build", source, "-o", built], cold)
             result = execute("native-run", [built])
-            assert result.stdout == b"42\n"
+            require(result.stdout == b"42\n", "native runtime output differs")
             report["checks"].append("installed native compile and actual executable output")
+            (scratch / "input.txt").write_text("packaged library works")
+            library_source = scratch / "read-library.rs"
+            library_source.write_text('fn main() { let text = std::fs::read_to_string("input.txt").unwrap(); println!("{}", text); }\n')
+            library_binary = scratch / "read-library"
+            execute("native-library-build", [package / "bin/lustr", "--engine", "lust", "build", library_source, "-o", library_binary], cold)
+            result = execute("native-library-run", [library_binary])
+            require(result.stdout == b"packaged library works\n", "packaged source library did not preserve filesystem behavior")
+            report["checks"].append("native filesystem operation through relocated library assets")
             unsupported = repository / "crates/lustr/fixtures/subset/unsupported.rs"
             result = execute("native-unsupported", [package / "bin/lustr", "--engine", "lust", "check", unsupported], cold, None)
-            assert result.returncode != 0 and b"L0405" in result.stderr
+            require(result.returncode == 1 and b"error[L0405]" in result.stderr, "native unsupported case did not reject cleanly")
             invalid = scratch / "invalid.rs"
             invalid.write_text('fn main() { let value: u32 = "wrong"; println!("{}", value); }\n')
             result = execute("native-invalid", [package / "bin/lustr", "--engine", "lust", "check", invalid], cold, None)
-            assert result.returncode != 0
+            require(result.returncode == 1 and b"error[L0110]" in result.stderr, "native type error did not reject cleanly")
             report["checks"].append("native unsupported and invalid input remain failures")
             full = scratch / "full Rust workspace"
             shutil.copytree(repository / "crates/lustr/fixtures/full-rust", full, ignore=shutil.ignore_patterns("target"))
@@ -160,13 +177,13 @@ def main() -> None:
             result = execute("compatibility-run", compatibility + ["run", "--offline", "--locked", "--quiet", "-p", "fixture-app",
                                                                      "--", "two words"], cwd=full)
             expected = b"derived=41 generated=7 async=42 raw=19 gat=13 const=15 ffi=21 body=42 probe=41 panic=1 drops=1\nargument=two words\n"
-            assert result.stdout == expected
+            require(result.stdout == expected, "compatibility workspace runtime output differs")
             result = execute("compatibility-tests", compatibility + ["test", "--offline", "--locked", "--workspace"], cwd=full)
-            assert b"features_keep_their_rust_semantics" in result.stdout and b"body_probe" in result.stdout
+            require(b"features_keep_their_rust_semantics" in result.stdout and b"body_probe" in result.stdout, "expected unit test and doctest did not execute")
             invalid_full = scratch / "invalid Rust workspace"
             shutil.copytree(repository / "crates/lustr/fixtures/invalid-borrow", invalid_full, ignore=shutil.ignore_patterns("target"))
             result = execute("compatibility-rejection", compatibility + ["check", "--offline", "--locked"], expected=None, cwd=invalid_full)
-            assert result.returncode != 0 and b"E0502" in result.stderr
+            require(result.returncode == 101 and b"E0502" in result.stderr, "compatibility borrow error did not reject cleanly")
             report["checks"].append("offline full-Rust compatibility workspace, proc macro, build script, panic/drop, tests, doctests and borrow rejection")
             for original_source, hidden_source in reversed(hidden_sources):
                 hidden_source.rename(original_source)
@@ -217,7 +234,7 @@ def main() -> None:
                             "source_sha256": digest(source), "command_index": len(report["commands"]) - 1,
                         })
                         result = execute(f"{mode}-{lane}-{sample}-runtime", [binary])
-                        assert result.stdout == f"{expected_answer}\n".encode()
+                        require(result.stdout == f"{expected_answer}\n".encode(), "timed native compilation produced wrong output")
                 for daemon in daemons:
                     if daemon.poll() is None:
                         daemon.terminate()
