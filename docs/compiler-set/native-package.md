@@ -29,6 +29,11 @@ lustr --bluefe-root "$LUSTR_ROOT" --engine rustc build --locked
 lustr --bluefe-root "$LUSTR_ROOT" --engine rustc test --locked
 ```
 
+For the combined BlueFe archive, use its extracted
+`bluefe-lustr-native-preview-x86_64-unknown-linux-gnu` directory as `LUSTR_ROOT`.
+The same commands apply. Verify the archive with its accompanying `SHA256SUMS`
+before extraction.
+
 The packaged coordinator can discover its colocated toolchain when no explicit
 compiler selection overrides it. The explicit root above makes selection
 reviewable. Existing explicit toolchain, compiler and wrapper selections remain
@@ -44,10 +49,18 @@ The package does not set LUST_LIBRARY or LUST_STD_SRC: upstream treats those
 overrides as reasons to avoid its daemon. Runtime assets use upstream's
 relative lib/lust discovery instead.
 
-The compatibility toolchain in this recipe is official Rust 1.99.1.
-It is not described as a fresh BlueFe source build. The package manifest records
-its complete version identity and binary hashes. A future BlueFe-built package
-must identify and qualify its own compiler source and bootstrap inputs.
+The package builder supports two explicit compatibility origins:
+
+| Archive prefix | Compatibility compiler | Identity record |
+| --- | --- | --- |
+| `lustr-native-preview` | Official Rust 1.99.1, installed by the standalone Lustr workflow | `lustr-toolchain.json` records `rust_compatibility: "upstream-rust"`, the pinned release, versions and binary hashes. |
+| `bluefe-lustr-native-preview` | BlueFe built from its unchanged pinned Rust source and qualified before assembly | `lustr-toolchain.json` records `rust_compatibility: "bluefe"`; `bluefe-package.json` binds the source commit, bootstrap inputs, versions, tool hashes and component qualification. |
+
+Read the delivered manifests for the actual compiler version and source commit.
+The combined package's source-built BlueFe compiler is distinct from the Rust
+1.99.1 bootstrap used to build native Lust and the coordinator. Assembly checks
+BlueFe's recorded versions and tool hashes against the actual component, then
+repeats runtime and relocation qualification on the combined package.
 
 ## Layout and evidence
 

@@ -20,7 +20,7 @@ It must remain accurately identified and cannot close native compiler tasks.
 | Fast edit path | Existing daemon, query reads, retained state and caches. Every expansion needs warm/cold and edit invalidation checks. |
 | Cargo/crate support | Partial native resolver and whole-target compilation. Native Rust rlib emission and general artifact interoperability remain open. |
 | Full Rust compatibility | Currently supplied by rustc through the separate coordinator. This is not native compiler coverage. |
-| Packaged previews | `preview-2026.11.09-2` contains a rustc-based toolchain and no native Lust compiler. Native compiler packaging and default selection remain open. |
+| Packaged previews | The [qualified package at `595cdc4`](https://github.com/glopyglerky/lustr/actions/runs/42977250507) contains pristine native Lust with its matching runtime, a coordinator and official Rust 1.99.1 for explicit compatibility. Full native coverage and a native replacement for the rustc command/artifact contract remain open. The earlier `preview-2026.11.09-2` contains no native Lust. |
 
 ## 1. Reproduce native coverage gaps
 
@@ -32,6 +32,15 @@ evidence, not proof that a program compiles or runs correctly.
 Acceptance requires reproducible native failures and corresponding rustc oracle
 results. Dependency availability and incorrect target selection are separate
 failures; they cannot count as language coverage observations.
+
+The [recorded package evidence at `595cdc4`](https://github.com/glopyglerky/lustr/actions/runs/42977250507/artifacts/13836655982)
+retains valid Rust rejected natively for unsafe pointers, async/await, generic
+associated types, a dynamic iterator, return-position `impl Trait` in a trait,
+an external C function, and native rlib emission. Existing generics/traits and
+`offset_of!` execute correctly in their bounded fixtures. Invalid type, move
+and borrow cases remain rejected. `tests/native-qualification` and
+`tools/native-qualification.py` preserve these fixtures, compiler identities and
+first failures. They are a starting regression set, not a complete Rust suite.
 
 ## 2. Extend the native implementation
 
@@ -82,6 +91,12 @@ that transition and identify their use explicitly.
 Acceptance requires clean installation, offline repeated compilation, actual
 native execution, upgrade/cache invalidation, rollback and every advertised
 host/target. The existing rustc-based preview is not this delivery.
+
+The Linux x86_64 package now passes relocation, native execution, runtime asset
+discovery, payload identity and offline compatibility gates. Direct Lust keeps
+the original compiler bytes and daemon behavior; the optional coordinator has
+measured dispatch overhead. Other hosts, full-project performance and complete
+native coverage remain separate requirements.
 
 ## 6. Establish full-project speed
 

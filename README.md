@@ -28,7 +28,38 @@ LUST_TCC_HOME=/absolute/tcc CARGO_TARGET_DIR=/absolute/lustr-native-build \
 /absolute/lustr-native-build/release/lust build unchanged.rs -o application
 ```
 
-## Compatibility toolchain
+## Native and compatibility package
+
+The [qualified Linux x86_64 package at `595cdc4`](https://github.com/glopyglerky/lustr/actions/runs/42977250507/artifacts/13836362511)
+contains native Lust, its matching TinyCC runtime and source libraries, the
+Lustr coordinator, and official Rust 1.99.1 for full Rust compatibility.
+Download the artifact while signed into GitHub, extract its ZIP, verify
+`SHA256SUMS`, and extract the contained tarball. It needs a Linux system compatible
+with Ubuntu 24.04, C development headers and a C linker.
+
+```sh
+sha256sum -c SHA256SUMS
+tar -xzf lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
+LUSTR_ROOT="$PWD/lustr-native-preview-x86_64-unknown-linux-gnu"
+
+# Native Lust, with its original compiler and daemon path.
+"$LUSTR_ROOT/bin/lust" build main.rs -o app
+./app
+
+# Full Rust compatibility through the bundled Rust compiler.
+"$LUSTR_ROOT/bin/lustr" --bluefe-root "$LUSTR_ROOT" --engine rustc build --locked
+"$LUSTR_ROOT/bin/lustr" --bluefe-root "$LUSTR_ROOT" --engine rustc test --locked
+```
+
+Direct `bin/lust` avoids the optional coordinator's dispatch cost. Native Rust
+coverage remains incomplete. The [package evidence](https://github.com/glopyglerky/lustr/actions/runs/42977250507/artifacts/13836655982)
+records unchanged compiler bytes, relocation, actual native and compatibility
+execution, unsupported native features, and paired cold and warm measurements.
+The [package guide](docs/compiler-set/native-package.md) explains selection,
+source archives and rebuild instructions. These results do not establish full
+native Rust coverage or exact preservation of every upstream speed ratio.
+
+## Earlier compatibility toolchain
 
 For versioned binary bundles, see [BlueFe releases](https://github.com/glopyglerky/blueFe/releases)
 and [Lustr releases](https://github.com/glopyglerky/lustr/releases). Use a release's
@@ -54,8 +85,11 @@ lustr --bluefe-root /absolute/toolchain doctor
 ```
 
 The assembled BlueFe directory supplies Cargo, rustc, rustdoc and the produced
-sysroot. Full Rust currently goes through rustc. `lustr build` without a root
-preserves the project's existing Cargo toolchain. Arguments, profiles, features,
+sysroot. Full Rust currently goes through rustc. A standalone coordinator's
+`lustr build` without a root preserves the project's existing Cargo toolchain.
+In a marked native preview package, the coordinator selects its bundled
+toolchain when no explicit compiler or toolchain selection overrides it.
+Arguments, profiles, features,
 compiler wrappers and failure status remain effective. Builds install nothing
 and failed programs are never retried through another compiler.
 
