@@ -44,8 +44,12 @@ Current library boundaries are explicit:
   Scalar unsafe function pointers preserve their safety through supported
   bindings and conversions. A library function named `main` is an ordinary
   export; a binary entry point must remain safe.
+- Local generic helpers compose with those functions and imported scalar
+  functions through the upstream collector and monomorphizer. The extra safety
+  check also visits unused generic templates. Exported generic metadata and
+  generic transport of unrepresented unsafe callable contracts remain open.
 - Raw-pointer operations, unsafe FFI, public generic/type/trait/const/macro contracts, transitive library
-  imports, consumer module/type/generic items and metadata-only compilation are
+  imports, consumer module/type items and metadata-only compilation are
   unfinished. Producer statics requiring initialization, generated shared glue
   and unrepresented export attributes also fail explicitly. Public modules,
   re-exports and crate inner attributes are rejected because their caller-facing
@@ -105,8 +109,16 @@ shadowed names, lint precedence and closure returns. A separate regression
 gate rejects malformed unsafe syntax and missed safety-analysis contexts.
 Separate safe-library diagnostic evidence keeps its original scope.
 The workflow publishes an archive only after all of its required checks pass.
-Even passing these bounded checks would not prove complete Rust semantics,
-BlueFe bootstrap or universal compilation-speed preservation.
+The [native acceptance gate](native-acceptance.md) also runs before publication.
+It compares the actual `lustr-native` compiler with upstream Lust and the same
+Cargo with stock rustc, retains raw samples, tests mixed and full-Rust builds,
+and refuses regressions or unproved requirements. The older package timing of
+unchanged `lust` against its byte-identical packaged copy remains relocation
+evidence only; it cannot satisfy the actual Lustr speed requirement.
+
+The successful correctness preview at `ecbc7b6` predates this additional
+publication gate. Neither that archive nor passing a bounded subset of the new
+gate proves complete Rust semantics, BlueFe bootstrap or universal speed.
 
 ## Platform and remaining upstream defect
 

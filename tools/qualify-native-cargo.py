@@ -44,6 +44,30 @@ def clear_source_cache(project: Path, scratch: Path) -> dict:
     return {"path": str(cache), "existed_before": existed, "empty_before_compile": True}
 
 
+def prepare_runtime_temp(owned: Path, label: str, fresh: bool) -> dict:
+    """Separate TinyCC's TMPDIR runtime-object cache from unit/artifact caches.
+
+    Upstream cached_runtime_object ignores LUST_CACHE_DIR and LUST_NO_CACHE.
+    Fresh rows therefore need a new empty TMPDIR, in both compiler lanes.
+    This setup happens before timing; warm rows deliberately retain theirs.
+    """
+    require(label and all(char.isascii() and (char.isalnum() or char in "-_") for char in label),
+            "runtime temp label must not contain a path")
+    root = owned.resolve()
+    require(root.is_dir(), "runtime temp requires an existing owned directory")
+    parent = root / "runtime-temporaries"
+    require(not parent.is_symlink(), "runtime temp parent must not be a symlink")
+    parent.mkdir(exist_ok=True)
+    directory = parent / label
+    require(not directory.is_symlink(), "runtime temp directory must not be a symlink")
+    directory.mkdir(exist_ok=not fresh)
+    require(directory.resolve().is_relative_to(root), "runtime temp escaped its owned directory")
+    names = sorted(str(path.relative_to(directory)) for path in directory.rglob("*"))
+    require(not fresh or not names, "fresh runtime temp must be empty before compilation")
+    return {"path": str(directory), "fresh": fresh, "empty_before_compile": not names,
+            "retained_entries_before_compile": names}
+
+
 def environment(scratch: Path, compiler: Path, sentinel: Path) -> dict[str, str]:
     result = dict(os.environ)
     for name in list(result):
@@ -97,8 +121,8 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
         "scope": "Dependency-free native binary crate, Cargo dep-info and supported development profile. Independent native libraries require their separate qualification; no test harness or full Rust claim.",
         "timing_scope": "Paired Cargo builds of the same fixture and profile; fresh targets and native unit caches, unchanged inputs, body and signature edits, and cold invalid inputs. No daemon latency equivalence is claimed.",
         "cache_policy": {
-            "fresh-target": "New Cargo target and removal of only the owned source-adjacent .lust-cache before every sample; reset time excluded.",
-            "cold-invalid": "New Cargo target and empty native unit cache before each invalid input; no preceding valid build, so this measures cold rejection.",
+            "fresh-target": "New Cargo target, new empty per-lane TMPDIR runtime cache, and removal of only the owned source-adjacent .lust-cache before every sample; setup excluded from timing.",
+            "cold-invalid": "New Cargo target, empty native unit cache and new empty per-lane TMPDIR before each invalid input; no preceding valid build.",
             "no-change": "Existing Cargo target and native unit cache; Cargo must report its artifact fresh without invoking the compiler.",
             "body-edit": "Existing Cargo target and native unit cache after a valid warmup; each changed body must rebuild.",
             "signature-edit": "Existing Cargo target and native unit cache after a valid warmup; each changed signature must rebuild.",
@@ -124,6 +148,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
         for name, project in projects.items():
             shutil.copytree(fixture, project)
             (scratch / name).mkdir()
+            environments[name]["TMPDIR"] = prepare_runtime_temp(scratch / name, "functional", True)["path"]
 
         def execute(label: str, argv: list[str | Path], env: dict[str, str], cwd: Path,
                     expected: int | None = 0) -> subprocess.CompletedProcess:
@@ -142,6 +167,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
             result = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
             report["commands"].append({"label": label, "argv": command, "cwd": str(cwd),
                                        "exit_code": process.returncode, "elapsed_ns": elapsed,
+                                       "compiler_tmpdir": env.get("TMPDIR"),
                                        "stdout": stdout.decode(errors="replace"),
                                        "stderr": stderr.decode(errors="replace"), "timed_out": timed_out})
             require(not timed_out, label + " timed out")
@@ -361,6 +387,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                     (project / "src/value.rs").write_text(module_source(42))
                     (project / "data.txt").write_text("first\n")
                     if mode in ("no-change", "body-edit", "signature-edit"):
+                        environments[lane]["TMPDIR"] = prepare_runtime_temp(scratch / lane, mode + "-warm", True)["path"]
                         build(mode + "-" + lane + "-warmup", lane, mode_targets[lane], expected_output())
                 for sample in range(samples):
                     order = ("native", "oracle") if sample % 2 == 0 else ("oracle", "native")
@@ -379,6 +406,10 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                             target = target / str(sample)
                             require(not target.exists(), "cold timing target must not already exist")
                             cache_reset = clear_source_cache(project, scratch)
+                            runtime_temp = prepare_runtime_temp(scratch / lane, mode + "-" + str(sample), True)
+                        else:
+                            runtime_temp = prepare_runtime_temp(scratch / lane, mode + "-warm", False)
+                        environments[lane]["TMPDIR"] = runtime_temp["path"]
                         wanted = None if mode == "cold-invalid" else expected_output(answer)
                         command_index, runtime_index = build(
                             mode + "-" + lane + "-" + str(sample), lane, target, wanted,
@@ -389,6 +420,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                             "elapsed_ns": record["elapsed_ns"], "command_index": command_index,
                             "runtime_command_index": runtime_index,
                             "source_cache_reset": cache_reset,
+                            "runtime_temp": runtime_temp,
                             "compile_plus_run_ns": record["elapsed_ns"] + report["commands"][runtime_index]["elapsed_ns"]
                             if runtime_index is not None else None,
                             "source_sha256": {name: digest(project / name)

@@ -51,9 +51,13 @@ fn group_end(tokens: &[Token], start: usize) -> Option<usize> {
     None
 }
 
+/// Leave an unchanged token stream borrowed. Only recognized extension
+/// qualifiers require an owned stream, copied in contiguous ranges between
+/// qualifiers. The pinned parser still owns all common grammar and every span.
 pub fn parse(lexed: &Lexed, interner: &Interner, known: &Known) -> Result<Parsed, Diag> {
     let mut markers = Vec::new();
-    let mut tokens = Vec::with_capacity(lexed.tokens.len());
+    let mut tokens: Option<Vec<Token>> = None;
+    let mut copied = 0;
     let mut i = 0;
     while i < lexed.tokens.len() {
         let token = lexed.tokens[i];
@@ -64,41 +68,47 @@ pub fn parse(lexed: &Lexed, interner: &Interner, known: &Known) -> Result<Parsed
             && lexed.tokens.get(i + 2).is_some_and(|t| matches!(t.tok, Tok::Ident(_)))
             && lexed.tokens.get(i + 3).is_some_and(|t| close(t.tok).is_some())
         {
-            let end = group_end(&lexed.tokens, i + 3).ok_or_else(|| unsupported(token.span, "unbalanced macro definition"))?;
-            tokens.extend_from_slice(&lexed.tokens[i..end]);
-            i = end;
+            i = group_end(&lexed.tokens, i + 3).ok_or_else(|| unsupported(token.span, "unbalanced macro definition"))?;
             continue;
         }
         if token.tok != Tok::Unsafe {
-            tokens.push(token);
             i += 1;
             continue;
         }
         let next = lexed.tokens.get(i + 1).copied();
-        match next.map(|t| t.tok) {
+        let marker = match next.map(|t| t.tok) {
             Some(Tok::Fn) => match lexed.tokens.get(i + 2).copied() {
-                Some(Token { tok: Tok::Ident(_), span }) => markers.push(Marker::Function { name: span, qualifier: token.span }),
-                Some(Token { tok: Tok::LParen, .. }) => {
-                    markers.push(Marker::Pointer { function: next.unwrap().span, qualifier: token.span })
-                }
+                Some(Token { tok: Tok::Ident(_), span }) => Marker::Function { name: span, qualifier: token.span },
+                Some(Token { tok: Tok::LParen, .. }) => Marker::Pointer { function: next.unwrap().span, qualifier: token.span },
                 _ => return Err(unsupported(token.span, "expected a function declaration or pointer type after `unsafe fn`")),
             },
             Some(Tok::LBrace) => {
                 if i > 0 && lexed.tokens[i - 1].tok == Tok::Else {
                     return Err(unsupported(token.span, "an else branch requires a block or if expression before an unsafe expression"));
                 }
-                markers.push(Marker::Block { open: next.unwrap().span, qualifier: token.span });
+                Marker::Block { open: next.unwrap().span, qualifier: token.span }
             }
             // These are already parsed and checked by the pinned implementation.
-            Some(Tok::Impl | Tok::Trait) => tokens.push(token),
+            Some(Tok::Impl | Tok::Trait) => {
+                i += 1;
+                continue;
+            }
             _ => return Err(unsupported(token.span, "this unsafe declaration or operation is not implemented")),
-        }
+        };
+        markers.push(marker);
+        tokens.get_or_insert_with(|| Vec::with_capacity(lexed.tokens.len() - 1))
+            .extend_from_slice(&lexed.tokens[copied..i]);
+        copied = i + 1;
         i += 1;
     }
-    if markers.is_empty() {
+    let rewritten = tokens.map(|mut tokens| {
+        tokens.extend_from_slice(&lexed.tokens[copied..]);
+        Lexed { tokens, strings: lexed.strings.clone() }
+    });
+    let Some(rewritten) = rewritten else {
         return crate::parser::parse(lexed, interner, known).map(|ast| Parsed { ast, safety: NativeSafety::default() });
-    }
-    let mut ast = crate::parser::parse(&Lexed { tokens, strings: lexed.strings.clone() }, interner, known)?;
+    };
+    let mut ast = crate::parser::parse(&rewritten, interner, known)?;
     let mut safety = NativeSafety::default();
     for marker in markers {
         match marker {

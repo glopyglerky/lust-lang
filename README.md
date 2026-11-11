@@ -7,13 +7,18 @@ as its only Rust compiler.
 
 Existing Lust-supported code must use unchanged upstream Lust. Lustr must supply
 the missing Rust language, library and crate support in its own code. Full, unchanged Rust
-projects with measured fast compilation are the requirement. Forwarding them to
-rustc does not satisfy it. See the [native compiler contract](docs/compiler-set/native-contract.md).
+projects must compile at least as fast as stock Cargo/rustc, and every
+Lust-supported input must remain supported at least as fast as upstream Lust.
+Both must work together in the same program and concurrent Cargo build.
+These are required acceptance conditions, not achieved performance claims.
+Forwarding projects to rustc does not satisfy them. See the
+[native compiler contract](docs/compiler-set/native-contract.md) and
+[blocking acceptance gate](docs/compiler-set/native-acceptance.md).
 
 Full native Rust coverage remains incomplete. The experimental
 [`lustr-native`](crates/lustr-native/README.md) entry point now reuses the native
 pipeline in process and implements a bounded Cargo interface for binaries and
-independently compiled native libraries with safe scalar function exports.
+independently compiled native libraries with safe and unsafe scalar function exports.
 `compiler/native` is the unchanged upstream Lust source, pinned by
 [`upstream/lust.pin`](upstream/lust.pin). Lustr-owned expansion belongs outside
 that baseline. No Lust divergence is admitted. Any exception must demonstrate
@@ -43,8 +48,13 @@ executables. Rustc is used separately to bootstrap Lustr and compare results.
 Lustr now has an owned native library emitter and metadata importer. A library
 contains real relocatable objects plus typed export metadata. A consumer can
 link that library after its producer source is hidden. The initial interface
-supports safe primitive function signatures; its [entry-point guide](crates/lustr-native/README.md)
+supports safe and unsafe primitive function signatures; its [entry-point guide](crates/lustr-native/README.md)
 records the remaining language, module, generic and crate limitations.
+Local generic helpers now compose with unsafe functions and native scalar
+imports, including safety checking for unused generic templates. The owned
+syntax path also avoids copying tokens when it does not need an extension.
+These are bounded native changes; full Rust and both required speed floors
+remain unqualified.
 
 Cargo selects the compiler directly:
 
@@ -53,11 +63,15 @@ LUSTR_ROOT=/absolute/path/to/lustr-native-preview-x86_64-unknown-linux-gnu
 RUSTC="$LUSTR_ROOT/bin/lustr-native" "$LUSTR_ROOT/bin/cargo" build --locked
 ```
 
-Full native Rust support and BlueFe compilation remain unfinished. The required
-library fixture currently exposes unsupported unsafe Rust. Package qualification
-retains that failure and does not upload an installable archive while its gate
-is unsuccessful. See the [native package guide](docs/compiler-set/native-package.md)
-for actual scope, source/runtime identities and qualification rules.
+Full native Rust support and BlueFe compilation remain unfinished. The native
+library and unsafe-contract correctness gates passed on
+[`ecbc7b6`](https://github.com/glopyglerky/lustr/actions/runs/43026534876).
+That result does not establish full language coverage or either speed floor.
+The package workflow now also requires the actual native compiler's acceptance
+and speed gate before it uploads a new installable archive. Failed and
+inconclusive measurements remain available as evidence. See the
+[native package guide](docs/compiler-set/native-package.md) for actual scope,
+source/runtime identities and qualification rules.
 
 The unchanged upstream direct compiler also has a reproduced external-input
 cache defect involving whitespace/comments before macro `!`. Its historical

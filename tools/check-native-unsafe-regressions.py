@@ -57,6 +57,26 @@ CASES = [
      'fn main() { println!("{}", unsafe { helper(41) }); }\n'),
     ("unsafe_main_library_control", "rlib", True, 'pub unsafe fn main() -> i32 { 42 }\n'),
     ("safe_main_library_control", "rlib", True, 'pub fn main() -> i32 { 42 }\n'),
+    ("extension_prefix_middle_suffix", "bin", True,
+     'fn prefix() -> i32 { 20 }\n'
+     'unsafe fn helper(value: i32) -> i32 { value + 1 }\n'
+     'fn suffix() -> i32 { 21 }\n'
+     'fn main() { println!("{}", unsafe { helper(prefix() + suffix()) }); }\n'),
+    ("extension_after_opaque_macro", "bin", True,
+     'macro_rules! ignored { () => { unsafe extern "C" { fn never(); } }; }\n'
+     'unsafe fn helper(value: i32) -> i32 { value + 1 }\n'
+     'fn main() { println!("{}", unsafe { helper(41) }); }\n'),
+    ("opaque_macro_between_extensions", "bin", True,
+     'unsafe fn helper(value: i32) -> i32 { value + 1 }\n'
+     'macro_rules! ignored { () => { unsafe extern "C" { fn never(); } }; }\n'
+     'fn main() { println!("{}", unsafe { helper(41) }); }\n'),
+    ("extension_with_string_pool", "bin", True,
+     'fn main() { let text = "unsafe fn, unsafe {, unsafe impl";\n'
+     '    println!("{}", unsafe { helper(41) }); }\n'
+     'unsafe fn helper(value: i32) -> i32 { value + 1 }\n'),
+    ("plain_opaque_macro_control", "bin", True,
+     'macro_rules! ignored { () => { unsafe extern "C" { fn never(); } }; }\n'
+     'fn main() { println!("42"); }\n'),
 ]
 
 
@@ -147,6 +167,8 @@ def main() -> None:
                     report["failures"].append(name + ": " + lane + " acceptance differs from the required Rust result")
                     if lane == "native":
                         report["unsupported_valid_cases" if valid else "accepted_invalid_cases"].append(name)
+                if not valid and row["exit_code"] != 1:
+                    report["failures"].append(name + ": " + lane + " must reject semantically with exit 1; a crash or infrastructure error is not rejection evidence")
                 if accepted:
                     if not artifact.is_file():
                         report["failures"].append(name + ": " + lane + " successful compile produced no artifact")

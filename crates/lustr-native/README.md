@@ -21,7 +21,7 @@ It is not a full rustc replacement.
 | --- | --- | --- |
 | Binary without `--extern` | Keeps the original Lust pipeline for its accepted programs. The owned frontend composes the additional unsafe function, block and scalar function-pointer contracts with the same native checker and backend. | Raw-pointer operations, unsafe FFI and other unimplemented language features remain errors. |
 | Library producer | Checks the source, emits native ELF objects, and writes a real ar `.rlib` with typed `lustr.meta` metadata. `--emit=dep-info,metadata,link` also writes the corresponding native `.rmeta`. | At least one original public scalar free function at the crate root is required. Safe and unsafe call contracts are preserved. Libraries with dependencies, public modules/re-exports, exported generics, types, traits, macros or const functions are not implemented. |
-| Binary with `--extern name=path` | Loads native artifacts, resolves their public function signatures, checks the original consumer, and links the recorded objects. Different versions of the same crate have separate native symbols. | Consumer source currently supports root free functions and `use` declarations. Generic consumer functions, modules, body-local items, crate attributes, and standard-library source splicing are not implemented on this path. A root import such as `use dependency;` or `use dependency as alias;` is also not implemented. Qualified calls and function imports are supported. |
+| Binary with `--extern name=path` | Loads native artifacts, resolves their public function signatures, checks the original consumer, and links the recorded objects. Different versions of the same crate have separate native symbols. Local generic helpers retain upstream checking and monomorphization. | Consumer source currently supports root free functions and `use` declarations. Modules, body-local items, crate attributes, and standard-library source splicing are not implemented on this path. A root import such as `use dependency;` or `use dependency as alias;` is also not implemented. Qualified calls and function imports are supported. |
 
 Exported parameters and results can be unit, bool, char, signed or unsigned
 integers through 128 bits, pointer-sized integers, `f32`, or `f64`. The native
@@ -33,6 +33,20 @@ callable stays unsafe through local bindings, aliases, parameters, returns and
 casts. Safe functions can become unsafe pointers; the reverse conversion is
 rejected. The additional check runs after native type checking and before
 lowering, borrowing checks and code emission.
+
+Local generic helpers can compose with native unsafe functions and imported
+scalar functions. Their original type, const and lifetime parameters and
+where clauses reach the upstream collector and monomorphizer. The additional
+safety check visits generic templates even when no caller instantiates them;
+unused invalid helpers do not become accepted through dead-code elimination.
+Generic exported metadata and unsafe callable transport through unrepresented
+generic types remain unsupported. Templates and trait stubs do not emit
+symbols, while real compiled/imported symbol collisions still reject.
+
+The owned syntax parser borrows an unchanged token stream. It allocates a
+replacement stream only for recognized extension qualifiers, preserving token
+ranges, macro bodies and spans. This removes an unnecessary allocation and
+copy on imported safe source; it does not establish whole-compiler speed parity.
 
 An artifact binds its target, crate disambiguator, compiler/runtime identity,
 panic strategy, exported signatures, source locations, and object checksums.
@@ -204,6 +218,14 @@ closure return contracts without removing any original requirement.
 safety-analysis regressions found during review. `tools/test-native-protocol.py`
 checks the actual BlueFe query and rejects unsupported compilation requests.
 A separate safe-library diagnostic keeps its original scope.
+
+`tools/check-native-mixed-generics.py` compares mixed generic/unsafe programs
+with stock Rust, checks invalid unused templates, compiles private generic
+library helpers, hides producer source before consumers compile, and retains
+real imported-symbol collision rejection. `tools/qualify-native-speed.py`
+enforces the [acceptance contract](../../docs/compiler-set/native-acceptance.md)
+against the actual native entry point. Missing coverage and measurements
+remain unproved and block publication.
 
 Local builds made with optimization level 1 and LTO disabled are diagnostic
 only. They do not satisfy the recorded package profile. Process tracing is

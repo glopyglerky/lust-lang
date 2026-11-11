@@ -7,6 +7,10 @@ must keep using the native path. Lustr supplies the missing native support;
 BlueFe preserves stock Rust source and uses Lustr as its only Rust compiler.
 Follow the [upstream preservation policy](upstream-lust.md);
 every proposed Lust divergence requires both necessity and faster-results evidence.
+The [native acceptance gate](native-acceptance.md) makes the required speed
+floors explicit: no slowdown against Lust on its supported inputs or against
+stock Cargo/rustc on the remaining Rust. Both must compose under Cargo's own
+parallel scheduler. Unsupported or inconclusive cases do not pass.
 
 The earlier Cargo/rustc coordinator work is historical compatibility tooling.
 It must remain accurately identified and cannot close native compiler tasks.
@@ -22,10 +26,10 @@ contract must be implemented in the native compiler.
 | Native frontend | Existing parser, expansion, resolution, trait/type checking, borrow checking and monomorphization. Remaining language gaps must be reproduced and implemented here. |
 | Native libraries and generation | Existing source libraries, adapters and C/TinyCC generation. Missing APIs and semantic support remain native implementation work. |
 | Fast edit path | Existing daemon, query reads, retained state and caches. Every expansion needs warm/cold and edit invalidation checks. |
-| Cargo/crate support | The native Cargo compiler accepts bounded binary and library invocations and emits real dependency records. Owned native rlib/metadata carries real objects and safe scalar signatures, with source-hidden binary imports. General metadata, transitive libraries, proc macros and test harnesses remain open; the required unsafe library fixture is still red. |
+| Cargo/crate support | The native Cargo compiler accepts bounded binary and library invocations and emits real dependency records. Owned native rlib/metadata carries real objects and safe/unsafe scalar signatures, with source-hidden binary imports. The required unsafe library gate passed at `ecbc7b6`. General metadata, transitive libraries, proc macros and test harnesses remain open. |
 | Full Rust compatibility | Unfinished in native Lustr. The separately retained Rust oracle does not satisfy the product requirement. |
 | Packaged previews | The current native-only recipe excludes stock rustc, rustdoc, a Rust sysroot and the coordinator. Required qualification failures prevent archive publication. Earlier stock/mixed packages remain historical reference artifacts. |
-| BlueFe build | The Lustr-only gate configures unchanged upstream bootstrap to use the native Lustr executable. The first actual diagnostic fails at the unsupported `-Zallow-features=` compiler probe. No successful Lustr-built BlueFe is claimed. |
+| BlueFe build | The Lustr-only gate configures unchanged upstream bootstrap to use the native Lustr executable. Its compiler-information query now succeeds, but Cargo stops at minimum Rust-version requirements before source compilation. No successful Lustr-built BlueFe is claimed. |
 
 ## 1. Reproduce native coverage gaps
 

@@ -16,13 +16,20 @@ on:
       - 'tools/test-native-library-invocations.py'
       - 'tools/test-native-protocol.py'
       - 'tools/check-native-unsafe-regressions.py'
+      - 'tools/check-native-mixed-generics.py'
+      - 'tools/qualify-native-speed.py'
+      - 'tools/test-native-speed.py'
       - 'tools/diagnose-native-library-safe.py'
       - 'tools/native-qualification.py'
       - 'tests/native-qualification/**'
       - 'tests/native-cargo/**'
       - 'tests/native-library/**'
       - 'tests/native-library-safe/**'
+      - 'tests/native-speed/**'
+      - 'tests/native-mixed-generics/**'
       - 'docs/compiler-set/native-package.md'
+      - 'docs/compiler-set/native-acceptance.md'
+      - 'docs/compiler-set/native-contract.md'
       - '.github/workflows/native-package.yml'
   pull_request:
     paths:
@@ -38,13 +45,20 @@ on:
       - 'tools/test-native-library-invocations.py'
       - 'tools/test-native-protocol.py'
       - 'tools/check-native-unsafe-regressions.py'
+      - 'tools/check-native-mixed-generics.py'
+      - 'tools/qualify-native-speed.py'
+      - 'tools/test-native-speed.py'
       - 'tools/diagnose-native-library-safe.py'
       - 'tools/native-qualification.py'
       - 'tests/native-qualification/**'
       - 'tests/native-cargo/**'
       - 'tests/native-library/**'
       - 'tests/native-library-safe/**'
+      - 'tests/native-speed/**'
+      - 'tests/native-mixed-generics/**'
       - 'docs/compiler-set/native-package.md'
+      - 'docs/compiler-set/native-acceptance.md'
+      - 'docs/compiler-set/native-contract.md'
       - '.github/workflows/native-package.yml'
   workflow_dispatch:
 
@@ -65,6 +79,7 @@ jobs:
     env:
       RUSTUP_TOOLCHAIN: 1.99.1
       PYTHONDONTWRITEBYTECODE: '1'
+      LUSTR_DIST: ${{ runner.temp }}/lustr-native-dist
     steps:
       - uses: actions/checkout@v4
         with:
@@ -81,6 +96,8 @@ jobs:
           "$RUNNER_TEMP/lust-upstream-check"
       - name: Check compiler invocation evidence parsing
         run: python3 tools/test-native-library-invocations.py
+      - name: Check strict native acceptance decisions
+        run: python3 tools/test-native-speed.py
       - name: Build the native compilers and runtime
         run: |
           compiler/native/scripts/build-tcc.sh
@@ -107,6 +124,12 @@ jobs:
             --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
             --oracle "$(rustup which rustc)" \
             --output "$RUNNER_TEMP/native-unsafe-regression-evidence"
+      - name: Check generic helpers with native unsafe and library support
+        run: |
+          python3 tools/check-native-mixed-generics.py \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --oracle "$(rustup which rustc)" \
+            --output "$RUNNER_TEMP/native-mixed-generics-evidence"
       - name: Retain native dependency sources
         run: cargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"
       - name: Record bounded safe-library diagnostics
@@ -119,7 +142,7 @@ jobs:
       - name: Assemble the relocatable package
         run: |
           python3 tools/package-toolchain.py \
-            --output dist/lustr-native-preview-x86_64-unknown-linux-gnu \
+            --output "$LUSTR_DIST/lustr-native-preview-x86_64-unknown-linux-gnu" \
             --native-bin compiler/native/target/release \
             --native-cargo-bin "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
             --native-cargo-receipt "$RUNNER_TEMP/native-cargo-build.json" \
@@ -130,16 +153,26 @@ jobs:
       - name: Verify relocation, actual engines, and retained native path
         run: |
           python3 tools/qualify-package.py \
-            --package dist/lustr-native-preview-x86_64-unknown-linux-gnu \
+            --package "$LUSTR_DIST/lustr-native-preview-x86_64-unknown-linux-gnu" \
             --baseline-native compiler/native/target/release/lust \
             --oracle-rustc "$(rustup which rustc)" \
-            --output dist/package-qualification.json
+            --output "$LUSTR_DIST/package-qualification.json"
       - name: Record actual native coverage and remaining gaps
         run: |
           python3 tools/native-qualification.py \
-            --lust "$GITHUB_WORKSPACE/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust" \
+            --lust "$LUSTR_DIST/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust" \
             --rustc "$(rustup which rustc)" \
-            --output "$GITHUB_WORKSPACE/dist/native-qualification"
+            --output "$LUSTR_DIST/native-qualification"
+      - name: Enforce native compatibility, concurrency and zero-regression speed
+        run: |
+          python3 tools/qualify-native-speed.py \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --lust "$GITHUB_WORKSPACE/compiler/native/target/release/lust" \
+            --cargo "$(rustup which cargo)" \
+            --rustc "$(rustup which rustc)" \
+            --native-build-receipt "$RUNNER_TEMP/native-cargo-build.json" \
+            --tcc-root "$GITHUB_WORKSPACE/compiler/native/third_party/tcc" \
+            --output "$RUNNER_TEMP/native-speed-evidence"
       - name: Verify unchanged source after build and qualification
         if: always()
         run: '"$RUNNER_TEMP/lust-upstream-check"'
@@ -147,16 +180,16 @@ jobs:
         run: |
           tar --sort=name --owner=0 --group=0 --numeric-owner \
             --mtime="@$(git show -s --format=%ct HEAD)" \
-            -C dist -cf - lustr-native-preview-x86_64-unknown-linux-gnu \
-            | gzip -n -6 > dist/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
-          cd dist
+            -C "$LUSTR_DIST" -cf - lustr-native-preview-x86_64-unknown-linux-gnu \
+            | gzip -n -6 > "$LUSTR_DIST/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz"
+          cd "$LUSTR_DIST"
           sha256sum lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: lustr-native-preview-linux-x86_64-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
-            dist/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
-            dist/SHA256SUMS
+            ${{ env.LUSTR_DIST }}/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
+            ${{ env.LUSTR_DIST }}/SHA256SUMS
           if-no-files-found: error
           compression-level: 0
       - uses: actions/upload-artifact@v4
@@ -164,13 +197,15 @@ jobs:
         with:
           name: lustr-package-evidence-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
-            dist/package-qualification.json
-            dist/package-qualification-native-library
+            ${{ env.LUSTR_DIST }}/package-qualification.json
+            ${{ env.LUSTR_DIST }}/package-qualification-native-library
             ${{ runner.temp }}/native-library-safe-evidence
             ${{ runner.temp }}/native-protocol-evidence
             ${{ runner.temp }}/native-unsafe-regression-evidence
-            dist/native-qualification
-            dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
+            ${{ runner.temp }}/native-mixed-generics-evidence
+            ${{ runner.temp }}/native-speed-evidence
+            ${{ env.LUSTR_DIST }}/native-qualification
+            ${{ env.LUSTR_DIST }}/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
             ${{ runner.temp }}/native-cargo-build.json
             ${{ runner.temp }}/native-cargo-build.cargo.log
           if-no-files-found: warn

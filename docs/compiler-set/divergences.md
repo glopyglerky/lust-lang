@@ -28,9 +28,10 @@ separate executable with a Lustr-owned Cargo entry point. Its explicit adapters
 supply the application crate name through the existing expansion and resolver
 input types. Native compilation runs in that process, with no compiler fallback.
 It emits real dependency records and rejects unsupported flags and artifact
-requests. The current scope is native binary crates under supported development
-settings. Rust libraries, metadata, procedural macros, tests and full coverage
-remain open. No copied or modified upstream implementation is hidden in this
+requests. The current scope includes native binary crates and separately
+compiled native libraries with scalar safe/unsafe function metadata under
+supported development settings. General metadata, procedural macros, tests
+and full coverage remain open. No copied or modified upstream implementation is hidden in this
 crate, and the original `lust` executable and its daemon path remain unchanged.
 
 `crates/lustr` retains the historical coordinator. It is not built or shipped by
@@ -50,7 +51,7 @@ The native package qualification fixtures under
 and the Rust oracle independently. Their report preserves native coverage gaps
 and does not count the compatibility compiler's acceptance as native support.
 
-Full native Rust support and native rlib emission remain unfinished.
+Full native Rust support and general Rust artifact interoperability remain unfinished.
 The [native contract](native-contract.md) and
 [roadmap](roadmap.md) define those obligations. The coordinator and bounded
 qualification fixtures do not close them.

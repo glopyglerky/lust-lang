@@ -229,6 +229,10 @@ fn exported_functions(program: &Program) -> Result<Vec<(Vec<String>, LocalDefId)
     Ok(result)
 }
 
+fn has_linked_symbol(program: &Program, index: usize) -> bool {
+    matches!(program.gx.fn_class.get(index), None | Some(FnClass::Plain | FnClass::Instance | FnClass::Closure))
+}
+
 fn stable_names(program: &Program, slots: &[u32], imports: &[(LocalDefId, Export)]) -> Result<Arc<cgen::names::Names>, String> {
     let mut instances = Vec::new();
     for (id, instance) in program.gx.adt_instance_of.iter().enumerate() {
@@ -250,7 +254,14 @@ fn stable_names(program: &Program, slots: &[u32], imports: &[(LocalDefId, Export
         names_mut.fns[slot as usize] = Some(id.to_string());
     }
     let mut seen = BTreeSet::new();
-    for id in names_mut.fns.iter().flatten() {
+    for (index, id) in names_mut.fns.iter().enumerate() {
+        // Generic templates and trait stubs are checking records, not linked
+        // functions. Some deliberately share a definition identity. Keep the
+        // collision check for every emitted body and imported library symbol.
+        if !has_linked_symbol(program, index) {
+            continue;
+        }
+        let Some(id) = id else { continue };
         if !seen.insert(id.clone()) {
             return Err(format!("native function symbol collision for f_{id}"));
         }
@@ -376,7 +387,24 @@ fn emit_functions(
                 if bindings.contains_key(&function) {
                     continue;
                 }
-                if !matches!(program.gx.fn_class.get(index), None | Some(FnClass::Plain | FnClass::Instance | FnClass::Closure)) {
+                if program.gx.fn_class.get(index) == Some(&FnClass::Template) && needs_safety {
+                    // Materialization checks every generic template's ordinary
+                    // Rust contract, including unused helpers. Its owned
+                    // Checked result does not survive that call. Check the
+                    // additional safety dimension here as well: inspecting
+                    // only generated instances would accept an unsafe call in
+                    // a generic helper that no caller happens to instantiate.
+                    let (checked, errors) = check::check_fn(program, function);
+                    if !errors.is_empty() {
+                        return Err(diagnostics("template checking", map, &errors));
+                    }
+                    let errors = safety.check_body(program, &checked, function);
+                    if !errors.is_empty() {
+                        return Err(diagnostics("template unsafe checking", map, &errors));
+                    }
+                    continue;
+                }
+                if !has_linked_symbol(program, index) {
                     continue;
                 }
                 let definition = program.fn_def(function);

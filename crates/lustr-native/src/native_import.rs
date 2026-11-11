@@ -233,12 +233,10 @@ fn collect_impl(
     for item in std::mem::take(&mut ast.items) {
         match &item.kind {
             ItemKind::Fn(def) => {
-                if !def.generics.params.is_empty() || !def.where_clause.preds.is_empty() {
-                    return Err(err(vec![unsupported(
-                        "generic consumer functions with native artifact imports are not implemented yet",
-                        def.name_span,
-                    )]));
-                }
+                // Local generic helpers keep their original parameters and
+                // bounds. The upstream collector and monomorphizer own their
+                // type/borrow checks and instances; exported generic metadata
+                // still requires its separate artifact-format implementation.
                 if !seen.insert(def.name.0) {
                     return Err(err(vec![Diag::new(
                         "L0106",

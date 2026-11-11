@@ -19,9 +19,29 @@ currently admitted. Changing or renaming a copied Lust implementation, or
 applying an unrecorded generated patch, does not satisfy this rule.
 
 The intended result accepts unchanged full Rust projects while retaining and
-extending Lust's fast development compilation. Full language coverage and
-equivalent-workload speed are both requirements. Neither follows from a
-wrapper, a successful parse, an optimized rustc build, or a few fixtures.
+extending Lust's fast development compilation. The user requires all of the
+following together, with no allowed slowdown:
+
+- Every input accepted by upstream Lust, under the same supported configuration,
+  remains accepted by Lustr and compiles at least as fast as upstream Lust.
+- Rust beyond Lust's coverage compiles natively through Lustr at least as fast
+  as the equivalent stock Cargo/rustc invocation.
+- Both kinds of code compose within the same program and Cargo dependency
+  graph. Independent crates can compile concurrently under Cargo's job budget.
+
+Use the simplest implementation with the least overhead that satisfies these
+requirements. Cargo remains the only build scheduler. One native compiler
+process per requested crate owns parsing, checking, generation and metadata.
+Reuse checked frontend work through explicit interfaces; do not add a source
+classifier, orchestration process, speculative compiler race or second build
+graph. New support must not force already supported code through a slower
+general path. The existing retained Lust state is an implementation to extend
+with correct invalidation, not a reason to add another daemon.
+
+Full language coverage and equivalent-workload speed are both requirements.
+Neither follows from a wrapper, a successful parse, an optimized rustc build,
+or a few fixtures. The [acceptance gate](native-acceptance.md) records each
+obligation separately and cannot convert missing evidence into a pass.
 
 The integration must compose existing Lust-supported code and Lustr's additions
 in the same program. A bounded Cargo entry point now calls the native driver in
