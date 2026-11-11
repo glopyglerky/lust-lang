@@ -4,10 +4,6 @@ use std::process::{Command, Output};
 
 /// Inspect installed tools. This never invokes a project build, installs a
 /// component, changes a toolchain, or claims that availability is qualification.
-pub fn run() -> i32 {
-    run_for_root(None)
-}
-
 pub(crate) fn run_for_root(root: Option<&Path>) -> i32 {
     let mut programs = crate::Programs::from_environment();
     if let Some(root) = root {
@@ -57,7 +53,7 @@ pub(crate) fn run_for_root(root: Option<&Path>) -> i32 {
             "Availability is not qualification. The stock preview lacks required unwind support; configure an explicitly built unwind-enabled backend with LUST_CRANELIFT_BACKEND."
         ),
         json(
-            "Compiler probes use --bluefe-root when supplied, otherwise PATH, RUSTC and RUSTDOC. Cargo configuration and custom wrappers may select a different compiler; this command does not build a project to resolve them."
+            "Compiler probes use the explicit or discovered package root when selected, otherwise PATH, RUSTC and RUSTDOC. Cargo configuration and custom wrappers may select a different compiler; this command does not build a project to resolve them."
         ),
     );
     i32::from(!ready)

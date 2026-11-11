@@ -1,0 +1,109 @@
+name: Native toolchain package
+
+on:
+  push:
+    branches: [next, 'build/lustr-native-package*']
+    paths:
+      - 'crates/lustr/**'
+      - 'compiler/native/**'
+      - 'upstream/lust.pin'
+      - 'tools/package-toolchain.py'
+      - 'tools/qualify-package.py'
+      - 'tools/native-qualification.py'
+      - 'tests/native-qualification/**'
+      - 'docs/compiler-set/native-package.md'
+      - '.github/workflows/native-package.yml'
+  pull_request:
+    paths:
+      - 'crates/lustr/**'
+      - 'compiler/native/**'
+      - 'upstream/lust.pin'
+      - 'tools/package-toolchain.py'
+      - 'tools/qualify-package.py'
+      - 'tools/native-qualification.py'
+      - 'tests/native-qualification/**'
+      - 'docs/compiler-set/native-package.md'
+      - '.github/workflows/native-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Native and compatibility package (Linux x86_64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned bootstrap and compatibility compiler
+        run: rustup toolchain install 1.99.1 --profile minimal
+      - name: Verify unchanged Lust source
+        run: |
+          rustc --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
+          "$RUNNER_TEMP/lust-upstream-check"
+      - name: Build the upstream native compiler and runtime
+        run: |
+          compiler/native/scripts/build-tcc.sh
+          cargo build --manifest-path compiler/native/Cargo.toml --release --locked
+      - name: Build and test the coordinator
+        run: |
+          cargo test --workspace --locked --offline
+          cargo build --workspace --release --locked --offline
+      - name: Retain native dependency sources
+        run: cargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"
+      - name: Assemble the relocatable package
+        run: |
+          python3 tools/package-toolchain.py \
+            --output dist/lustr-native-preview-x86_64-unknown-linux-gnu \
+            --native-bin compiler/native/target/release \
+            --coordinator-bin target/release \
+            --rust-root "$(rustc --print sysroot)" \
+            --vendor-dir "$RUNNER_TEMP/native-vendor" \
+            --compatibility-origin upstream-rust
+      - name: Verify relocation, actual engines, and retained native path
+        run: |
+          python3 tools/qualify-package.py \
+            --package dist/lustr-native-preview-x86_64-unknown-linux-gnu \
+            --baseline-native compiler/native/target/release/lust \
+            --output dist/package-qualification.json
+      - name: Record actual native coverage and remaining gaps
+        run: |
+          python3 tools/native-qualification.py \
+            --lust "$GITHUB_WORKSPACE/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust" \
+            --rustc "$GITHUB_WORKSPACE/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc" \
+            --output "$GITHUB_WORKSPACE/dist/native-qualification"
+      - name: Verify unchanged source after build and qualification
+        run: '"$RUNNER_TEMP/lust-upstream-check"'
+      - name: Archive the qualified preview
+        run: |
+          tar --sort=name --owner=0 --group=0 --numeric-owner \
+            --mtime="@$(git show -s --format=%ct HEAD)" \
+            -C dist -cf - lustr-native-preview-x86_64-unknown-linux-gnu \
+            | gzip -n -6 > dist/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
+          cd dist
+          sha256sum lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lustr-native-preview-linux-x86_64-${{ github.sha }}
+          path: |
+            dist/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lustr-package-evidence-${{ github.sha }}
+          path: |
+            dist/package-qualification.json
+            dist/native-qualification
+            dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
+          if-no-files-found: warn
+

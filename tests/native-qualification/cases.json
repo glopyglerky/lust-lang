@@ -1,0 +1,14 @@
+[
+  {"name":"existing-generics-traits","source":"existing-generics-traits.rs","category":"existing","stdout":"14\n"},
+  {"name":"invalid-type","source":"invalid-type.rs","category":"invalid"},
+  {"name":"invalid-move","source":"invalid-move.rs","category":"invalid"},
+  {"name":"invalid-alias","source":"invalid-alias.rs","category":"invalid"},
+  {"name":"unsafe-pointer","source":"unsafe-pointer.rs","category":"expansion","stdout":"14\n"},
+  {"name":"async-await","source":"async-await.rs","category":"expansion","stdout":"14\n"},
+  {"name":"generic-associated-type","source":"generic-associated-type.rs","category":"expansion","stdout":"14\n"},
+  {"name":"dyn-iterator","source":"dyn-iterator.rs","category":"expansion","stdout":"14\n"},
+  {"name":"return-impl-trait-in-trait","source":"return-impl-trait-in-trait.rs","category":"expansion","stdout":"14\n"},
+  {"name":"offset-of","source":"offset-of.rs","category":"expansion","stdout":"4\n"},
+  {"name":"extern-function","source":"extern-function.rs","category":"expansion","stdout":"14\n"},
+  {"name":"native-rlib","source":"native-rlib.rs","consumer":"native-rlib-consumer.rs","category":"expansion","kind":"library","stdout":"14\n"}
+]
