@@ -151,10 +151,12 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
 
         def build(label: str, lane: str, target: Path, wanted: bytes | None,
                   flags: tuple[str, ...] = (), fresh: bool | None = None,
-                  project: Path | None = None) -> tuple[int, int | None]:
+                  project: Path | None = None,
+                  env: dict[str, str] | None = None) -> tuple[int, int | None]:
             work_project = projects[lane] if project is None else project
+            work_env = environments[lane] if env is None else env
             result = execute(label, [cargo, "build", "--offline", "--locked", "--message-format=json",
-                                     "--target-dir", target, *flags], environments[lane], work_project,
+                                     "--target-dir", target, *flags], work_env, work_project,
                              0 if wanted is not None else 101)
             command_index = len(report["commands"]) - 1
             artifact = target / "debug/lustr_native_contract"
@@ -169,7 +171,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                     label + ": Cargo did not report the real executable")
             if fresh is not None:
                 require(artifacts[0]["fresh"] is fresh, label + ": incorrect Cargo freshness")
-            run = execute(label + "-runtime", [artifact], environments[lane], work_project)
+            run = execute(label + "-runtime", [artifact], work_env, work_project)
             runtime_index = len(report["commands"]) - 1
             require(run.stdout == wanted, f"{label}: wrong output {run.stdout!r}, expected {wanted!r}")
             return command_index, runtime_index
@@ -217,14 +219,31 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
             require(bool(separator) and not any(line.lstrip().startswith("[") for line in profile_tail.splitlines()),
                     "default-profile fixture requires the known final profile.dev table")
             default_manifest += "\n"
-            report["default_development_profile"] = {"manifest": default_manifest, "lanes": {}}
+            report["default_development_profile"] = {
+                "manifest": default_manifest,
+                "environment_policy": {
+                    "scenario": "ordinary development outside CI",
+                    "CI": "unset", "TF_BUILD": "unset", "CARGO_INCREMENTAL": "unset",
+                    "reason": "Cargo disables default incremental compilation when CI or TF_BUILD is present. This scenario removes those markers for both compiler lanes; explicit incremental selection is qualified separately.",
+                },
+                "lanes": {},
+            }
             for lane in projects:
+                # Cargo's is_ci() checks presence, so even CI=false would select
+                # its CI defaults. Change only this non-CI development scenario.
+                default_env = dict(environments[lane])
+                removed_markers = [name for name in ("CI", "TF_BUILD") if name in default_env]
+                for name in ("CI", "TF_BUILD"):
+                    default_env.pop(name, None)
+                require("CARGO_INCREMENTAL" not in default_env,
+                        "default development scenario must not force incremental selection")
                 default_project = scratch / (lane + " default development profile")
                 shutil.copytree(fixture, default_project)
                 (default_project / "Cargo.toml").write_text(default_manifest)
                 default_target = scratch / (lane + " default development target")
                 build_index, runtime_index = build(lane + "-default-dev-build", lane, default_target,
-                                                   expected_output(), fresh=False, project=default_project)
+                                                   expected_output(), fresh=False, project=default_project,
+                                                   env=default_env)
                 events = [json.loads(line) for line in report["commands"][build_index]["stdout"].splitlines()
                           if line.strip()]
                 profile = next(event["profile"] for event in events if event.get("reason") == "compiler-artifact")
@@ -232,7 +251,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                         and profile["debug_assertions"] and profile["overflow_checks"],
                         lane + ": Cargo did not use its ordinary development profile")
                 fresh_index, _ = build(lane + "-default-dev-fresh", lane, default_target,
-                                       expected_output(), fresh=True, project=default_project)
+                                       expected_output(), fresh=True, project=default_project, env=default_env)
                 incremental = default_target / "debug/incremental"
                 require(incremental.is_dir() and any(incremental.iterdir()),
                         lane + ": default development build did not create its incremental cache")
@@ -240,8 +259,9 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                     "build_command_index": build_index, "runtime_command_index": runtime_index,
                     "fresh_command_index": fresh_index, "cargo_profile": profile,
                     "incremental_directory": str(incremental),
+                    "removed_inherited_ci_markers": removed_markers,
                 }
-            report["checks"].append("ordinary Cargo development defaults compile and run correctly with Cargo's debuginfo=2 request and incremental caching, then remain fresh")
+            report["checks"].append("ordinary non-CI Cargo development defaults compile and run correctly with Cargo's debuginfo=2 request and incremental caching, then remain fresh")
 
             profile_root = scratch / "native profile contracts"
             profile_root.mkdir()
