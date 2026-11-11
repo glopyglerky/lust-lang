@@ -1,0 +1,19 @@
+{
+  "id": 13882595194,
+  "name": "lustr-package-evidence-5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+  "size_in_bytes": 117029680,
+  "url": "https://api.github.com/repos/glopyglerky/lustr/actions/artifacts/13882595194",
+  "archive_download_url": "https://api.github.com/repos/glopyglerky/lustr/actions/artifacts/13882595194/zip",
+  "expired": false,
+  "created_at": "2026-11-11T18:05:39Z",
+  "expires_at": "2027-02-09T17:52:22Z",
+  "updated_at": "2026-11-11T18:05:39Z",
+  "digest": "sha256:05ad07f90a50b0b36a03366342628eefa80f088748dadb34fd4db3be5e457d18",
+  "workflow_run": {
+    "id": 43072307206,
+    "repository_id": 1450430441,
+    "head_repository_id": 1450430441,
+    "head_branch": "build/lustr-native-package-20261110",
+    "head_sha": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e"
+  }
+}

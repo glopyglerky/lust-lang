@@ -19,11 +19,20 @@ copies gate binaries into `target/release`, so a pathname cannot establish the
 recipe. Lustr's build receipt verifies the observed compiler command.
 
 The [release-baseline workflow](https://github.com/glopyglerky/lustr/actions/runs/43069040645)
-runs commit
+measured commit
 [8110d9f7](https://github.com/glopyglerky/lustr/commit/8110d9f7aad82a8c382ebadcc092248f0db917bc),
 which precedes the request-cache change. A cache candidate needs its own release
 build and complete qualification. Diagnostic optimization-level-1 results cannot
 qualify a delivered compiler. See [CI design](native-ci.md).
+
+The [initial cache release candidate](measurements/2026-11-11-native-cache/cache-candidate/README.md)
+was measured separately at commit `5b98ffb6`. Its unchanged warm median was
+4.407 ms against Lust's 4.681 ms, with four slower pairs out of twelve; it failed
+the strict floor. Disabled-cache cold compilation was 50.840 versus 50.116 ms,
+and enabled-cache first admission was 52.408 versus 51.396 ms. Body, signature,
+type and macro edits were still slower than Lust. The full-Rust preflights
+failed at procedural macro compilation. All samples remain retained and the
+archive was withheld. These measurements predate the namespace fix below.
 
 ## What Lust's history establishes
 
@@ -54,6 +63,14 @@ copy of the original environment. Lookup verifies source, response and artifact
 fingerprints plus executable permissions, stages the result, then publishes it
 atomically. The native entry point regenerates Cargo dep-info and artifact
 notifications. A failed artifact contract removes the unqualified output.
+
+The cache surrogate uses upstream's synthetic `file:` identity. The original
+native request remains bound into its digest and still drives compilation.
+This prevents cache-key construction from discovering an enclosing Cargo
+manifest and running its build script again. Cargo already supplied the
+effective compiler arguments and environment. A sentinel regression covers
+initial storage, warm lookup and parent manifest/config edits with unchanged
+effective arguments.
 
 Independent review found and corrected three gaps: upstream identity named
 `lust-core` rather than the executing `lustr-native`; byte fingerprints omitted
@@ -94,6 +111,14 @@ medians were slower. Neither experiment satisfies the speed floor. CI measures
 both cold definitions separately.
 
 ## Remaining work
+
+The [phase diagnostic](measurements/2026-11-11-native-cache/phase-profile/README.md)
+places most measured cache overhead in storage, rather than source or dependency
+validation. Setup medians were about 0.11 ms; stores were 0.58–1.50 ms. This was
+instrumented opt1 code on separate temporary storage, so it does not explain
+the release regressions by itself. It gives no reason to weaken the inexpensive
+correctness checks. The next optimization must demonstrate a same-run release
+gain while preserving their guarantees.
 
 Whole-request reuse cannot retain frontend work across body, signature, type or
 macro edits. Those modes still require a semantically complete retained design

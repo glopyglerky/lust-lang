@@ -51,6 +51,12 @@ jobs:
         run: |
           rustc --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
           "$RUNNER_TEMP/lust-upstream-check"
+      - name: Verify the Lust pin still matches upstream HEAD
+        id: upstream_head
+        run: |
+          python3 tools/check-native-upstream-head.py \
+            --repository "$GITHUB_WORKSPACE" \
+            --output "$RUNNER_TEMP/native-upstream-head-evidence"
       - name: Check compiler invocation evidence parsing
         id: invocations
         run: python3 tools/test-native-library-invocations.py
@@ -60,6 +66,8 @@ jobs:
           python3 tools/test-native-speed.py
           python3 tools/test-native-ci-summary.py
           python3 tools/test-native-build.py
+          python3 tools/test-native-upstream-corpus.py
+          python3 tools/test-native-upstream-head.py
       - name: Build the native compilers and runtime
         id: native_build
         run: |
@@ -172,6 +180,15 @@ jobs:
             --native-build-receipt "$RUNNER_TEMP/native-cargo-build.json" \
             --tcc-root "$GITHUB_WORKSPACE/compiler/native/third_party/tcc" \
             --output "$RUNNER_TEMP/native-speed-evidence"
+      - name: Compare unchanged upstream fixtures through the native entry point
+        id: upstream_corpus
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
+        run: |
+          python3 tools/check-native-upstream-corpus.py \
+            --native "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native" \
+            --lust "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust" \
+            --workers 2 \
+            --output "$RUNNER_TEMP/native-upstream-corpus-evidence"
       - name: Verify unchanged source after build and qualification
         id: source_after
         if: always()
@@ -185,7 +202,9 @@ jobs:
           python3 tools/native-ci-summary.py \
             --report "$RUNNER_TEMP/native-speed-evidence/report.json" \
             --receipt "$RUNNER_TEMP/native-cargo-build.json" \
+            --corpus-report "$RUNNER_TEMP/native-upstream-corpus-evidence/report.json" \
             --source-commit "$QUALIFIED_SOURCE" \
+            --enforce \
             --output "$RUNNER_TEMP/native-qualification-summary.md"
       - name: Archive the qualified preview
         run: |
@@ -217,6 +236,9 @@ jobs:
             ${{ runner.temp }}/native-request-cache-evidence/report.json
             ${{ runner.temp }}/native-request-cache-evidence/logs
             ${{ runner.temp }}/native-speed-evidence
+            ${{ runner.temp }}/native-upstream-corpus-evidence
+            !${{ runner.temp }}/native-upstream-corpus-evidence/compilers/**
+            ${{ runner.temp }}/native-upstream-head-evidence
             ${{ runner.temp }}/lustr-native-dist/native-qualification
             ${{ runner.temp }}/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
             ${{ runner.temp }}/native-cargo-build.json

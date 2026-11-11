@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render native qualification evidence without changing its acceptance decision."""
+"""Render native qualification evidence and optionally enforce its consistency."""
 from __future__ import annotations
 
 import argparse
@@ -16,9 +16,9 @@ import zlib
 REQUIREMENTS = ("identities", "provenance", "input-stability", "upstream-preservation",
                 "upstream-accepted-corpus", "engine-trace", "concurrent-cargo", "mixed-compatibility",
                 "full-rust-compatibility", "build-scripts", "doctests")
-WORKFLOW_CHECKS = ("source_before", "invocations", "acceptance_tests", "native_build", "artifacts",
+WORKFLOW_CHECKS = ("source_before", "upstream_head", "invocations", "acceptance_tests", "native_build", "artifacts",
                    "protocol", "unsafe", "mixed_generics", "request_cache", "vendor", "safe_library", "package",
-                   "relocation", "upstream_coverage", "native_speed", "source_after")
+                   "relocation", "upstream_coverage", "native_speed", "upstream_corpus", "source_after")
 
 
 def helper(filename: str):
@@ -57,8 +57,9 @@ def load_record(path: Path) -> dict:
     return record
 
 
-def render(report: dict | None, receipt: dict | None = None, steps: dict | None = None,
-           source_commit: str = "", errors: list[str] | None = None) -> str:
+def assess(report: dict | None, receipt: dict | None = None, steps: dict | None = None,
+           source_commit: str = "", errors: list[str] | None = None,
+           corpus: dict | None = None) -> tuple[bool, list[str]]:
     report = report or {}
     if receipt is None:
         receipt = report.get("native_build_receipt", {})
@@ -79,6 +80,32 @@ def render(report: dict | None, receipt: dict | None = None, steps: dict | None 
         annotations.append("Measured source and native receipt source are absent or different.")
     if source_commit and source_commit != measured_commit:
         annotations.append("Requested source differs from the measured source.")
+    if corpus is None:
+        annotations.append("The required bounded upstream fixture report is missing.")
+    else:
+        audit = corpus.get("summary", {})
+        selected = audit.get("selected_cases")
+        counts = audit.get("counts", {})
+        if (corpus.get("schema") != "lustr.native-upstream-corpus.v1"
+                or corpus.get("success") is not True or audit.get("success") is not True
+                or audit.get("complete") is not True or audit.get("inputs_stable") is not True
+                or type(selected) is not int or selected <= 0
+                or selected != audit.get("total_corpus_cases")
+                or audit.get("completed_cases") != selected
+                or audit.get("compiler_pairs_attempted") != selected
+                or counts.get("passed") != selected
+                or any(value != 0 for name, value in counts.items() if name != "passed")
+                or any(audit.get(name) != [] for name in
+                       ("missing", "unexpected", "duplicates", "compiler_pairs_missing"))
+                or corpus.get("failures") != []):
+            annotations.append("The complete bounded upstream fixture matrix did not pass.")
+        if corpus.get("source_commit") != measured_commit:
+            annotations.append("Upstream fixture audit source differs from the measured source.")
+        for lane, name, index in (("native", "native", 0), ("lust", "lust", 0), ("lust", "lust-core", 1)):
+            files = corpus.get("compilers", {}).get(lane, {}).get("files", [])
+            expected = report.get("tools", {}).get(name, {}).get("sha256")
+            if len(files) <= index or not expected or files[index].get("sha256") != expected:
+                annotations.append(f"Upstream fixture audit {name} executable differs from the measured executable.")
     for name in WORKFLOW_CHECKS:
         if (steps or {}).get(name, {}).get("outcome") != "success":
             annotations.append(f"Workflow check {name} did not report success.")
@@ -91,6 +118,22 @@ def render(report: dict | None, receipt: dict | None = None, steps: dict | None 
     qualified = (not errors and not annotations and complete and report.get("qualified") is True
                  and decision.get("qualified") is True and not report.get("failures")
                  and not report.get("diagnostic_without_trace") and not report.get("functional_only"))
+    return qualified, annotations
+
+
+def render(report: dict | None, receipt: dict | None = None, steps: dict | None = None,
+           source_commit: str = "", errors: list[str] | None = None, corpus: dict | None = None) -> str:
+    report = report or {}
+    if receipt is None:
+        receipt = report.get("native_build_receipt", {})
+    errors = errors or []
+    required = expected_series()
+    series = report.get("series", {})
+    requirements = report.get("requirements", {})
+    decision = report.get("decision", {})
+    source = report.get("source", {})
+    build = receipt.get("build", {})
+    qualified, annotations = assess(report, receipt, steps, source_commit, errors, corpus)
     lines = ["# Native compiler qualification", "",
              "**QUALIFIED for the recorded corpus and environment.**" if qualified else
              "**UNQUALIFIED. Failed, missing or inconclusive evidence blocks the installable archive.**",
@@ -104,7 +147,7 @@ def render(report: dict | None, receipt: dict | None = None, steps: dict | None 
     if annotations:
         lines += ["## Summary consistency checks", ""]
         lines += ["- " + cell(annotation) for annotation in annotations]
-        lines += ["", "These checks annotate the evidence. They do not inspect the executable or replace the release admission gate.", ""]
+        lines += ["", "These checks bind the retained reports. CI enforces them before archiving; they do not replace the executable and performance gates.", ""]
     lines += ["## Source and compiler builds", "", "| Field | Value |", "| --- | --- |",
               f"| Requested source | {cell(source_commit)} |",
               f"| Measured source | {cell(source.get('commit', 'unavailable'))} |",
@@ -133,6 +176,22 @@ def render(report: dict | None, receipt: dict | None = None, steps: dict | None 
         row = requirements.get(name, {})
         detail = row.get("reason", row.get("scope", "" if row else "required evidence missing"))
         lines.append(f"| {cell(name)} | {cell(row.get('state', 'unproved'))} | {cell(detail)} |")
+    if corpus is not None:
+        audit = corpus.get("summary", {})
+        counts = audit.get("counts", {})
+        lines += ["", "## Bounded upstream fixture audit", "",
+                  "The actual native Cargo entry point and Lust compile the unchanged pass, unwind and release fixtures.",
+                  "This functional matrix does not establish full accepted-input coverage or either speed floor.", "",
+                  "| Selected | Completed | Available | Passed | Failed | Unproved | Inputs stable |",
+                  "| ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+                  f"| {cell(audit.get('selected_cases', 'unavailable'))} | {cell(audit.get('completed_cases', 0))} | "
+                  f"{cell(audit.get('total_corpus_cases', 'unavailable'))} | {cell(counts.get('passed', 0))} | "
+                  f"{cell(counts.get('failed', 0))} | {cell(counts.get('unproved', 0))} | {cell(audit.get('inputs_stable', False))} |",
+                  "", "Remaining matrix coverage:", ""]
+        lines += ["- " + cell(gap) for gap in corpus.get("coverage_gaps", [])] or ["See the retained corpus report."]
+        if corpus.get("failures"):
+            lines += ["", "Fixture audit collection errors:", ""]
+            lines += ["- " + cell(error) for error in corpus["failures"]]
     lines += ["", "## Every timing mode", "",
               "Durations are medians in milliseconds. Ratios are candidate / baseline; the limit is 1.000.",
               "Upper bounds and paired ratios are taken from the report without dropping outliers or recomputing decisions.", "",
@@ -161,26 +220,34 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--corpus-report", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-commit", default="")
+    parser.add_argument("--enforce", action="store_true", help="fail unless every required gate and report consistency check passes")
     args = parser.parse_args()
-    report, receipt, steps, errors = None, None, None, []
-    for label, path in (("report", args.report), ("receipt", args.receipt)):
+    report, receipt, corpus, steps, errors = None, None, None, None, []
+    for label, path in (("report", args.report), ("receipt", args.receipt), ("corpus", args.corpus_report)):
         if path is None:
             continue
         try:
             record = load_record(path)
             if label == "report":
                 report = record
-            else:
+            elif label == "receipt":
                 receipt = record
+            else:
+                corpus = record
         except (OSError, ValueError, EOFError, zlib.error) as error:
             errors.append(f"Cannot read {label}: {error}")
+    qualified = False
+    if args.enforce and not args.source_commit:
+        errors.append("Enforced qualification requires the requested source commit.")
     try:
         steps = json.loads(os.environ.get("LUSTR_CI_STEPS", "{}"))
         if not isinstance(steps, dict):
             raise ValueError("workflow steps must be an object")
-        text = render(report, receipt, steps, args.source_commit, errors)
+        qualified, _ = assess(report, receipt, steps, args.source_commit, errors, corpus)
+        text = render(report, receipt, steps, args.source_commit, errors, corpus)
     except (ValueError, TypeError, AttributeError) as error:
         errors.append(f"Invalid evidence structure: {error}")
         text = render(None, source_commit=args.source_commit, errors=errors)
@@ -190,7 +257,7 @@ def main() -> int:
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
             stream.write(text)
     print(f"Native qualification summary: {args.output}")
-    return 1 if errors else 0
+    return 1 if errors or (args.enforce and not qualified) else 0
 
 
 if __name__ == "__main__":

@@ -64,13 +64,13 @@ class SummaryTests(unittest.TestCase):
             self.assertIn(f"| {name} | unproved |", text)
 
     def test_complete_report_is_not_called_universal(self):
-        report, steps = self.complete()
-        text = summary.render(report, steps=steps, source_commit="a" * 40)
+        report, steps, audit = self.corpus()
+        text = summary.render(report, steps=steps, source_commit="a" * 40, corpus=audit)
         self.assertIn("**QUALIFIED for the recorded corpus and environment.**", text)
         self.assertIn("proves no universal", text)
         for key in ("functional_only", "diagnostic_without_trace"):
             diagnostic = dict(report, **{key: True})
-            self.assertIn("**UNQUALIFIED.", summary.render(diagnostic, steps=steps, source_commit="a" * 40))
+            self.assertIn("**UNQUALIFIED.", summary.render(diagnostic, steps=steps, source_commit="a" * 40, corpus=audit))
 
     def test_failed_cancelled_or_missing_correctness_step_blocks_success_headline(self):
         report, steps = self.complete()
@@ -112,6 +112,81 @@ class SummaryTests(unittest.TestCase):
         self.assertNotIn("<script>", text)
         self.assertIn("test\\|injected", text)
         self.assertIn("\\[link\\]", text)
+
+    def corpus(self):
+        report, steps = self.complete()
+        report["tools"] = {name: {"sha256": character * 64} for name, character in
+                           (("native", "a"), ("lust", "b"), ("lust-core", "c"))}
+        audit = {"schema": "lustr.native-upstream-corpus.v1", "success": True,
+                 "source_commit": "a" * 40, "failures": [],
+                 "summary": {"success": True, "complete": True, "inputs_stable": True,
+                             "selected_cases": 2293, "completed_cases": 2293,
+                             "total_corpus_cases": 2293, "counts": {"passed": 2293},
+                             "compiler_pairs_attempted": 2293, "compiler_pairs_missing": [],
+                             "missing": [], "unexpected": [], "duplicates": []},
+                 "compilers": {"native": {"files": [{"sha256": "a" * 64}]},
+                               "lust": {"files": [{"sha256": "b" * 64}, {"sha256": "c" * 64}]}},
+                 "coverage_gaps": ["panic=abort profiles", "cold and warm speed floors"]}
+        return report, steps, audit
+
+    def test_corpus_counts_remain_bounded_functional_evidence(self):
+        report, steps, audit = self.corpus()
+        text = summary.render(report, steps=steps, corpus=audit)
+        self.assertIn("| 2293 | 2293 | 2293 | 2293 | 0 | 0 | True |", text)
+        self.assertIn("does not establish full accepted-input coverage or either speed floor", text)
+        self.assertIn("panic=abort profiles", text)
+        for field, value in (("success", False), ("complete", False), ("inputs_stable", False),
+                             ("selected_cases", 18), ("completed_cases", 18),
+                             ("compiler_pairs_attempted", 2292),
+                             ("counts", {"passed": 2292, "failed": 1}),
+                             ("counts", {"passed": 2293, "unproved": 1}),
+                             ("duplicates", ["pass/example.rs"])):
+            changed = copy.deepcopy(audit)
+            changed["summary"][field] = value
+            self.assertIn("**UNQUALIFIED.", summary.render(report, steps=steps, corpus=changed))
+        self.assertIn("**UNQUALIFIED.", summary.render(report, steps=steps))
+        audit["failures"].append("input snapshot failed")
+        self.assertIn("**UNQUALIFIED.", summary.render(report, steps=steps, corpus=audit))
+
+    def test_corpus_source_and_each_compiler_must_match_measured_inputs(self):
+        report, steps, audit = self.corpus()
+        changed = copy.deepcopy(audit)
+        changed["source_commit"] = "b" * 40
+        self.assertIn("**UNQUALIFIED.", summary.render(report, steps=steps, corpus=changed))
+        for lane, index in (("native", 0), ("lust", 0), ("lust", 1)):
+            changed = copy.deepcopy(audit)
+            changed["compilers"][lane]["files"][index]["sha256"] = "d" * 64
+            self.assertIn("**UNQUALIFIED.", summary.render(report, steps=steps, corpus=changed))
+
+    def test_enforced_cli_blocks_missing_contradictory_and_mismatched_corpus(self):
+        report, steps, audit = self.corpus()
+        cases = [("complete", audit, 0), ("missing", None, 1)]
+        changed = copy.deepcopy(audit)
+        changed["summary"]["counts"] = {"passed": 2292, "failed": 1}
+        cases.append(("contradictory counts", changed, 1))
+        changed = copy.deepcopy(audit)
+        changed["compilers"]["lust"]["files"][1]["sha256"] = "d" * 64
+        cases.append(("wrong core executable", changed, 1))
+        changed = copy.deepcopy(audit)
+        changed["source_commit"] = "b" * 40
+        cases.append(("wrong source", changed, 1))
+        changed = copy.deepcopy(audit)
+        changed["failures"] = ["input snapshot failed"]
+        cases.append(("collection failure", changed, 1))
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "report.json").write_text(json.dumps(report))
+            for label, corpus, expected in cases:
+                with self.subTest(label=label):
+                    argv = [sys.executable, str(SCRIPT), "--report", str(root / "report.json"),
+                            "--output", str(root / "summary.md"), "--source-commit", "a" * 40, "--enforce"]
+                    if corpus is not None:
+                        (root / "corpus.json").write_text(json.dumps(corpus))
+                        argv += ["--corpus-report", str(root / "corpus.json")]
+                    result = subprocess.run(argv, capture_output=True, text=True,
+                                            env=dict(os.environ, GITHUB_STEP_SUMMARY="", LUSTR_CI_STEPS=json.dumps(steps)))
+                    self.assertEqual(result.returncode, expected, result.stderr)
+                    self.assertIn("**QUALIFIED" if expected == 0 else "**UNQUALIFIED", (root / "summary.md").read_text())
 
     def test_missing_file_writes_failure_summary_and_returns_error(self):
         with tempfile.TemporaryDirectory() as temporary:

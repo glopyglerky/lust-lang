@@ -33,7 +33,8 @@ fn response_fingerprint(response: &Response) -> [u8; 16] {
 
 impl RequestCache {
     pub fn new(request: &Request, native_options: impl FnOnce() -> String) -> Option<Self> {
-        if !cfg!(target_os = "linux") || std::env::var("LUST_NO_CACHE").is_ok_and(|v| !v.is_empty() && v != "0") {
+        if !cfg!(target_os = "linux") || request.session.krate.manifest_path.is_some()
+            || std::env::var("LUST_NO_CACHE").is_ok_and(|v| !v.is_empty() && v != "0") {
             return None;
         }
         // Bind the complete native invocation, including the client's original
@@ -60,9 +61,12 @@ impl RequestCache {
         let (lo, hi) = cache::hash128(&[b"native-request-v1", env!("LUST_BUILD_HASH").as_bytes(), identity.as_bytes(), &mask.to_le_bytes(), native_options.as_bytes(), &encoded], 0);
         let tag = format!("{lo:016x}{hi:016x}");
         let mut request = request.clone();
-        // This namespace is only a cache key. The compiler always receives the
-        // original SessionKey, so cached and uncached code have the same ABI.
-        request.session.krate.package_id.push_str(&format!(":native-request-v1:{tag}"));
+        // Cargo supplied the effective arguments and environment, already
+        // bound above. Upstream's file: namespace suppresses parent-manifest
+        // discovery and build-script refresh inside its cache key. Lookup and
+        // store must not independently run Cargo. Only this cache surrogate
+        // changes; compilation keeps the original SessionKey and ABI.
+        request.session.krate.package_id = format!("file:native-request-v1:{tag}");
         let marker = cache::cache_dir(&request.file).join(format!("req-native-{tag}"));
         Some(Self { request, marker })
     }

@@ -295,6 +295,43 @@ os.execv(str(here.with_name('tcc-real')),[str(here.with_name('tcc-real'))]+sys.a
             check(build(directory, env, "-C", "debug-assertions=" + setting).returncode == 0, "profile invocation succeeds")
             run(directory, env, expected)
 
+        # Cargo already supplied the effective source compilation request. A
+        # source-adjacent manifest must not cause cache lookup/store to run
+        # another Cargo build or independently rediscover build-script inputs.
+        directory, env = project("parent-manifest", scalar)
+        (directory / "Cargo.toml").write_text('[package]\nname="parent_manifest"\nversion="0.1.0"\nedition="2024"\n'
+                                             'build="build.rs"\n[[bin]]\nname="cache_probe"\npath="main.rs"\n[workspace]\n')
+        (directory / "build.rs").write_text('compile_error!("Cargo owns build scripts");\n')
+        sentinels = directory / "sentinels"
+        sentinels.mkdir()
+        cargo_log = directory / "unexpected-cargo"
+        cargo = sentinels / "cargo"
+        cargo.write_text('#!/usr/bin/python3\nfrom pathlib import Path\n'
+                         + f'with Path({str(cargo_log)!r}).open("a") as stream: stream.write("cargo called\\n")\n'
+                         + 'raise SystemExit(97)\n')
+        cargo.chmod(0o755)
+        env["PATH"] = str(sentinels) + os.pathsep + env.get("PATH", "")
+        check(build(directory, env).returncode == 0, "source compilation under a parent manifest succeeds")
+        check(not cargo_log.exists(), "cold cache admission never invokes Cargo or its build script")
+        run(directory, env, "42\n")
+        remove_output(directory)
+        before = invoked.read_bytes()
+        disabled.touch()
+        check(build(directory, env).returncode == 0 and invoked.read_bytes() == before,
+              "parent-manifest warm hit reuses the completed native request")
+        check(not cargo_log.exists(), "warm cache lookup never invokes Cargo or its build script")
+        run(directory, env, "42\n")
+        (directory / "Cargo.toml").write_text('[package]\nname="different_parent"\nversion="9.0.0"\nedition="2024"\n[workspace]\n')
+        (directory / "build.rs").write_text('compile_error!("changed outside the effective compiler request");\n')
+        (directory / ".cargo").mkdir()
+        (directory / ".cargo/config.toml").write_text('[build]\nrustflags=["--cfg=unrelated_parent_setting"]\n')
+        remove_output(directory)
+        check(build(directory, env).returncode == 0 and invoked.read_bytes() == before,
+              "parent manifest/config edits do not alter an identical effective native request")
+        check(not cargo_log.exists(), "changed parent inputs never reenter Cargo through the cache")
+        disabled.unlink()
+        run(directory, env, "42\n")
+
         directory, env = project("cache-disabled", scalar)
         env["LUST_NO_CACHE"] = "1"
         check(build(directory, env).returncode == 0, "cache-disabled native compile succeeds")

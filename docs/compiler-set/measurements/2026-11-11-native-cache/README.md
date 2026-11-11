@@ -2,7 +2,7 @@
 
 These records test the bounded unchanged-request cache. They do **not** qualify
 the compiler against the cold or warm speed floors, or establish full Rust
-coverage. The source parent is
+coverage. The initial implementation's source parent is
 [`8110d9f7`](https://github.com/glopyglerky/lustr/commit/8110d9f7aad82a8c382ebadcc092248f0db917bc).
 The [performance design](../../native-performance.md) records the implementation
 and upstream evidence.
@@ -12,15 +12,39 @@ pre-cache CI run, its exact v2 build receipt, all 51 then-required series and
 verified raw output. It is unqualified. The candidate adds two required
 first-admission series, bringing the current total to 53.
 
+The [initial cache candidate's release run](cache-candidate/README.md) retains all
+53 series: 11 passed, 29 failed and 13 remained unproved. Its warm unchanged
+median was 4.407 ms against Lust's 4.681 ms, but four of twelve pairs were slower.
+Cold builds and all warm edit modes failed their required Lust comparisons.
+The release archive was withheld. These observations precede the
+[parent-manifest namespace fix](namespace-fix/README.md).
+
 ## Correctness
 
-The final diagnostic candidate passed all **75 checks in 58 commands** in
+The initial cache diagnostic candidate passed all **75 checks in 58 commands** in
 [`functional.json.gz`](functional.json.gz). The test disables a private TinyCC
 helper after compilation, so a successful unchanged request demonstrates actual
 reuse. It also checks dependency information, Cargo notifications, changed
 inputs, compiler replacement, umask, corruption and output failures. All 116
 stdout/stderr hashes match the retained
 [`functional-logs.tar.gz`](functional-logs.tar.gz).
+
+The later namespace regression passes **84 checks in 64 commands**. It prevents
+cache lookup or store from independently running Cargo or a build script. The
+same expanded test fails against the initial cache binary; both outcomes and
+all raw command outputs are retained in [namespace-fix](namespace-fix/README.md).
+
+The corrected diagnostic binary also passed all **2,293 fixtures** in the
+bounded [upstream corpus audit](upstream-corpus/README.md). Every native/Lust
+compiler pair ran and all compared runtime behavior matched. The earlier disk
+and runtime-launch collection failures remain alongside the completed run.
+These functional profiles are not the full upstream matrix or speed evidence.
+
+The [live upstream HEAD check](upstream-head/report.json) observed
+`refs/heads/next` at the exact pinned revision on 2026-11-11. Its raw Git
+response and pin bytes are bound by [the manifest](upstream-head/manifest.json).
+CI now repeats that read-only check and blocks qualification on drift or an
+unavailable result.
 
 The earlier candidate passed the independent source-race and output-failure
 review, **10 checks in 6 commands**, retained in
@@ -75,6 +99,14 @@ include first admission as well as disabled-cache cold compilation, unchanged
 reuse and all required edits. No sample was dropped or retried because it was
 slower.
 
+A separate [instrumented phase diagnostic](phase-profile/README.md) retained
+210 compiler invocations and runtime-output checks. Cache setup medians were
+0.106–0.115 ms; stores were 0.575–1.499 ms across the four fixtures. Actual
+dependency admission and source revalidation were each below 0.009 ms. Those
+checks were not the dominant measured cost. This opt1 experiment used different
+temporary storage and the old namespace; its phase times cannot be subtracted
+from the release results or used to claim a speed improvement.
+
 The actual new CI mode was checked against the final diagnostic native binary
 and installed Lust. It completed 25 commands with four paired measurements,
 fresh runtime and compilation directories, and one admission per native sample.
@@ -87,9 +119,9 @@ unqualified because four pairs are below the required twelve.
 | --- | --- |
 | Reference before cache | `600086c4e7b0b22063376205f36d4a648f73423f5ec0cd30cf81dc2c83b59dbf` |
 | Candidate before lazy formatting | `94d337fdb9571805276ab8d71f19a2692aa45b78140a6b43cdcdb5d54831310d` |
-| Final candidate | `734d50867257bfd1e1105e58ccaf482aa79560007af2069cc22c383cb14720fa` |
+| Initial cache after lazy formatting | `734d50867257bfd1e1105e58ccaf482aa79560007af2069cc22c383cb14720fa` |
 
-The final change delays formatting native arguments until caching is enabled.
+That cache revision delays formatting native arguments until caching is enabled.
 The measured source snapshots are distinct and retained in
 [`diagnostic-sources.tar.gz`](diagnostic-sources.tar.gz), with their runners,
 individual file hashes and experiment manifest. The earlier snapshot was

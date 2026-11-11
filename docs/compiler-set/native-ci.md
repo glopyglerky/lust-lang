@@ -24,6 +24,16 @@ provides a backstop, and `workflow_dispatch` permits a full run on demand. GitHu
 schedules activate only when this workflow is on the repository's default
 branch; a draft branch does not activate its schedule.
 
+Each primary run also checks the upstream repository's current default-branch
+HEAD against `upstream/lust.pin`, retaining the advertised ref, commit and raw
+Git response. A moved, unavailable or ambiguous HEAD blocks the build and
+archive. This read-only check does not update the pin or donor source. The pin
+currently matches the default branch's `240e08d9`; future movement requires a
+source update and fresh qualification. A
+[live check on 2026-11-11](measurements/2026-11-11-native-cache/upstream-head/report.json)
+retains the exact matching response. The weekly and manual triggers cover
+periods without local changes once the workflow reaches the default branch.
+
 The existing upstream differential, daemon, sanitizer, fuzz and benchmark-smoke
 checks remain on Linux and macOS in the [upstream workflow](../../.github/workflows/ci.yml).
 That workflow runs when protected upstream source, its pin, its guard or the
@@ -76,7 +86,30 @@ and deliberately disables it after a successful build. This proves an admitted
 unchanged request reuses its result while still producing Cargo dependency
 information and artifact events. Corruption, changed compiler identity,
 permissions and external inputs must force normal compilation or a real error.
+An enclosing manifest and build script must never make cache storage or lookup
+invoke Cargo again; the check records any attempted invocation with a sentinel.
 Those fault-injection runs never supply production timing samples.
+
+After the timing campaign, a separate functional audit compares the native
+Cargo entry point with Lust on all 2,293 top-level accepted fixtures in the
+pinned `pass`, `unwind` and `release` directories. Both compilers attempt every
+selected source unchanged. The audit checks native dep-info and compares
+program output, exit status and signals using only upstream's existing masks.
+It uses the assembled package, snapshots its executable and runtime support
+files, and binds their hashes to the same release binaries used for timing.
+Two isolated worker processes keep this compatibility check short; their
+durations are never performance evidence. It runs even when the speed gate or
+relocation check fails, provided package assembly succeeded.
+
+The explicit fixture matrix uses unwind semantics with overflow and debug
+checks enabled for `pass` and `unwind`, and disabled checks for `release`.
+Release semantics for the other suites, abort profiles, failure/rejection
+diagnostics, alternative backends, cross-target configurations and the other
+upstream gates remain uncovered by this audit. Passing it does not prove the
+complete upstream accepted-input requirement. Missing, duplicate, unattempted,
+unstable or failed cases block its success. Raw logs, per-case results, input
+and artifact hashes, storage observations and collection errors are retained;
+per-case executables are removed after recording their hashes.
 
 GitHub-hosted runners are not noise-free. Reports retain host identity,
 available CPU affinity, raw durations, paired ratios and uncertainty. A missing
@@ -95,9 +128,11 @@ confidence bounds, worst pairs and execution failures. Missing rows appear as
 unproved. Missing or malformed report files produce an unqualified summary and
 a failing renderer exit. A qualified headline also requires matching source
 identities, the current release receipt recipe and successful recorded workflow
-checks. These consistency checks do not revalidate the executable or change the
-campaign's acceptance decision. The renderer can also inspect a historical
-compressed report locally:
+checks. The workflow passes `--enforce`, so inconsistent or missing corpus
+evidence, source mismatches and different compiler hashes fail before archive
+creation. The summary does not replace the executable or performance gates,
+and never upgrades their result. Without `--enforce`, it can also inspect a
+historical compressed report locally:
 
 ```sh
 python3 tools/native-ci-summary.py \

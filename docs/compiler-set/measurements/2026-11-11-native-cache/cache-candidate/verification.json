@@ -1,0 +1,120 @@
+{
+  "speed_commands": 728,
+  "verified_raw_stdout_stderr_files": 1456,
+  "inherited_cargo_commands": 419,
+  "cache_correctness_commands": 58,
+  "verified_cache_stdout_stderr_files": 116,
+  "cache_correctness_checks": 75,
+  "report_receipt_equality": true,
+  "receipt_digest_match": true,
+  "build_log_digest_match": true,
+  "committed_helper_and_runner_digests_match": true,
+  "unique_verified_source_files": 72,
+  "fresh_cache": {
+    "pairs": 12,
+    "unique_enabled_empty_compile_cache_paths": 24,
+    "unique_empty_runtime_cache_paths": 24,
+    "actual_command_environments_match": true
+  },
+  "timing_series": 53,
+  "timing_observations": 480,
+  "series_states": {
+    "passed": 11,
+    "failed": 29,
+    "unproved": 13
+  },
+  "edit_rebuild_evidence": {
+    "cargo/type-edit": {
+      "pairs": 12,
+      "both_lanes_exact_source_rebuilds": true,
+      "slower_pairs": 1
+    },
+    "cargo/macro-edit": {
+      "pairs": 12,
+      "both_lanes_exact_source_rebuilds": true,
+      "slower_pairs": 0
+    },
+    "mixed/type-edit": {
+      "pairs": 12,
+      "both_lanes_exact_source_rebuilds": true,
+      "slower_pairs": 2
+    },
+    "mixed/macro-edit": {
+      "pairs": 12,
+      "both_lanes_exact_source_rebuilds": true,
+      "slower_pairs": 0
+    }
+  },
+  "concurrency": {
+    "candidate": {
+      "pids": [
+        10288,
+        10289
+      ],
+      "overlap_ms": 40.83395004272461
+    },
+    "baseline": {
+      "pids": [
+        10326,
+        10327
+      ],
+      "overlap_ms": 63.76004219055176
+    }
+  },
+  "full_rust_preflight_failures": [
+    {
+      "label": "full-rust-fresh-target--1-candidate",
+      "elapsed_ms": 23.290285,
+      "exit_code": 101,
+      "diagnostic": "cannot produce proc-macro for fixture-derive"
+    },
+    {
+      "label": "full-rust-no-change--1-candidate",
+      "elapsed_ms": 20.898154,
+      "exit_code": 101,
+      "diagnostic": "cannot produce proc-macro for fixture-derive"
+    },
+    {
+      "label": "full-rust-check--1-candidate",
+      "elapsed_ms": 22.423164,
+      "exit_code": 101,
+      "diagnostic": "cannot produce proc-macro for fixture-derive"
+    },
+    {
+      "label": "full-rust-release--1-candidate",
+      "elapsed_ms": 20.368217,
+      "exit_code": 101,
+      "diagnostic": "cannot produce proc-macro for fixture-derive"
+    },
+    {
+      "label": "full-rust-compile-plus-test--1-candidate",
+      "elapsed_ms": 24.328629,
+      "exit_code": 101,
+      "diagnostic": "cannot produce proc-macro for fixture-derive"
+    },
+    {
+      "label": "full-rust-doctests--1-candidate",
+      "elapsed_ms": 19.297734,
+      "exit_code": 101,
+      "diagnostic": "cannot produce proc-macro for fixture-derive"
+    },
+    {
+      "label": "full-rust-type-edit--1-candidate",
+      "elapsed_ms": 22.27921,
+      "exit_code": 101,
+      "diagnostic": "cannot produce proc-macro for fixture-derive"
+    },
+    {
+      "label": "full-rust-macro-edit--1-candidate",
+      "elapsed_ms": 23.624382,
+      "exit_code": 101,
+      "diagnostic": "cannot produce proc-macro for fixture-derive"
+    }
+  ],
+  "limits": [
+    "This source predates the separately discovered parent-Cargo.toml cache correctness fix; its 75 checks do not cover that case.",
+    "Compiler executables are identified by the CI records; their bytes are absent from this text-evidence subset.",
+    "Compile-plus-run rows reuse compilation durations and are not independent build trials.",
+    "This finite corpus on one shared CI host does not establish universal compatibility or performance."
+  ]
+}

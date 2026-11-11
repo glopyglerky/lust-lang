@@ -1,0 +1,71 @@
+{
+  "schema": "lustr.native-cache-namespace-fix.v1",
+  "qualified": false,
+  "source_parent": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+  "diagnostic_only": true,
+  "files": {
+    "red-report.json.gz": {
+      "original_bytes": 49957,
+      "original_sha256": "65f3f667df8f96789f37b37a19081967c465a09b26015a431cbbaa60c783c181",
+      "stored_bytes": 3835,
+      "stored_sha256": "bb0550534fcc52409ed3656e1c7abb3803c82f00079ec3a0099a9a0fc8dea33d"
+    },
+    "green-report.json.gz": {
+      "original_bytes": 55925,
+      "original_sha256": "649a5b31e8acffe6d0da5a2c6f7f38fb26a0a4d811df4c07f0ac1fb71f2c08b0",
+      "stored_bytes": 4184,
+      "stored_sha256": "bcc6c2cb32de4b2ec61af8156b14ab006f103e4c03ab605ed5fcf96e7c99e11a"
+    },
+    "original-probe.json.gz": {
+      "original_bytes": 1277,
+      "original_sha256": "72fc5704bb15af6ad41e678f495cb1930c9fdfe6430fe56df32d24abee08fbd1",
+      "stored_bytes": 386,
+      "stored_sha256": "ea169712bfd435f2a1b89f81d86927a9bf45069d9071c920e6fc50bed47cb0e6"
+    },
+    "diagnostic-build.log.gz": {
+      "original_bytes": 19662,
+      "original_sha256": "caf020fda846937338d508832e51c52e7b2387964dc44f7a7e7bdfb7de9bfc88",
+      "stored_bytes": 4337,
+      "stored_sha256": "718e88e6e98d004f048981f4512617c9b9ea4f7259f0c93e044b2cad5fc8ff3b"
+    },
+    "logs.tar.gz": {
+      "stored_bytes": 3420,
+      "stored_sha256": "779c7413af142e3b0c4715b6011bdb9ee4c93450d981cae2e08df22b26ec1fd4",
+      "entries": 243,
+      "all_command_output_hashes_verified": true
+    },
+    "README.md": {
+      "stored_bytes": 2480,
+      "stored_sha256": "dd264398b80aa131e88d5b9859e8331a85f463792f385761bac404bdce758fce",
+      "derived": true
+    },
+    "source-change.diff.gz": {
+      "original_bytes": 5284,
+      "original_sha256": "7f16c8c1ef7a50bc03ea2a231304c4b2ce5ec55b356f3f47be926636a585649d",
+      "stored_bytes": 1915,
+      "stored_sha256": "e4a454295f5a5d1615c157d72c4e0e7a48b6787a8155804afee1ea9eceb1c6a4"
+    }
+  },
+  "source_sha256": {
+    "crates/lustr-native/src/native_request_cache.rs": "d937217e99e7fd1ef6cba5b7c8600167a65d16853cb65ec2e1820a69b6c4f6fe",
+    "tools/check-native-request-cache.py": "c97e47b5fa102d7aacea8db0c75c3b087b68d9549298ea3576cc91ef3b244acb"
+  },
+  "red": {
+    "success": false,
+    "checks": 73,
+    "commands": 57,
+    "failures": [
+      "ValueError: cold cache admission never invokes Cargo or its build script"
+    ],
+    "native_sha256": "734d50867257bfd1e1105e58ccaf482aa79560007af2069cc22c383cb14720fa",
+    "runner_sha256": "c97e47b5fa102d7aacea8db0c75c3b087b68d9549298ea3576cc91ef3b244acb"
+  },
+  "green": {
+    "success": true,
+    "checks": 84,
+    "commands": 64,
+    "failures": [],
+    "native_sha256": "9447fad2740377c02172d091aa4127ccc99ffa6e44edc46528e568db1561ca61",
+    "runner_sha256": "c97e47b5fa102d7aacea8db0c75c3b087b68d9549298ea3576cc91ef3b244acb"
+  }
+}

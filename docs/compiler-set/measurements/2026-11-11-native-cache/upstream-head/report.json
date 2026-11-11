@@ -1,0 +1,40 @@
+{
+  "command": {
+    "argv": [
+      "git",
+      "ls-remote",
+      "--symref",
+      "https://github.com/t3dotgg/lust-lang",
+      "HEAD"
+    ],
+    "cwd": "/tmp/lustr-upstream-head-prepublish",
+    "elapsed_ns": 5311223220,
+    "exit_code": 0,
+    "stderr": "command.stderr",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "command.stdout",
+    "stdout_sha256": "1a40211d671472010fc250ba560591f92333bae97c0513a7c1c1d9eb4ee1acbb",
+    "timed_out": false,
+    "timeout_seconds": 20
+  },
+  "elapsed_ns": 5312507912,
+  "errors": [],
+  "helper_sha256": "3590cc1ba6abe2b2a759bf943a5455d72e84c24e14abc0c291f1ad3bd22b335d",
+  "observed": {
+    "default_ref": "refs/heads/next",
+    "revision": "240e08d91d4aed0299639f6f11fd522912b248f9"
+  },
+  "pin": {
+    "file": "/workspace/scratch/92a35dfe3ee0/lustr/upstream/lust.pin",
+    "path": "compiler/native",
+    "repository": "https://github.com/t3dotgg/lust-lang",
+    "revision": "240e08d91d4aed0299639f6f11fd522912b248f9",
+    "sha256": "76aa7cc5a6283c05ccba58435056fb02f305219b55bca9e75caa935409d9418d",
+    "tree": "0ab1b09815802894e6078de0af59273cbdf46cb0"
+  },
+  "schema": "lustr.upstream-head.v1",
+  "scope": "Remote default-branch freshness only; no source synchronization or compiler qualification.",
+  "started_at": "2026-11-11T18:26:54.988168+00:00",
+  "state": "matched",
+  "success": true
+}

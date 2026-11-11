@@ -1,0 +1,15 @@
+test_empty_suite_and_invalid_selection_fail (__main__.CorpusTests.test_empty_suite_and_invalid_selection_fail) ... ok
+test_inventory_includes_support_files_without_selecting_them_as_cases (__main__.CorpusTests.test_inventory_includes_support_files_without_selecting_them_as_cases) ... ok
+test_masks_match_the_donor_rules_and_keep_other_differences (__main__.CorpusTests.test_masks_match_the_donor_rules_and_keep_other_differences) ... ok
+test_matching_nonzero_is_valid_but_signal_and_output_mismatches_fail (__main__.CorpusTests.test_matching_nonzero_is_valid_but_signal_and_output_mismatches_fail) ... ok
+test_profile_flags_preserve_upstream_semantic_modes (__main__.CorpusTests.test_profile_flags_preserve_upstream_semantic_modes) ... ok
+test_sandbox_reset_preserves_equal_paths_and_declared_environment (__main__.CorpusTests.test_sandbox_reset_preserves_equal_paths_and_declared_environment) ... ok
+test_storage_exhaustion_preserves_both_lane_errors_without_claiming_a_compiler_regression (__main__.CorpusTests.test_storage_exhaustion_preserves_both_lane_errors_without_claiming_a_compiler_regression) ... ok
+test_successful_compiler_exit_without_an_artifact_fails_the_contract (__main__.CorpusTests.test_successful_compiler_exit_without_an_artifact_fails_the_contract) ... ok
+test_summary_never_promotes_missing_duplicate_partial_or_bounded_evidence (__main__.CorpusTests.test_summary_never_promotes_missing_duplicate_partial_or_bounded_evidence) ... ok
+test_timeout_and_signals_are_retained_without_retry (__main__.CorpusTests.test_timeout_and_signals_are_retained_without_retry) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.241s
+
+OK

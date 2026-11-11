@@ -1,0 +1,54 @@
+mode,state,pairs,baseline_median_ms,candidate_median_ms,geometric_ratio,upper_95,worst_observed_ratio,slower_pairs,reason
+mixed/fresh-target,failed,12,83.050014,88.9453195,1.0775651223735858,1.0992631223300842,1.1955587548445696,12,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/fresh-target/compile-plus-run,failed,12,83.9711935,90.0870605,1.079375111052759,1.1007833346087492,1.19580883559656,12,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/no-change,failed,12,28.114004,16.992936,0.6720105375821969,0.9602367758589943,4.875851196146226,1,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/no-change/compile-plus-run,failed,12,29.02453,18.0015085,0.6904522894680402,0.9772173907271328,4.762302308071908,1,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/body-edit,failed,12,67.034037,53.621319,0.8479085619848938,0.9882570963429035,1.9983419861074236,1,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/body-edit/compile-plus-run,failed,12,67.980672,54.7735105,0.8524729118172861,0.9916616976041626,1.9867438452172443,1,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/signature-edit,passed,12,67.360237,52.425058,0.7788707614386169,0.7972322118808844,0.8448216320725987,0,
+mixed/signature-edit/compile-plus-run,passed,12,68.313336,53.5579195,0.7839395466009498,0.8020547280258785,0.8486448559658649,0,
+mixed/type-edit,failed,12,68.3800035,52.4943915,0.8142884172408266,0.9864151518734852,2.3922813776055576,2,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/type-edit/compile-plus-run,failed,12,69.38503,53.613011,0.8187738417888412,0.9894933354858569,2.3755509445485967,2,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/macro-edit,passed,12,67.38507,53.078691,0.7804284273625682,0.7961640441424666,0.8248258871931315,0,
+mixed/macro-edit/compile-plus-run,passed,12,68.494149,54.2165705,0.7851109320774339,0.800436396348706,0.8292777051669984,0,
+lust/process-cold,failed,12,50.1159745,50.8403875,1.005818953380168,1.03159223105776,1.1267556657057938,8,at least one observed candidate invocation is slower; no outliers were discarded
+lust/process-cold/compile-plus-run,failed,12,51.249111,51.9648315,1.0058921398755087,1.0311208212396594,1.1237925251008538,8,at least one observed candidate invocation is slower; no outliers were discarded
+lust/fresh-cache,failed,12,51.395604,52.408477,1.0101241480535716,1.0325042613543678,1.089484828355374,7,at least one observed candidate invocation is slower; no outliers were discarded
+lust/fresh-cache/compile-plus-run,failed,12,52.544489,53.5480235,1.0099199029081583,1.0319077630052458,1.0878647441114158,7,at least one observed candidate invocation is slower; no outliers were discarded
+lust/warm-noop,failed,12,4.6809315,4.4068295,0.9600357457735257,1.6802846617711036,24.90873165085193,4,at least one observed candidate invocation is slower; no outliers were discarded
+lust/warm-noop/compile-plus-run,failed,12,5.921788,5.684726,0.9643060513987556,1.6167689471737658,19.991301456587895,4,at least one observed candidate invocation is slower; no outliers were discarded
+lust/body-edit,failed,12,6.3387375,28.869102,4.5420760262012125,4.697460929213049,4.966818817012243,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/body-edit/compile-plus-run,failed,12,7.636386,30.0261195,3.9394709635464196,4.061160261998558,4.2870100081260984,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/signature-edit,failed,12,12.8636995,28.2168745,1.8607870976117198,2.173295835724589,2.29078911459646,11,at least one observed candidate invocation is slower; no outliers were discarded
+lust/signature-edit/compile-plus-run,failed,12,14.2016015,29.4269415,1.7743025363638911,2.0553929871177057,2.160345724787322,11,at least one observed candidate invocation is slower; no outliers were discarded
+lust/type-edit,failed,12,12.8970315,28.1448875,2.2799210687874267,2.513609136199329,3.9936886240216136,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/type-edit/compile-plus-run,failed,12,14.216451,29.307974,2.1534549791029702,2.369006423104091,3.718489120885902,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/macro-edit,failed,12,6.95944,28.2893675,4.034096503504937,4.153701029186858,4.4343864948940075,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/macro-edit/compile-plus-run,failed,12,8.265511,29.496895,3.550505956099451,3.644286724453251,3.8833609276603163,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/cold-invalid,failed,12,6.276436,5.602052,0.9325454383528974,0.989349078840521,1.1074455488602202,3,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/fresh-target,failed,12,81.878326,75.2523425,0.9169247027064703,0.950977186207181,1.0901928175887046,1,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/fresh-target/compile-plus-run,failed,12,82.834895,76.320072,0.9188118085634569,0.954058500955863,1.1015061429899635,1,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/no-change,passed,12,37.128828,19.142347,0.5112246159982452,0.5268076464074776,0.5602740509701256,0,
+cargo/no-change/compile-plus-run,passed,12,38.014246,20.2108375,0.526656473396459,0.5419147770131691,0.5750537251827111,0,
+cargo/body-edit,passed,12,80.2254705,50.7086245,0.6283627296412664,0.6376225593024506,0.6661911348692495,0,
+cargo/body-edit/compile-plus-run,passed,12,81.1362415,51.8162635,0.6352185439266498,0.6445028497633656,0.6729075591102799,0,
+cargo/signature-edit,failed,12,80.9597395,49.616643,0.5728527033130804,0.6611174098551692,1.1709191559818741,1,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/signature-edit/compile-plus-run,failed,12,81.895057,50.7432,0.5788189827222016,0.6671815041544311,1.171079789047658,1,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/type-edit,failed,12,81.660752,50.3123785,0.7331873731676415,1.053116357807755,5.4778244238993175,1,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/type-edit/compile-plus-run,failed,12,82.624522,51.452716,0.7399862345573511,1.0595779779055412,5.428925249036325,1,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/macro-edit,passed,12,81.2488935,49.8228905,0.6154872176940006,0.6303334498328638,0.7009482492906465,0,
+cargo/macro-edit/compile-plus-run,passed,12,82.1752375,50.948641,0.6219074340721303,0.6366971632206516,0.7068851461502901,0,
+cargo/cold-invalid,passed,12,54.515853,26.423399,0.47991610774884874,0.4902365122409924,0.5200817675184306,0,
+full-rust/fresh-target,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/fresh-target/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/no-change,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/no-change/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/check,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/release,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/release/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/compile-plus-test,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/doctests,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/type-edit,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/type-edit/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/macro-edit,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/macro-edit/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
