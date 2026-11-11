@@ -1,0 +1,185 @@
+{
+  "schema": "lustr.native-cache-release-baseline.v1",
+  "source": {
+    "commit": "8110d9f7aad82a8c382ebadcc092248f0db917bc",
+    "tree": "c523d6cc24f32776b8d89e2719738d652124eda6"
+  },
+  "upstream_tree": "0ab1b09815802894e6078de0af59273cbdf46cb0",
+  "workflow_run": 43069040645,
+  "workflow_url": "https://github.com/glopyglerky/lustr/actions/runs/43069040645",
+  "artifact": {
+    "id": 13876854325,
+    "url": "https://github.com/glopyglerky/lustr/actions/runs/43069040645/artifacts/13876854325",
+    "zip_bytes": 106880765,
+    "zip_sha256": "299eeaa25cff67c65f9ddc94d19d43b8f8cb2b6556e18cf6d1bdfc9e86e6369e",
+    "expires_at": "2027-02-09T17:31:47Z"
+  },
+  "decision": {
+    "state": "unqualified",
+    "qualified": false,
+    "blocking": [
+      "upstream-accepted-corpus",
+      "full-rust-compatibility",
+      "build-scripts",
+      "doctests",
+      "lust/process-cold",
+      "lust/process-cold/compile-plus-run",
+      "lust/warm-noop",
+      "lust/warm-noop/compile-plus-run",
+      "lust/body-edit",
+      "lust/body-edit/compile-plus-run",
+      "lust/signature-edit",
+      "lust/signature-edit/compile-plus-run",
+      "lust/type-edit",
+      "lust/type-edit/compile-plus-run",
+      "lust/macro-edit",
+      "lust/macro-edit/compile-plus-run",
+      "lust/cold-invalid",
+      "cargo/macro-edit",
+      "cargo/macro-edit/compile-plus-run",
+      "mixed/fresh-target",
+      "mixed/fresh-target/compile-plus-run",
+      "mixed/type-edit",
+      "mixed/type-edit/compile-plus-run",
+      "mixed/macro-edit/compile-plus-run",
+      "full-rust/fresh-target",
+      "full-rust/fresh-target/compile-plus-run",
+      "full-rust/no-change",
+      "full-rust/no-change/compile-plus-run",
+      "full-rust/check",
+      "full-rust/release",
+      "full-rust/release/compile-plus-run",
+      "full-rust/compile-plus-test",
+      "full-rust/doctests",
+      "full-rust/type-edit",
+      "full-rust/type-edit/compile-plus-run",
+      "full-rust/macro-edit",
+      "full-rust/macro-edit/compile-plus-run",
+      "retained execution failures"
+    ],
+    "universal_coverage_proved": false,
+    "universal_speed_proved": false,
+    "scope": "Only the recorded workload, source, tools, settings, host and observations. Never a proof for all Rust or future inputs."
+  },
+  "tools": {
+    "native": {
+      "path": "/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native",
+      "sha256": "37e7830c29e85a6e72549e3f3f23dbde567c463484c335b69e7f1c9eb00bbd67",
+      "version": "lustr-native 0.1.0 (Lust 0.2.0, build 0fa2f406587a1041)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n"
+    },
+    "lust": {
+      "path": "/home/runner/work/lustr/lustr/compiler/native/target/release/lust",
+      "sha256": "df41ae4636c4eac79a44efeb595866f259124b0652d1bdfd8c2e9a5e982f7316",
+      "version": "lust 0.2.0 (build 861bd8ad)\n"
+    },
+    "cargo": {
+      "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af",
+      "version": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]\n"
+    },
+    "rustc": {
+      "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    },
+    "rustdoc": {
+      "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustdoc",
+      "sha256": "832e53ca262db3d3fcaca659dc6e71f0f5a924a48adc580ee4278acac75f3e80",
+      "version": "rustdoc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustdoc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    },
+    "lust-core": {
+      "path": "/home/runner/work/lustr/lustr/compiler/native/target/release/lust-core",
+      "sha256": "4ca2678317abe22d6bf2a88329db65645d8ffc4d0c14e1994b3f25b4ab1ca017"
+    }
+  },
+  "build_settings": {
+    "opt_level": 3,
+    "codegen_units": 1,
+    "lto": "thin",
+    "debug": "line-tables-only",
+    "incremental": false
+  },
+  "files": [
+    {
+      "path": "speed-report.json.gz",
+      "artifact_path": "native-speed-evidence/report.json",
+      "bytes": 96964,
+      "sha256": "1f46df00f91248bf6409c03d92e855aa23942df8738cc984ca6dabfad3ce2a7d",
+      "original_bytes": 3567895,
+      "original_sha256": "682ddff8aae775d8e66787e40ff9e1c2ae8bd1e32ca26284616772121a25d637",
+      "compression": "gzip; mtime=0; no filename"
+    },
+    {
+      "path": "cargo-report.json.gz",
+      "artifact_path": "native-speed-evidence/existing-cargo-qualification.json",
+      "bytes": 40788,
+      "sha256": "4b3928dcca969cdc1c1e1cdc01abe3e248aa7fcbdc3a65e526bb39b73c14d5f7",
+      "original_bytes": 1419033,
+      "original_sha256": "a9d1edacb30e778d043614674baa138e26fcf758b8d626c85c9e02288d7615e7",
+      "compression": "gzip; mtime=0; no filename"
+    },
+    {
+      "path": "native-cargo-build.json",
+      "artifact_path": "native-cargo-build.json",
+      "bytes": 4868,
+      "sha256": "7314ad1e39f494871f09e6fa3a285934ca1544fe1a3a9c8b17a1760b6b786173"
+    },
+    {
+      "path": "native-cargo-build.cargo.log.gz",
+      "artifact_path": "native-cargo-build.cargo.log",
+      "bytes": 11912,
+      "sha256": "94836b41dbd4612420b924d31cc69ec8380d0f2f4e4c938fef76a9c2e363fbf1",
+      "original_bytes": 133658,
+      "original_sha256": "b6d0b1106bdb91070907b5df4715a74395c433aa423d8c51bf170e3e8dc85559",
+      "compression": "gzip; mtime=0; no filename"
+    },
+    {
+      "path": "native-qualification-summary.md",
+      "artifact_path": "native-qualification-summary.md",
+      "bytes": 16253,
+      "sha256": "2f421dfecaa8183522ed7440bdbcb10f5c7f9aeb02aee636ae6c28b64536c785"
+    },
+    {
+      "path": "workflow-jobs.json",
+      "bytes": 4571,
+      "sha256": "35bf1f0414ebc253a2c0d2bd38f5d178af5b6da39ba0e3970ce7db4bdc41605f",
+      "api_source": "https://api.github.com/repos/glopyglerky/lustr/actions/runs/43069040645/jobs",
+      "derived": true
+    },
+    {
+      "path": "raw-evidence.tar.gz",
+      "bytes": 48965,
+      "sha256": "37e0152a17c936145f1cd905e77478f9070714e0cf3aa5149787a0adea172008",
+      "original_bytes": 2222080,
+      "original_sha256": "61e406f7ba6cb01d6f35ddcf6b97e599912b21111427c7ca5282a2b027182061",
+      "entries": 1457,
+      "compression": "tar+gzip; timestamps=0; uid/gid=0; no gzip filename"
+    },
+    {
+      "path": "timing-summary.csv",
+      "bytes": 7485,
+      "sha256": "df77e0711cf972c2e7124777bbe1d1e834ddf9ed6220631b55591f0864db9790",
+      "derived": true,
+      "line_endings": "LF"
+    },
+    {
+      "path": "timing-pairs.csv",
+      "bytes": 36525,
+      "sha256": "dc7c8d341bd57cfb026c5665ae3f69c69ab8c9201ce241295bfad4dafd0fc9bc",
+      "derived": true,
+      "line_endings": "LF"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 1531,
+      "sha256": "e8ca0f317d45317044fc9c5fd0f4aa4e09f5aafb4d25efab0a663918ea473400",
+      "derived": true
+    },
+    {
+      "path": "README.md",
+      "bytes": 5813,
+      "sha256": "d2da7a8db0c27acbb690e03b771420aa51d2935a57074461f046a8e4e19f1189",
+      "derived": true
+    }
+  ]
+}

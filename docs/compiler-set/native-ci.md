@@ -14,14 +14,15 @@ then uses those same executables for correctness, package relocation and the
 sequential comparison campaign. Keeping this work together avoids a second
 compiler build or a new artifact-transfer and receipt-rebinding protocol.
 
-Every native compiler, donor source, relevant helper, build lockfile and fixture
-change triggers this workflow on pull requests. Native package branch pushes
-and pushes to `next` also trigger it. The summary's historical report fixture is
-included in the trigger set. Unrelated documentation changes do not rebuild the
-compiler. A weekly full run provides a path-filter-independent backstop, and
-`workflow_dispatch` permits a full run on demand. GitHub schedules activate only
-when this workflow is on the repository's default branch; a draft branch does
-not activate its schedule.
+Every pull request triggers this workflow. Native package branch pushes and
+pushes to `next` also trigger it. The primary gate has no path filters because
+[GitHub limits the diff used for path filtering](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows#filtering-and-diff-limits).
+A broad compiler change must not silently miss acceptance. This costs a full
+run for documentation-only changes but avoids a second change-classification
+system. Branch/PR concurrency removes duplicate active runs. A weekly full run
+provides a backstop, and `workflow_dispatch` permits a full run on demand. GitHub
+schedules activate only when this workflow is on the repository's default
+branch; a draft branch does not activate its schedule.
 
 The existing upstream differential, daemon, sanitizer, fuzz and benchmark-smoke
 checks remain on Linux and macOS in the [upstream workflow](../../.github/workflows/ci.yml).
@@ -62,10 +63,20 @@ The campaign compares both engines sequentially on the same runner. It
 alternates the order of each pair and retains every observation, including
 errors, timeouts and slower pairs. Cold samples get separate initially empty
 artifact, unit and runtime temporary directories. Warm samples retain their
-own state. OS page caches are not flushed; the report records that limitation.
+own state. Direct cold measurements include both caching disabled and caching
+enabled with empty caches. The latter includes first admission and store cost;
+an unchanged-cache result cannot substitute for it. OS page caches are not
+flushed; the report records that limitation.
 Functional process tracing is separate from timing. It verifies actual engine
 execution and overlapping Cargo compiler jobs without adding tracing cost to
 the measured samples.
+
+The request-cache correctness check uses a private instrumented TinyCC helper
+and deliberately disables it after a successful build. This proves an admitted
+unchanged request reuses its result while still producing Cargo dependency
+information and artifact events. Corruption, changed compiler identity,
+permissions and external inputs must force normal compilation or a real error.
+Those fault-injection runs never supply production timing samples.
 
 GitHub-hosted runners are not noise-free. Reports retain host identity,
 available CPU affinity, raw durations, paired ratios and uncertainty. A missing

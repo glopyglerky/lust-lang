@@ -29,7 +29,8 @@ import time
 
 SCHEMA = "lustr.native-speed-qualification.v1"
 MIN_PAIRS = 12
-DIRECT_MODES = ("process-cold", "warm-noop", "body-edit", "signature-edit", "type-edit", "macro-edit", "cold-invalid")
+DIRECT_MODES = ("process-cold", "fresh-cache", "warm-noop", "body-edit", "signature-edit", "type-edit", "macro-edit", "cold-invalid")
+COLD_DIRECT_MODES = ("process-cold", "fresh-cache", "cold-invalid")
 CARGO_MODES = ("fresh-target", "no-change", "body-edit", "signature-edit", "type-edit", "macro-edit", "cold-invalid")
 MIXED_MODES = ("fresh-target", "no-change", "body-edit", "signature-edit", "type-edit", "macro-edit")
 FULL_MODES = ("fresh-target", "no-change", "check", "release", "compile-plus-test", "doctests", "type-edit", "macro-edit")
@@ -65,7 +66,7 @@ def load_helper(repository: Path, name: str):
     return module
 
 
-def paired_decision(samples: list[dict], minimum: int = MIN_PAIRS) -> dict:
+def paired_decision(samples: list[dict], minimum: int = MIN_PAIRS, *, fresh_cache: bool = False) -> dict:
     """No positive regression budget, no discarded outliers, no pooled modes.
 
     Paired bootstrap uncertainty is conditional on representative independent
@@ -79,10 +80,12 @@ def paired_decision(samples: list[dict], minimum: int = MIN_PAIRS) -> dict:
     try:
         require(len(samples) >= minimum, f"need at least {minimum} complete pairs")
         require([row["sample"] for row in samples] == list(range(len(samples))), "missing or duplicate sample indices")
-        cold_paths = set()
+        cold_paths, compile_cache_paths = set(), set()
         for row in samples:
             require(row.get("correct") is True, "timed result failed correctness or engine verification")
             require(row.get("source_equal") is True, "paired semantic inputs differ")
+            if fresh_cache:
+                require(row.get("cold") is True, "fresh-cache row is not a cold compilation")
             if row.get("cold") is True:
                 caches = [row.get("baseline_runtime_temp", {}), row.get("candidate_runtime_temp", {})]
                 require(all(isinstance(cache, dict) for cache in caches), "cold row has no runtime-cache evidence")
@@ -95,6 +98,22 @@ def paired_decision(samples: list[dict], minimum: int = MIN_PAIRS) -> dict:
                 for cache in caches:
                     require(cache["path"] not in cold_paths, "cold samples reused a runtime temp directory")
                     cold_paths.add(cache["path"])
+            if fresh_cache:
+                caches = [row.get(lane + "_compile_cache") for lane in ("baseline", "candidate")]
+                require(all(isinstance(cache, dict) for cache in caches), "fresh-cache row has no compilation-cache evidence")
+                for lane, cache in zip(("baseline", "candidate"), caches):
+                    require(cache.get("fresh") is True and cache.get("empty_before_compile") is True
+                            and cache.get("enabled") is True, "fresh-cache row lacks an enabled, new empty compilation cache")
+                    path = cache.get("path")
+                    require(isinstance(path, str) and path and path not in compile_cache_paths,
+                            "fresh-cache lanes or samples reused a compilation cache")
+                    compile_cache_paths.add(path)
+                    environment = row.get(lane + "_cache_env")
+                    require(isinstance(environment, dict) and all(name in environment for name in
+                            ("LUST_CACHE_DIR", "LUST_NO_CACHE", "LUST_NO_DAEMON")), "fresh-cache compiler environment is missing")
+                    require(environment["LUST_CACHE_DIR"] == path, "compiler cache directory differs from fresh-cache evidence")
+                    require(environment["LUST_NO_CACHE"] in (None, "", "0"), "fresh-cache compilation disabled caching")
+                    require(environment["LUST_NO_DAEMON"] == "1", "fresh-cache compilation allowed daemon reuse")
             for key in ("baseline_ns", "candidate_ns"):
                 require(type(row.get(key)) is int and row[key] > 0, "timings must be positive integer nanoseconds")
         ratios = [row["candidate_ns"] / row["baseline_ns"] for row in samples]
@@ -222,7 +241,7 @@ class Campaign:
                        "host": {"platform": platform.platform(), "cpu_affinity": sorted(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else None},
                        "compiler_runtime_instrumentation": False,
                        "timing_policy": "Paired alternating baseline/candidate order; no trace during timing; no retries or discarded samples; no regression allowance.",
-                       "cache_policy": "Fresh owned artifact/unit caches and new empty per-lane TMPDIR runtime caches for each cold sample. Warm rows retain per-lane TMPDIR. OS page cache is not flushed.",
+                       "cache_policy": "Each cold sample uses empty per-lane artifact/unit and TMPDIR runtime caches. Direct process-cold disables caching; direct fresh-cache keeps it enabled with a new cache directory per sample and no daemon. Warm rows retain per-lane TMPDIR. OS page cache is not flushed.",
                        "configuration": {"edition": "2024", "jobs": 2, "panic": "unwind", "overflow_checks": True,
                                          "debug_assertions": True, "direct_optimization": 0, "direct_debug": 0},
                        "tools": {}, "requirements": {}, "commands": [], "series": {}, "failures": []}
@@ -301,6 +320,7 @@ class Campaign:
         prefix.with_suffix(".stderr").write_bytes(stderr)
         row = {"index": number, "label": label, "argv": original, "actual_argv": actual, "cwd": str(cwd),
                "compiler_tmpdir": env.get("TMPDIR"),
+               "compiler_cache": {name: env.get(name) for name in ("LUST_CACHE_DIR", "LUST_NO_CACHE", "LUST_NO_DAEMON")},
                "elapsed_ns": elapsed, "exit_code": code, "timed_out": timed_out, "spawn_error": spawn_error,
                "stdout_file": str(prefix.with_suffix(".stdout").relative_to(self.output)),
                "stderr_file": str(prefix.with_suffix(".stderr").relative_to(self.output)),
@@ -364,7 +384,7 @@ class Campaign:
         return snapshot
 
     def evaluate_series(self, name: str, observations: list[dict]):
-        result = paired_decision(observations)
+        result = paired_decision(observations, fresh_cache=name in ("lust/fresh-cache", "lust/fresh-cache/compile-plus-run"))
         result["observations"] = observations
         self.report["series"][name] = result
         self.save()
@@ -412,6 +432,7 @@ class Campaign:
             self.attempt("lust/" + mode, lambda mode=mode: self.direct_mode(family, original, mode))
 
     def direct_mode(self, family: Path, original: str, mode: str):
+        cold = mode in COLD_DIRECT_MODES
         directory = family / mode
         directory.mkdir()
         projects, envs = {}, {}
@@ -427,7 +448,7 @@ class Campaign:
                 if mode in ("process-cold", "cold-invalid"):
                     env["LUST_NO_CACHE"] = "1"
                 envs[lane] = env
-            if mode not in ("process-cold", "cold-invalid"):
+            if not cold:
                 # Unix sockets have a short path limit independent of the
                 # caller's output directory. Keep only this owned endpoint in
                 # a short temporary directory; its logs stay in the report.
@@ -476,14 +497,27 @@ class Campaign:
                     path, artifact = project / "main.rs", project / "program"
                     if not path.exists() or path.read_text() != source:
                         path.write_text(source)
-                    if mode in ("process-cold", "cold-invalid"):
+                    if cold:
                         artifact.unlink(missing_ok=True)
+                    compile_cache = None
+                    if mode == "fresh-cache":
+                        # Keep caching enabled and include the first admission
+                        # and store. Never reuse a previous lane/sample cache.
+                        cache_root = project / "compile-caches"
+                        require(not cache_root.is_symlink(), "fresh-cache root is a symlink")
+                        cache_root.mkdir(exist_ok=True)
+                        cache = cache_root / f"sample-{sample + 1}"
+                        cache.mkdir()
+                        envs[lane]["LUST_CACHE_DIR"] = str(cache)
+                        envs[lane].pop("LUST_NO_CACHE", None)
+                        compile_cache = {"path": str(cache), "fresh": True, "enabled": True,
+                                         "empty_before_compile": not any(cache.iterdir())}
+                    elif cold:
                         cache = project / "cache"
                         if cache.exists():
                             shutil.rmtree(cache)
                     runtime_temp = self.helpers["qualify-native-cargo.py"].prepare_runtime_temp(
-                        project / "environment", "cold-" + str(sample + 1) if mode in ("process-cold", "cold-invalid") else "warm",
-                        mode in ("process-cold", "cold-invalid"))
+                        project / "environment", "cold-" + str(sample + 1) if cold else "warm", cold)
                     envs[lane]["TMPDIR"] = runtime_temp["path"]
                     argv = [self.lust, "build", path, "-o", artifact] if lane == "baseline" else [
                         self.native, "--crate-name", "speed_contract", "--edition=2024", "--crate-type", "bin",
@@ -498,15 +532,19 @@ class Campaign:
                         run, stdout, _ = self.execute(f"direct-{mode}-{sample}-{lane}-run", [artifact], project, envs[lane])
                         require(run["exit_code"] == 0 and stdout == f"{answer}\n".encode(), "supported program result differs")
                         runtime = run["elapsed_ns"]
-                    results[lane] = (row["elapsed_ns"], runtime, digest(path), runtime_temp, row["compiler_tmpdir"])
+                    results[lane] = (row["elapsed_ns"], runtime, digest(path), runtime_temp, row["compiler_tmpdir"],
+                                     compile_cache, row["compiler_cache"])
                 if sample >= 0 and not self.args.functional_only:
                     base, candidate = results["baseline"], results["candidate"]
                     entry = {"sample": sample, "baseline_ns": base[0], "candidate_ns": candidate[0],
                              "correct": True, "source_equal": base[2] == candidate[2], "source_sha256": source_id,
-                             "cold": mode in ("process-cold", "cold-invalid"),
+                             "cold": cold,
                              "baseline_runtime_temp": base[3], "candidate_runtime_temp": candidate[3],
                              "baseline_tmpdir": base[4], "candidate_tmpdir": candidate[4],
                              "source_file": str(retained.relative_to(self.output))}
+                    if mode == "fresh-cache":
+                        entry.update(baseline_compile_cache=base[5], candidate_compile_cache=candidate[5],
+                                     baseline_cache_env=base[6], candidate_cache_env=candidate[6])
                     observations.append(entry)
                     total_observations.append(dict(entry, baseline_ns=base[0] + base[1], candidate_ns=candidate[0] + candidate[1]))
             self.evaluate_series("lust/" + mode, observations)

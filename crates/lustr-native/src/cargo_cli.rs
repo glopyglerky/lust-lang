@@ -18,7 +18,7 @@ pub(crate) fn crate_name(root: &Path) -> Option<&'static str> {
     CRATE_INPUT.get().filter(|(path, _)| path == root).map(|(_, name)| name.as_str())
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct Args {
     source: Option<PathBuf>,
     name: Option<String>,
@@ -310,7 +310,7 @@ fn escape_env(s: &str) -> String {
 }
 
 fn dependency_info(
-    session: &crate::driver::Session,
+    session: Option<&crate::driver::Session>,
     source: &Path,
     output: &Path,
     path: &Path,
@@ -320,18 +320,20 @@ fn dependency_info(
 ) -> Result<(), String> {
     let mut files = BTreeSet::new();
     files.insert(source.to_path_buf());
-    for i in 0..session.front.map.file_count() {
-        let path = session.front.map.path(crate::diag::FileId(i as u32));
-        if Path::new(path).is_file() {
-            files.insert(PathBuf::from(path));
+    if let Some(session) = session {
+        for i in 0..session.front.map.file_count() {
+            let path = session.front.map.path(crate::diag::FileId(i as u32));
+            if Path::new(path).is_file() {
+                files.insert(PathBuf::from(path));
+            }
         }
+        files.extend(session.front.resolve_cache.source_paths().filter(|p| p.is_file()).map(Path::to_path_buf));
     }
-    files.extend(session.front.resolve_cache.source_paths().filter(|p| p.is_file()).map(Path::to_path_buf));
     for (_, artifact) in externs {
         files.insert(artifact.canonicalize().map_err(|e| format!("dependency artifact {}: {e}", artifact.display()))?);
     }
     let mut envs = native_env;
-    for dep in session.front.chunks.iter().flat_map(|chunk| &chunk.expand_deps).chain(additional) {
+    for dep in session.into_iter().flat_map(|session| session.front.chunks.iter()).flat_map(|chunk| &chunk.expand_deps).chain(additional) {
         match dep {
             crate::expand::Dep::File { path, .. } => {
                 files.insert(path.clone());
@@ -505,9 +507,6 @@ fn compile(args: &Args) -> Result<i32, String> {
     crate::tcc::use_mimalloc();
     crate::tcc::set_huge_pages(false);
     raise_stack_limit();
-    let object_dir = temporary_directory()?;
-    let mut session = crate::driver::Session::new(object_dir.clone(), false, key.clone());
-    session.caches.leak_at_exit = true;
     let request = Request {
         cmd: Cmd::Build,
         session: key,
@@ -523,20 +522,33 @@ fn compile(args: &Args) -> Result<i32, String> {
         cc: false,
         client: Client { env: Some(original_env), shown: Some(typed.clone()) },
     };
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        if kind == ArtifactKind::Library {
-            crate::native_library::compile(&request, &mut session, metadata.as_deref())
-        } else if !dependencies.is_empty() {
-            crate::native_library::compile_imported_binary(&request, &mut session, dependencies)
-        } else {
-            crate::native_library::compile_binary(&request, &mut session)
-        }
-    }));
-    let compiled = match result {
-        Ok(compiled) => compiled,
-        Err(panic) => {
-            let _ = std::fs::remove_dir_all(&object_dir);
-            std::panic::resume_unwind(panic)
+    let request_cache = if kind == ArtifactKind::Binary && dependencies.is_empty() {
+        crate::native_request_cache::RequestCache::new(&request, || format!("{args:?}"))
+    } else {
+        None
+    };
+    let (compiled, session) = match request_cache.as_ref().and_then(|cache| cache.lookup()) {
+        Some(response) => (crate::native_library::CompileOutput::from(response), None),
+        None => {
+            let object_dir = temporary_directory()?;
+            let mut session = crate::driver::Session::new(object_dir.clone(), false, request.session.clone());
+            session.caches.leak_at_exit = true;
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                if kind == ArtifactKind::Library {
+                    crate::native_library::compile(&request, &mut session, metadata.as_deref())
+                } else if !dependencies.is_empty() {
+                    crate::native_library::compile_imported_binary(&request, &mut session, dependencies)
+                } else {
+                    crate::native_library::compile_binary(&request, &mut session)
+                }
+            }));
+            match result {
+                Ok(compiled) => (compiled, Some(session)),
+                Err(panic) => {
+                    let _ = std::fs::remove_dir_all(&object_dir);
+                    std::panic::resume_unwind(panic)
+                }
+            }
         }
     };
     let response = compiled.response;
@@ -557,14 +569,21 @@ fn compile(args: &Args) -> Result<i32, String> {
                 }
             }
             if args.emits.iter().any(|v| v == "dep-info") {
-                dependency_info(&session, &source, &output, &dep, native_env, &compiled.expand_deps, &args.externs)?;
+                dependency_info(session.as_ref(), &source, &output, &dep, native_env, &compiled.expand_deps, &args.externs)?;
             }
             Ok(())
         })()
     } else {
         Ok(())
     };
-    let _ = std::fs::remove_dir_all(&object_dir);
+    if dep_result.is_ok() {
+        if let (Some(cache), Some(session)) = (&request_cache, &session) {
+            cache.store(session, &compiled.expand_deps, &response);
+        }
+    }
+    if let Some(session) = &session {
+        let _ = std::fs::remove_dir_all(session.obj_dir());
+    }
     std::mem::forget(session);
     if let Err(error) = dep_result {
         // A successful native link followed by a failed artifact contract is
@@ -662,7 +681,7 @@ fn feature_check_cfg(value: &str) -> bool {
         .all(|item| item.trim().strip_prefix('"').and_then(|s| s.strip_suffix('"')).is_some_and(|s| !s.contains(['"', '\\', '\n', '\r'])))
 }
 
-fn temporary_directory() -> Result<PathBuf, String> {
+pub(crate) fn temporary_directory() -> Result<PathBuf, String> {
     let start = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e| e.to_string())?.as_nanos();
     for attempt in 0..100u32 {
         let dir = std::env::temp_dir().join(format!("lustr-native-{}-{start}-{attempt}", std::process::id()));

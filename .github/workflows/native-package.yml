@@ -3,41 +3,11 @@ name: Native toolchain package
 on:
   push:
     branches: [next, 'build/lustr-native-package*']
-    paths:
-      - 'LICENSE'
-      - 'crates/lustr/fixtures/**'
-      - 'crates/lustr-native/**'
-      - 'compiler/native/**'
-      - 'upstream/lust.pin'
-      - 'tools/*native*.py'
-      - 'tools/package-toolchain.py'
-      - 'tools/qualify-package.py'
-      - 'tools/lust-upstream-check.rs'
-      - 'tests/native-*/**'
-      - 'docs/compiler-set/native-package.md'
-      - 'docs/compiler-set/native-acceptance.md'
-      - 'docs/compiler-set/native-contract.md'
-      - 'docs/compiler-set/measurements/2026-11-11-native-composition/optimized-ci/native-speed-evidence/report.json.gz'
-      - '.github/workflows/native-package.yml'
+  # A bounded GitHub path-filter diff can omit compiler changes in a large PR.
+  # Always run the primary acceptance job; only the unchanged-donor CI is scoped.
   pull_request:
-    paths:
-      - 'LICENSE'
-      - 'crates/lustr/fixtures/**'
-      - 'crates/lustr-native/**'
-      - 'compiler/native/**'
-      - 'upstream/lust.pin'
-      - 'tools/*native*.py'
-      - 'tools/package-toolchain.py'
-      - 'tools/qualify-package.py'
-      - 'tools/lust-upstream-check.rs'
-      - 'tests/native-*/**'
-      - 'docs/compiler-set/native-package.md'
-      - 'docs/compiler-set/native-acceptance.md'
-      - 'docs/compiler-set/native-contract.md'
-      - 'docs/compiler-set/measurements/2026-11-11-native-composition/optimized-ci/native-speed-evidence/report.json.gz'
-      - '.github/workflows/native-package.yml'
   workflow_dispatch:
-  # Full backstop, independent of path filters. Schedules run from the default branch.
+  # Full backstop. Schedules run from the default branch.
   schedule:
     - cron: '37 4 * * 1'
 
@@ -143,6 +113,14 @@ jobs:
         id: vendor
         if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: cargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"
+      - name: Check native request cache invalidation and Cargo outputs
+        id: request_cache
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
+        run: |
+          python3 tools/check-native-request-cache.py \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native" \
+            --tcc-root "$GITHUB_WORKSPACE/compiler/native/third_party/tcc" \
+            --output "$RUNNER_TEMP/native-request-cache-evidence"
       - name: Record bounded safe-library diagnostics
         id: safe_library
         if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
@@ -236,6 +214,8 @@ jobs:
             ${{ runner.temp }}/native-protocol-evidence
             ${{ runner.temp }}/native-unsafe-regression-evidence
             ${{ runner.temp }}/native-mixed-generics-evidence
+            ${{ runner.temp }}/native-request-cache-evidence/report.json
+            ${{ runner.temp }}/native-request-cache-evidence/logs
             ${{ runner.temp }}/native-speed-evidence
             ${{ runner.temp }}/lustr-native-dist/native-qualification
             ${{ runner.temp }}/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json

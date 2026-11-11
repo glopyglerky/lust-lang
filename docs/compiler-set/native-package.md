@@ -111,6 +111,11 @@ include aliases, function pointers, lexical scope, macro-expanded expressions,
 shadowed names, lint precedence and closure returns. A separate regression
 gate rejects malformed unsafe syntax and missed safety-analysis contexts.
 Separate safe-library diagnostic evidence keeps its original scope.
+Request-cache qualification separately disables an instrumented TinyCC helper
+to prove real unchanged-input reuse through the Cargo-facing compiler. It
+checks dependency information, artifact reporting, corruption, compiler
+replacement, file permissions and external-input invalidation. Performance
+measurements use the normal runtime, without this instrumentation.
 The workflow publishes an archive only after all of its required checks pass.
 The [native acceptance gate](native-acceptance.md) also runs before publication.
 It compares the actual `lustr-native` compiler with upstream Lust and the same

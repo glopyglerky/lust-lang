@@ -17,7 +17,7 @@ REQUIREMENTS = ("identities", "provenance", "input-stability", "upstream-preserv
                 "upstream-accepted-corpus", "engine-trace", "concurrent-cargo", "mixed-compatibility",
                 "full-rust-compatibility", "build-scripts", "doctests")
 WORKFLOW_CHECKS = ("source_before", "invocations", "acceptance_tests", "native_build", "artifacts",
-                   "protocol", "unsafe", "mixed_generics", "vendor", "safe_library", "package",
+                   "protocol", "unsafe", "mixed_generics", "request_cache", "vendor", "safe_library", "package",
                    "relocation", "upstream_coverage", "native_speed", "source_after")
 
 

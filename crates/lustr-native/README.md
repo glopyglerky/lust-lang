@@ -113,12 +113,28 @@ returns an error if that cannot be established; it does not silently ignore
 the request or run a separate stripping process. Other strip modes and stripping
 an artifact built with native debug information remain unsupported.
 
-This entry point does not use the upstream whole-request cache or daemon.
-Cargo handles unchanged-target freshness. The original binary path reuses the
-native unit cache; the initial library and import paths emit their native
-objects again when Cargo executes the compiler. These paths do not yet have a
-speed-parity result. The separate pristine `lust` executable keeps its
-original fast path.
+Cargo handles unchanged-target freshness. A successful binary with one root
+file and no imported artifacts can also reuse the upstream whole-request
+cache. Admission checks the actual source map, resolver paths and expansion
+dependencies. Environment-reading macros and included files remain outside
+this cache even when their spelling contains whitespace or comments. A cache
+hit regenerates Cargo dep-info and the requested artifact and unused-extern
+reports. It preserves source-dependent checking by invalidating on changed
+inputs; rejected or incomplete artifact contracts are never admitted.
+
+The cache binds the complete native invocation, original environment digest,
+runtime identity, actual executing compiler inode and timestamps, and caller
+umask. It verifies the cached response, executable bytes and permissions before
+publishing a result. A malformed record or changed compiler/runtime causes
+normal compilation. Cache metadata does not store a copy of the caller's
+environment. This cache is currently enabled only on Linux.
+
+This entry point still has no retained frontend across source edits. The
+original binary path reuses the native unit cache; library and import paths
+emit their native objects again when Cargo executes the compiler. Neither this
+request cache nor the separate pristine `lust` executable establishes the full
+cold and warm speed requirement. Both speed floors still require qualification
+of the actual delivered compiler.
 
 ## Dependency information
 

@@ -1,0 +1,52 @@
+mode,state,pairs,baseline_median_ms,candidate_median_ms,geometric_ratio,upper_95,worst_observed_ratio,slower_pairs,reason
+mixed/fresh-target,failed,12,83.152218,83.399161,0.990239093387952,1.009614004744978,1.0557675717047443,6,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/fresh-target/compile-plus-run,failed,12,84.141631,84.5417135,0.9923081872074199,1.0116448419522233,1.058575357860408,6,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/no-change,passed,12,28.3586755,16.635952,0.5801537345648532,0.5910052789250401,0.6296896010858637,0,
+mixed/no-change/compile-plus-run,passed,12,29.304923,17.738745,0.6005737782842011,0.6114929917783953,0.6529627327566321,0,
+mixed/body-edit,passed,12,65.323931,49.910819,0.7484295328168096,0.763073646020764,0.7992551532239996,0,
+mixed/body-edit/compile-plus-run,passed,12,66.362878,51.074518,0.7539631724014707,0.7687477340745914,0.8043766966911571,0,
+mixed/signature-edit,passed,12,64.5735045,48.947558,0.7460967822642823,0.7704366073220393,0.8427272409274377,0,
+mixed/signature-edit/compile-plus-run,passed,12,65.574557,50.1093335,0.7520877042767434,0.7761672619072719,0.8452515559499859,0,
+mixed/type-edit,failed,12,67.489131,49.253973,0.7682545928712762,0.8530517644765925,1.3901776226847062,1,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/type-edit/compile-plus-run,failed,12,68.591603,50.415599,0.7736450360441466,0.8573958871844497,1.385954583335119,1,at least one observed candidate invocation is slower; no outliers were discarded
+mixed/macro-edit,passed,12,70.1368265,49.747945,0.6956184314138764,0.7620523694273242,0.9850569278824389,0,
+mixed/macro-edit/compile-plus-run,failed,12,71.2657885,50.9899235,0.7031234796207011,0.770619830855206,1.010049141937956,1,at least one observed candidate invocation is slower; no outliers were discarded
+lust/process-cold,failed,12,43.7058405,43.6717195,0.9553474300035376,1.0151309207711574,1.0837193788681763,4,at least one observed candidate invocation is slower; no outliers were discarded
+lust/process-cold/compile-plus-run,failed,12,45.3459235,44.901713,0.9537979361267117,1.0109017132111053,1.080417353160238,4,at least one observed candidate invocation is slower; no outliers were discarded
+lust/warm-noop,failed,12,4.79418,24.2650955,4.867708889065732,5.255211023049398,5.812368425338134,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/warm-noop/compile-plus-run,failed,12,6.1891945,25.6140965,4.029636186564702,4.304878259358584,4.823077236243658,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/body-edit,failed,12,6.159461,26.988894,3.216906167602242,4.2823692786475,4.791088732122829,11,at least one observed candidate invocation is slower; no outliers were discarded
+lust/body-edit/compile-plus-run,failed,12,7.5093095,28.2394685,2.8376728443786567,3.68269452095796,4.0809951402677385,11,at least one observed candidate invocation is slower; no outliers were discarded
+lust/signature-edit,failed,12,12.1479365,24.8607495,1.9587289702859196,2.0534385492332823,2.3080401607184062,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/signature-edit/compile-plus-run,failed,12,13.514755,26.1145585,1.8547844346286286,1.9386128694668552,2.1705713125772568,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/type-edit,failed,12,11.5194125,24.0367985,1.9691406103345046,2.098539401744009,2.2696232769068003,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/type-edit/compile-plus-run,failed,12,12.9047655,25.274848,1.861022244578912,1.9729829051018253,2.117292349505399,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/macro-edit,failed,12,6.818313,26.2204775,3.8658690929085724,3.931803510473057,4.151635915476326,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/macro-edit/compile-plus-run,failed,12,8.1729625,27.4686975,3.390005397009071,3.4490730259877567,3.6740530416442483,12,at least one observed candidate invocation is slower; no outliers were discarded
+lust/cold-invalid,failed,12,6.3888595,6.041679,0.9296841605384721,0.9766633749008906,1.171647712599081,3,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/fresh-target,passed,12,81.715376,66.0868885,0.783432349224272,0.8268442647482113,0.8895948017074425,0,
+cargo/fresh-target/compile-plus-run,passed,12,82.7056455,67.178713,0.7864444388160828,0.8294308191491411,0.890864803024954,0,
+cargo/no-change,passed,12,37.9760735,18.4101635,0.5061469209241846,0.5457072849746695,0.7912129452874583,0,
+cargo/no-change/compile-plus-run,passed,12,38.8829295,19.526033,0.5218306313949895,0.5609522604289917,0.802580125469863,0,
+cargo/body-edit,passed,12,82.250003,45.786318,0.5502522867129964,0.5620807004923796,0.5959113563195706,0,
+cargo/body-edit/compile-plus-run,passed,12,83.2941655,47.2984805,0.5586983540456062,0.571646748636502,0.6028001185381734,0,
+cargo/signature-edit,passed,12,80.59516,45.428469,0.5600275342846472,0.5837733411825902,0.6663589847708477,0,
+cargo/signature-edit/compile-plus-run,passed,12,81.636712,46.867117,0.5700808190214756,0.5945352372412828,0.6729262993412093,0,
+cargo/type-edit,passed,12,80.4779245,45.799691,0.5648276382232934,0.5721915574324656,0.5970873757439474,0,
+cargo/type-edit/compile-plus-run,passed,12,81.4560075,46.909672,0.5721061904187552,0.5793185861943981,0.6034168409616514,0,
+cargo/macro-edit,failed,12,82.239892,49.134727,0.7314883861256352,0.966932012349512,3.568484017094506,2,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/macro-edit/compile-plus-run,failed,12,83.2608095,50.2917335,0.7374126133558006,0.9715833837127833,3.539188919625477,2,at least one observed candidate invocation is slower; no outliers were discarded
+cargo/cold-invalid,passed,12,56.1738785,25.570335,0.44959593762503847,0.4583545119114616,0.4787545108875635,0,
+full-rust/fresh-target,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/fresh-target/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/no-change,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/no-change/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/check,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/release,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/release/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/compile-plus-test,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/doctests,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/type-edit,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/type-edit/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/macro-edit,unproved,,,,,,,,required measurements missing or functional compilation failed
+full-rust/macro-edit/compile-plus-run,unproved,,,,,,,,required measurements missing or functional compilation failed

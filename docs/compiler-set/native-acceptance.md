@@ -63,6 +63,9 @@ Record cold compilation, fresh-process cache reuse, no-op requests, body edits,
 signature edits, type and macro edits, rejection latency and compilation plus
 executed tests separately. No aggregate speedup may hide a slower mode or
 workload. Unsupported modes remain missing evidence, not zero-cost work.
+Direct cold compilation includes both an explicitly disabled cache and enabled
+caches that start empty for every sample. The first successful admission and
+store are part of compile time.
 
 Interleave candidate and baseline measurements and retain all raw observations,
 including unsuccessful commands, timeouts and regressions. Never retry only

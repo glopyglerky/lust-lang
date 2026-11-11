@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +19,22 @@ SPEC.loader.exec_module(MODULE)
 def observations(candidate=80):
     return [{"sample": sample, "baseline_ns": 100, "candidate_ns": candidate,
              "correct": True, "source_equal": True} for sample in range(12)]
+
+
+def fresh_cache_observations():
+    rows = observations()
+    for row in rows:
+        row['cold'] = True
+        for lane in ('baseline', 'candidate'):
+            runtime = f"/owned/{lane}/runtime/{row['sample']}"
+            cache = f"/owned/{lane}/compile-cache/{row['sample']}"
+            row[lane + '_runtime_temp'] = {'fresh': True, 'empty_before_compile': True, 'path': runtime}
+            row[lane + '_tmpdir'] = runtime
+            row[lane + '_compile_cache'] = {'fresh': True, 'empty_before_compile': True,
+                                            'enabled': True, 'path': cache}
+            row[lane + '_cache_env'] = {'LUST_CACHE_DIR': cache, 'LUST_NO_CACHE': None,
+                                       'LUST_NO_DAEMON': '1'}
+    return rows
 
 
 def complete_report():
@@ -108,8 +125,43 @@ class Statistics(unittest.TestCase):
         rows[0].update(cold=True, baseline_runtime_temp=None, candidate_runtime_temp=None)
         self.assertEqual(MODULE.paired_decision(rows)['state'], 'unproved')
 
+    def test_fresh_cache_rows_require_enabled_empty_distinct_caches(self):
+        self.assertTrue(MODULE.paired_decision(fresh_cache_observations(), fresh_cache=True)['qualified'])
+        self.assertFalse(MODULE.paired_decision(observations(), fresh_cache=True)['qualified'])
+        for lane in ('baseline', 'candidate'):
+            for field, value in (('fresh', False), ('empty_before_compile', False), ('enabled', False),
+                                 ('path', f'/owned/{lane}/compile-cache/0')):
+                rows = fresh_cache_observations()
+                rows[1][lane + '_compile_cache'][field] = value
+                self.assertFalse(MODULE.paired_decision(rows, fresh_cache=True)['qualified'], (lane, field))
+            rows = fresh_cache_observations()
+            rows[0][lane + '_compile_cache'] = None
+            self.assertFalse(MODULE.paired_decision(rows, fresh_cache=True)['qualified'])
+        rows = fresh_cache_observations()
+        rows[0]['candidate_compile_cache']['path'] = rows[0]['baseline_compile_cache']['path']
+        rows[0]['candidate_cache_env']['LUST_CACHE_DIR'] = rows[0]['baseline_compile_cache']['path']
+        self.assertFalse(MODULE.paired_decision(rows, fresh_cache=True)['qualified'])
+
+    def test_fresh_cache_evidence_must_match_actual_compiler_environment(self):
+        for lane in ('baseline', 'candidate'):
+            for field, value in (('LUST_CACHE_DIR', '/different/cache'), ('LUST_NO_CACHE', '1'),
+                                 ('LUST_NO_DAEMON', None), ('LUST_NO_DAEMON', '0')):
+                rows = fresh_cache_observations()
+                rows[1][lane + '_cache_env'][field] = value
+                self.assertFalse(MODULE.paired_decision(rows, fresh_cache=True)['qualified'], (lane, field, value))
+            rows = fresh_cache_observations()
+            del rows[1][lane + '_cache_env']['LUST_NO_CACHE']
+            self.assertFalse(MODULE.paired_decision(rows, fresh_cache=True)['qualified'])
+
 
 class Decisions(unittest.TestCase):
+    def test_fresh_cache_compile_and_run_are_required_series(self):
+        self.assertEqual(len(MODULE.expected_series()), 53)
+        self.assertEqual(MODULE.DIRECT_MODES.count('fresh-cache'), 1)
+        self.assertIn('lust/fresh-cache', MODULE.expected_series())
+        self.assertIn('lust/fresh-cache/compile-plus-run', MODULE.expected_series())
+        self.assertEqual(set(MODULE.COLD_DIRECT_MODES), {'process-cold', 'fresh-cache', 'cold-invalid'})
+
     def test_complete_finite_report_is_not_a_universal_claim(self):
         result = MODULE.final_decision(complete_report())
         self.assertTrue(result["qualified"])
@@ -217,6 +269,43 @@ class FailureRetention(unittest.TestCase):
 
 
 class RuntimeCacheLifecycle(unittest.TestCase):
+    def test_fresh_direct_samples_keep_caching_enabled_and_reset_both_caches(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            args = FailureRetention().args(Path(temporary) / 'evidence')
+            args.functional_only = False
+            args.samples = 12
+            campaign = MODULE.Campaign(args)
+            family = campaign.work / 'direct'
+            family.mkdir()
+            visited, commands = set(), []
+
+            def execute(label, argv, cwd, env, trace=False):
+                cache_env = {name: env.get(name) for name in ('LUST_CACHE_DIR', 'LUST_NO_CACHE', 'LUST_NO_DAEMON')}
+                row = {'elapsed_ns': 100, 'exit_code': 0, 'compiler_tmpdir': env['TMPDIR'], 'compiler_cache': cache_env}
+                if not label.endswith('-run'):
+                    self.assertIsNone(env.get('LUST_NO_CACHE'))
+                    self.assertEqual(env['LUST_NO_DAEMON'], '1')
+                    for key in ('TMPDIR', 'LUST_CACHE_DIR'):
+                        directory = Path(env[key])
+                        self.assertNotIn(directory, visited)
+                        self.assertEqual(list(directory.iterdir()), [])
+                        visited.add(directory)
+                        (directory / 'retained-cache-object').write_bytes(b'previous compilation')
+                    artifact = Path(argv[-1])
+                    self.assertFalse(artifact.exists())
+                    artifact.write_bytes(b'compiled output')
+                    commands.append(label)
+                return row, b'14\n', b''
+
+            with mock.patch.object(campaign, 'execute', execute), mock.patch.object(MODULE.subprocess, 'Popen') as daemon:
+                campaign.direct_mode(family, 'fn main() {}\n', 'fresh-cache')
+                daemon.assert_not_called()
+            self.assertEqual(len(commands), 26)
+            self.assertEqual(len(visited), 52)
+            for name in ('lust/fresh-cache', 'lust/fresh-cache/compile-plus-run'):
+                self.assertTrue(campaign.report['series'][name]['qualified'])
+                self.assertEqual(len(campaign.report['series'][name]['observations']), 12)
+
     def test_cold_dirs_start_empty_and_warm_dirs_retain_runtime_objects(self):
         helper = MODULE.load_helper(ROOT, 'qualify-native-cargo.py')
         with tempfile.TemporaryDirectory() as temporary:

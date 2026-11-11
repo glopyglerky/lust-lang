@@ -1,0 +1,59 @@
+{
+  "speed_commands": 676,
+  "verified_raw_stdout_stderr_files": 1352,
+  "inherited_cargo_commands": 419,
+  "report_receipt_equality": true,
+  "receipt_digest_match": true,
+  "build_log_digest_match": true,
+  "committed_helper_and_runner_digests_match": true,
+  "timing_series": 51,
+  "timing_observations": 456,
+  "series_states": {
+    "passed": 18,
+    "failed": 20,
+    "unproved": 13
+  },
+  "edit_rebuild_evidence": {
+    "cargo/type-edit": {
+      "pairs": 12,
+      "both_lanes_exact_source_rebuilds": true,
+      "slower_pairs": 0
+    },
+    "cargo/macro-edit": {
+      "pairs": 12,
+      "both_lanes_exact_source_rebuilds": true,
+      "slower_pairs": 2
+    },
+    "mixed/type-edit": {
+      "pairs": 12,
+      "both_lanes_exact_source_rebuilds": true,
+      "slower_pairs": 1
+    },
+    "mixed/macro-edit": {
+      "pairs": 12,
+      "both_lanes_exact_source_rebuilds": true,
+      "slower_pairs": 0
+    }
+  },
+  "concurrency": {
+    "candidate": {
+      "pids": [
+        9933,
+        9932
+      ],
+      "overlap_ms": 36.50188446044922
+    },
+    "baseline": {
+      "pids": [
+        9971,
+        9970
+      ],
+      "overlap_ms": 71.28596305847168
+    }
+  },
+  "limits": [
+    "Compiler executables are identified by the CI records and receipt; executable bytes are not included in this evidence subset.",
+    "Compile-plus-run rows reuse the same compilation durations and are not independent build trials.",
+    "This run is a pre-cache release baseline on one shared CI host, not universal qualification."
+  ]
+}
