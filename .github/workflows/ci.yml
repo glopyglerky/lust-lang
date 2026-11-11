@@ -19,7 +19,7 @@ defaults:
 
 jobs:
   linux-x86_64:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER_ROUTES || '{}')['ubuntu-24.04'] || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - name: Cache pinned tcc
@@ -50,7 +50,7 @@ jobs:
 
   macos-arm64:
     # macOS 14 runners retired on 2026-11-02. macos-15 is the supported Arm64 image.
-    runs-on: macos-15
+    runs-on: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER_ROUTES || '{}')['macos-15'] || 'macos-15' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install GNU test utilities
