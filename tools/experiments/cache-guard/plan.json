@@ -1,0 +1,60 @@
+{
+  "schema": "lustr.cache-guard-experiment-plan.v1",
+  "source": "ec89ca9342f50c77d2e1fd2ced2fc0c87829faab",
+  "change": "Only compiler/native/src/driver/cache.rs; V4 bounded lookahead and real native lexer. V3 was not compiled or timed.",
+  "hypothesis": "One conservative byte scan plus the native lexer only for trivia candidates corrects stale external input results and reduces source-scan work without new cache bypasses on valid lookalikes.",
+  "correctness": [
+    "unset->first->second external env input with adjacent, whitespace and nested comment gaps",
+    "option_env successful output changes",
+    "include_str file content changes",
+    "native-supported runtime/rejection fixtures",
+    "comment/raw-string lookalikes preserve whole-request hit",
+    "actual cache unit tests",
+    "native panic recovery and exactly-once destructor order against Rust oracle",
+    "daemon external-input transitions for env/option_env/include_str in both lanes",
+    "boundednativequalification acceptance/rejection/runtime set",
+    "Compare exactnativecase/source/config identities and reject every baseline-passed case becoming a candidatefailure, including expansioncases"
+  ],
+  "performance": {
+    "build_profile": "release opt3 cgu1 ThinLTO, Rust1.99.1, same TinyCC tree",
+    "comparison": "same source, invocation, flags, cache state and correct runtime result in both lanes; bug cases excluded from speed comparison",
+    "order": "paired alternating lane order; fixed rounds chosen before inspecting outcomes",
+    "scenarios": [
+      "fresh cache",
+      "whole-request hit",
+      "unit-cache reuse after body edit",
+      "signature edit",
+      "invalid source rejection",
+      "external-input macro with unchanged input",
+      "false-positive env variable/comment",
+      "large real upstream source",
+      "long comment env variable exceeding256-byte lookahead budget",
+      "generated external macro via macro_rules"
+    ],
+    "rounds": 40,
+    "analysis": "paired ratio of process wall time, median and bootstrap95% interval; record all samples, failure/rejection outcomes, compiler hashes and CPU affinity",
+    "limits": "No universal speed claim. Reject admission if confidence does not establish actual-compiler improvement, or material native regressions remain. Never compare stale baseline output as equal correct work.",
+    "admission": "Paired geometric-mean runtime ratio below1 with bootstrap95% upper bound below1, all workload results and per-case regressions disclosed; no meaningful confirmed regression may be omitted.",
+    "native_threads": 1,
+    "cpu_affinity": "Lowest permitted CPU, both lanes",
+    "scenario_order": "Rotate start by round; paired lane order alternates by even/odd round; 40pairs per14cases",
+    "cache_detail": "fresh empty perround/lane; request primed once; body/signature/invalid edits use fresh cache seeded with corresponding valid source perround/lane",
+    "regression_rule": "Report all per-case ratios; any case with bootstrap95% lowergeomean bound >1.05 is a confirmed material regression and blocks admission."
+  },
+  "harness_sha256": {
+    "candidate.patch": "e44cc1d28c233931f6203bf46ccdd1946b0beba9b5927068da6dcd19422726b1",
+    "correctness.py": "6ce087e21ada0457074e3749f44a51845513f2cc32a259a060f7e3185ff94ded",
+    "benchmark.py": "f64a7ebeeb60d872e1d4d6ce998558d6896b0536fd8d931ea008931585d199d0",
+    "daemon.py": "c47b49cdc7525126a82266b39594c22ef4882d216bd69fb4a9e07bd9c58f83b2",
+    "run.py": "71f5f7b136fc6a570e475031ee9394d0216f1e7c2847cb7ffaec646140cc6098"
+  },
+  "build_amendment": {
+    "reason": "two concurrent local release builds were killed bySIGKILL beforecandidatebuilt or anycandidateperformance sample",
+    "local_pristine_reuse_proof": "Recorded separately; CI deliberately builds both pristine andcandidate sequentially",
+    "ci_builds": "release opt3 cgu1 ThinLTO Rust1.99.1, samebuiltTinyCC; noCPU-heavyjob overlaps insideworkflow"
+  },
+  "execution": "GitHub Actions ubuntu24.04, sequential identical release builds in explicit isolated worktrees; primary checkout never patched",
+  "candidate_cache_sha256": "e2103ffaddc09df08a854caeca712e641f48a5ae78bf998668d7d7d38fa6196f",
+  "baseline_cache_sha256": "aa776daaebd1f5d1553c0b2a3927599692a41a184799f40ca91dddf47982eeae",
+  "runtime_binding": "Verify each native build-script output bakes exactly the same TinyCC lib/bin paths, hash all shared TinyCC files, and reject package support-dir overrides before probes remove runtime environment"
+}

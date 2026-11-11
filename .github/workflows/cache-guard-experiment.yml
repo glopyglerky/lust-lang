@@ -1,0 +1,46 @@
+name: Unadmitted native cache experiment
+
+on:
+  push:
+    branches: ['experiment/cache-guard-20261111']
+    paths:
+      - '.github/workflows/cache-guard-experiment.yml'
+      - 'tools/experiments/cache-guard/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  isolated-experiment:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install the pinned build compiler
+        run: rustup toolchain install 1.99.1 --profile minimal
+      - name: Build and measure an isolated candidate without admitting it
+        run: python3 tools/experiments/cache-guard/run.py --work "$RUNNER_TEMP/cache-guard-experiment"
+      - name: Preserve experiment evidence and any failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unadmitted-cache-guard-experiment-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/cache-guard-experiment/evidence/**/*.json
+            ${{ runner.temp }}/cache-guard-experiment/evidence/**/*.jsonl
+            ${{ runner.temp }}/cache-guard-experiment/evidence/**/*.log
+            ${{ runner.temp }}/cache-guard-experiment/evidence/**/*.patch
+            ${{ runner.temp }}/cache-guard-experiment/evidence/**/*.stdout
+            ${{ runner.temp }}/cache-guard-experiment/evidence/**/*.stderr
+            ${{ runner.temp }}/cache-guard-experiment/evidence/**/*.rs
+          if-no-files-found: warn
+          retention-days: 30
