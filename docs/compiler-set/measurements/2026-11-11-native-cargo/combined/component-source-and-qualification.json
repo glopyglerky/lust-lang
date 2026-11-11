@@ -1,0 +1,92 @@
+{
+  "complete_native_lustr": false,
+  "native_lust_included": false,
+  "qualification": {
+    "build_script": true,
+    "cargo_workspace_build": true,
+    "cargo_workspace_tests_and_doctests": true,
+    "panic_recovery_and_drop": true,
+    "proc_macro": true,
+    "relocated_sysroot": true,
+    "runtime": true,
+    "type_error_rejection": true,
+    "versions": {
+      "cargo": "cargo 1.102.0-dev (c07ac2c4d 2026-11-06)\nrelease: 1.102.0-dev\ncommit-hash: c07ac2c4d12237effc4b94f4543769b421790045\ncommit-date: 2026-11-06\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.5.0 (sys:0.4.90+curl-8.21.0 system ssl:OpenSSL/3.0.13)\nos: Ubuntu 24.4.0 (noble) [64-bit]\n",
+      "rustc": "rustc 1.102.0-dev (e09174196 2026-11-11)\nbinary: rustc\ncommit-hash: e091741964e51bc70fc61b1dc14c382809bf8410\ncommit-date: 2026-11-11\nhost: x86_64-unknown-linux-gnu\nrelease: 1.102.0-dev\nLLVM version: 23.1.5\n",
+      "rustdoc": "rustdoc 1.102.0-dev (e09174196 2026-11-11)\nbinary: rustdoc\ncommit-hash: e091741964e51bc70fc61b1dc14c382809bf8410\ncommit-date: 2026-11-11\nhost: x86_64-unknown-linux-gnu\nrelease: 1.102.0-dev\nLLVM version: 23.1.5\n"
+    }
+  },
+  "qualified_host": {
+    "libc": [
+      "glibc",
+      "2.39"
+    ],
+    "machine": "x86_64",
+    "system": "Linux"
+  },
+  "role": "rustc-compatibility-component",
+  "schema": "bluefe.pristine-rust-package.v1",
+  "source": {
+    "bootstrap_github_actions_detection": false,
+    "commit": "e091741964e51bc70fc61b1dc14c382809bf8410",
+    "components": [
+      {
+        "archive": "rustc-1.102.0-dev-x86_64-unknown-linux-gnu.tar.gz",
+        "bytes": 157146785,
+        "component": "rustc",
+        "sha256": "7d5237f589ef7741524b277ade1832da38430a2e2a5aa1d5c4a555dd065efa2a"
+      },
+      {
+        "archive": "rust-std-1.102.0-dev-x86_64-unknown-linux-gnu.tar.gz",
+        "bytes": 53910330,
+        "component": "rust-std",
+        "sha256": "caa1a53ff5ebea110a352afafee01cb7f1dbc8a3583277231cbb4a2a69de8352"
+      },
+      {
+        "archive": "cargo-1.102.0-dev-x86_64-unknown-linux-gnu.tar.gz",
+        "bytes": 19635234,
+        "component": "cargo",
+        "sha256": "1e6b2a4443690af8cf7c1148aec8049e09aa3d59945af90f6d62ecc6419f45d9"
+      }
+    ],
+    "config_sha256": "ef10d33f5c5543de312f677e1f89fe9b6fdad41bdce7d323a3c31e6c8a88c6df",
+    "llvm": {
+      "source": "upstream-ci",
+      "version": "23.1.5-rust-1.102.0-nightly"
+    },
+    "protected_objects": {
+      "Cargo.lock": "feeba051664e2fb683fdc8914790a81261b3b5d7",
+      "Cargo.toml": "b785c566dc651857b62c1711d6e9c12430d49ebd",
+      "bootstrap.example.toml": "6c2e3917fb697b30656e57a46a4c9223197fc89e",
+      "compiler": "9bb98adca40010656ac057f2c4103cf72f5cdc6f",
+      "library": "f48d6700750a1dc11b2f8f1df91a26dee3ef13fb",
+      "src": "8042d9063cce1688a1f0e2f945c6da48f9568645",
+      "tests": "f617a67b841a0b7939d83ab886ca694809ff3f22",
+      "x": "768ed1674641e020c4fb9985d53c197ca5bf3e16",
+      "x.ps1": "afd988e67e4cd787c58aeb786a7d8d3c7c89a6ad",
+      "x.py": "928a7496cb70ef2a6caf8e890fb09f12883a26e3"
+    },
+    "repository": "glopyglerky/blueFe",
+    "stage": 1,
+    "stage0": {
+      "cargo": "cargo 1.100.0-beta.1 (3d7cf6e93 2026-09-25)\nrelease: 1.100.0-beta.1\ncommit-hash: 3d7cf6e937d6127d0f49881bf689c560b36d35c4\ncommit-date: 2026-09-25\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]\n",
+      "rustc": "rustc 1.100.0-beta.1 (e3feeb59c 2026-09-27)\nbinary: rustc\ncommit-hash: e3feeb59cd1bdd011a2bfcc0747b55125d9b8527\ncommit-date: 2026-09-27\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0-beta.1\nLLVM version: 23.1.1\n"
+    },
+    "upstream": {
+      "compiler": "9bb98adca40010656ac057f2c4103cf72f5cdc6f",
+      "library": "f48d6700750a1dc11b2f8f1df91a26dee3ef13fb",
+      "repository": "https://github.com/rust-lang/rust",
+      "revision": "5b7b37aefcb5b2fba3c2392bc9065b9e4602d494",
+      "root_tree": "9896086e2e320d7a5ced48d162cc9af159b004d7",
+      "src/bootstrap": "95743e45d2df74cb11f10c1be297dbeee521ad6f",
+      "src/stage0": "65357a133fe0930b2c7a876fc46fa63cbd572daf",
+      "src/tools/bump-stage0": "e21cb8dfcd60252ed46d9ab2fec480a1631dadc5"
+    }
+  },
+  "target": "x86_64-unknown-linux-gnu",
+  "tool_sha256": {
+    "cargo": "20f9987fdb417ecde7afc70d59a817b84a94c560cff3a6e41b9f9f9c4f914344",
+    "rustc": "f92c1e061e47cafb6cd7fd64573df14399425c01921262985f2e76571bd50703",
+    "rustdoc": "b6033fff53c765f10386d53b81a062e9243c8d467d33fef6c5bcacfdd29a253b"
+  }
+}

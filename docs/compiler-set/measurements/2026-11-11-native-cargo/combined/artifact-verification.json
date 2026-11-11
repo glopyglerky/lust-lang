@@ -1,0 +1,49 @@
+{
+  "run": "https://github.com/glopyglerky/blueFe/actions/runs/42993768154",
+  "run_id": 42993768154,
+  "assembly_source": "7175cffbb56b0e596a41f0bbda7ea58d35127502",
+  "lustr_source": "f1c4bf2c6a22baa2ea146bb270804be547c15473",
+  "job_conclusion": "success",
+  "artifacts": [
+    {
+      "id": 13843926751,
+      "name": "bluefe-lustr-package-evidence-7175cffbb56b0e596a41f0bbda7ea58d35127502",
+      "size_in_bytes": 3029818,
+      "url": "https://api.github.com/repos/glopyglerky/blueFe/actions/artifacts/13843926751",
+      "archive_download_url": "https://api.github.com/repos/glopyglerky/blueFe/actions/artifacts/13843926751/zip",
+      "expired": false,
+      "created_at": "2026-11-11T09:30:35Z",
+      "expires_at": "2026-11-25T09:30:33Z",
+      "updated_at": "2026-11-11T09:30:35Z",
+      "digest": "sha256:1edad5955398341b237e973c509766c6c46b513d14356c0c080f28b01fb69b40",
+      "workflow_run": {
+        "id": 42993768154,
+        "repository_id": 1450701224,
+        "head_repository_id": 1450701224,
+        "head_branch": "package/qualified-native-20261111",
+        "head_sha": "7175cffbb56b0e596a41f0bbda7ea58d35127502"
+      },
+      "downloaded_zip_sha256_verified": true
+    },
+    {
+      "id": 13843567817,
+      "name": "bluefe-lustr-native-preview-x86_64-7175cffbb56b0e596a41f0bbda7ea58d35127502",
+      "size_in_bytes": 236640133,
+      "url": "https://api.github.com/repos/glopyglerky/blueFe/actions/artifacts/13843567817",
+      "archive_download_url": "https://api.github.com/repos/glopyglerky/blueFe/actions/artifacts/13843567817/zip",
+      "expired": false,
+      "created_at": "2026-11-11T09:30:33Z",
+      "expires_at": "2026-12-11T09:30:30Z",
+      "updated_at": "2026-11-11T09:30:33Z",
+      "digest": "sha256:178d80279cfc40ecc003e45237c8734d507d83335f29d79e9ec275278f67017d",
+      "workflow_run": {
+        "id": 42993768154,
+        "repository_id": 1450701224,
+        "head_repository_id": 1450701224,
+        "head_branch": "package/qualified-native-20261111",
+        "head_sha": "7175cffbb56b0e596a41f0bbda7ea58d35127502"
+      },
+      "downloaded_zip_sha256_verified": true
+    }
+  ]
+}

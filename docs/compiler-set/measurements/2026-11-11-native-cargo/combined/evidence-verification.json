@@ -1,0 +1,408 @@
+{
+  "schema": "bluefe.recorded-qualification-review.v1",
+  "passed": true,
+  "package_manifest_sha256": "86dbf18bdacdf1e85fd5b2bca3794d5365ab539252b229c7ffe01bf88c486aa4",
+  "lustr_source": "f1c4bf2c6a22baa2ea146bb270804be547c15473",
+  "command_counts": {
+    "package": 105,
+    "native_cargo": 207,
+    "native_coverage": 38
+  },
+  "timeouts": 0,
+  "unexpected_nonzero_exits": 0,
+  "expected_nonzero_commands": {
+    "package": [
+      {
+        "command_index": 10,
+        "label": "native-unsupported",
+        "exit_code": 1,
+        "expected": true,
+        "stderr": "error[L0405]: `async` is not supported\n  --> /home/runner/work/blueFe/blueFe/lustr/crates/lustr/fixtures/subset/unsupported.rs:1:1\n   | async fn answer() -> u32 {\n   | ^^^^^\n   = fix: Use std::thread and channels.\n\nerror: could not compile `/home/runner/work/blueFe/blueFe/lustr/crates/lustr/fixtures/subset/unsupported.rs` due to 1 previous error(s)\n"
+      },
+      {
+        "command_index": 11,
+        "label": "native-invalid",
+        "exit_code": 1,
+        "expected": true,
+        "stderr": "error[L0110]: mismatched types: expected `u32`, found `&str`\n  --> /tmp/lustr-package-zagiq0fn/invalid.rs:1:30\n   | fn main() { let value: u32 = \"wrong\"; println!(\"{}\", value); }\n   |                              ^^^^^^^\n   = fix: Change the value to type `u32`, or change the expected type.\n\nerror: could not compile `/tmp/lustr-package-zagiq0fn/invalid.rs` due to 1 previous error(s)\n"
+      },
+      {
+        "command_index": 14,
+        "label": "compatibility-rejection",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "    Checking fixture-invalid-borrow v0.0.0 (/tmp/lustr-package-zagiq0fn/invalid Rust workspace)\nerror[E0502]: cannot borrow `values` as mutable because it is also borrowed as immutable\n --> src/lib.rs:4:5\n  |\n3 |     let first = &values[0];\n  |                  ------ immutable borrow occurs here\n4 |     values.push(2);\n  |     ^^^^^^^^^^^^^^ mutable borrow occurs here\n5 |     println!(\"{first}\");\n  |                ----- immutable borrow later used here\n\nFor more information about this error, try `rustc --explain E0502`.\nerror: could not compile `fixture-invalid-borrow` (lib) due to 1 previous error\n"
+      }
+    ],
+    "native_cargo": [
+      {
+        "command_index": 68,
+        "label": "profile-unwind-overflow-on-native-runtime",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "\nthread 'main' (4751) panicked at /tmp/lustr-native-cargo-0ug7a4bz/native profile contracts/profile.rs:1:24:\nattempt to add with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "command_index": 70,
+        "label": "profile-unwind-overflow-on-oracle-runtime",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "\nthread 'main' (4765) panicked at /tmp/lustr-native-cargo-0ug7a4bz/native profile contracts/profile.rs:1:24:\nattempt to add with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "command_index": 72,
+        "label": "profile-abort-overflow-on-native-runtime",
+        "exit_code": -6,
+        "expected": true,
+        "stderr": "\nthread 'main' (4770) panicked at /tmp/lustr-native-cargo-0ug7a4bz/native profile contracts/profile.rs:1:24:\nattempt to add with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "command_index": 74,
+        "label": "profile-abort-overflow-on-oracle-runtime",
+        "exit_code": -6,
+        "expected": true,
+        "stderr": "\nthread 'main' (4794) panicked at /tmp/lustr-native-cargo-0ug7a4bz/native profile contracts/profile.rs:1:24:\nattempt to add with overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+      },
+      {
+        "command_index": 75,
+        "label": "native-reject-rlib",
+        "exit_code": 2,
+        "expected": true,
+        "stderr": "error: lustr-native: native Cargo entry point currently emits only bin artifacts; rlib, metadata and proc macros are not implemented\n"
+      },
+      {
+        "command_index": 76,
+        "label": "native-reject-metadata",
+        "exit_code": 2,
+        "expected": true,
+        "stderr": "error: lustr-native: native Cargo entry point supports --emit=link,dep-info only; Rust metadata is not implemented\n"
+      },
+      {
+        "command_index": 77,
+        "label": "native-reject-optimized-profile",
+        "exit_code": 2,
+        "expected": true,
+        "stderr": "error: lustr-native: unsupported native codegen option `opt-level=3`\n"
+      },
+      {
+        "command_index": 78,
+        "label": "native-reject-foreign-target",
+        "exit_code": 2,
+        "expected": true,
+        "stderr": "error: native Cargo entry point does not support target `aarch64-unknown-linux-gnu`\n"
+      },
+      {
+        "command_index": 79,
+        "label": "native-reject-malformed-check-cfg",
+        "exit_code": 2,
+        "expected": true,
+        "stderr": "error: lustr-native: custom check-cfg `cfg(feature, values(` is not implemented\n"
+      },
+      {
+        "command_index": 80,
+        "label": "native-reject-malformed-version",
+        "exit_code": 2,
+        "expected": true,
+        "stderr": "error: lustr-native: --version does not take a value\n"
+      },
+      {
+        "command_index": 81,
+        "label": "invalid-type-native",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 82,
+        "label": "invalid-type-oracle",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 83,
+        "label": "invalid-move-native",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 84,
+        "label": "invalid-move-oracle",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 85,
+        "label": "invalid-alias-native",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 86,
+        "label": "invalid-alias-oracle",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 195,
+        "label": "cold-invalid-native-0",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 196,
+        "label": "cold-invalid-oracle-0",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 197,
+        "label": "cold-invalid-oracle-1",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 198,
+        "label": "cold-invalid-native-1",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 199,
+        "label": "cold-invalid-native-2",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 200,
+        "label": "cold-invalid-oracle-2",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 201,
+        "label": "cold-invalid-oracle-3",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 202,
+        "label": "cold-invalid-native-3",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 203,
+        "label": "cold-invalid-native-4",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 204,
+        "label": "cold-invalid-oracle-4",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 205,
+        "label": "cold-invalid-oracle-5",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/oracle project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      },
+      {
+        "command_index": 206,
+        "label": "cold-invalid-native-5",
+        "exit_code": 101,
+        "expected": true,
+        "stderr": "   Compiling lustr_native_contract v0.0.0 (/tmp/lustr-native-cargo-0ug7a4bz/native project with spaces)\nerror: could not compile `lustr_native_contract` (bin \"lustr_native_contract\") due to 1 previous error\n"
+      }
+    ]
+  },
+  "timing_observations": {
+    "direct_lust": 42,
+    "native_cargo": 60
+  },
+  "direct_lust_summaries": [
+    {
+      "mode": "process-cold",
+      "lane": "pristine",
+      "samples": 7,
+      "median_ns": 56123537,
+      "median_paired_ratio_to_pristine": 1.0
+    },
+    {
+      "mode": "process-cold",
+      "lane": "packaged_native",
+      "samples": 7,
+      "median_ns": 62301974,
+      "median_paired_ratio_to_pristine": 1.02228754755781
+    },
+    {
+      "mode": "daemon-noop",
+      "lane": "pristine",
+      "samples": 7,
+      "median_ns": 5588346,
+      "median_paired_ratio_to_pristine": 1.0
+    },
+    {
+      "mode": "daemon-noop",
+      "lane": "packaged_native",
+      "samples": 7,
+      "median_ns": 5694845,
+      "median_paired_ratio_to_pristine": 0.9710956522921173
+    },
+    {
+      "mode": "daemon-body-edit",
+      "lane": "pristine",
+      "samples": 7,
+      "median_ns": 7093758,
+      "median_paired_ratio_to_pristine": 1.0
+    },
+    {
+      "mode": "daemon-body-edit",
+      "lane": "packaged_native",
+      "samples": 7,
+      "median_ns": 7007686,
+      "median_paired_ratio_to_pristine": 0.9785559524268829
+    }
+  ],
+  "native_cargo_summaries": [
+    {
+      "mode": "body-edit",
+      "lane": "native",
+      "samples": 6,
+      "median_ns": 84152754.0,
+      "median_paired_ratio_to_oracle": 0.4824480495552717
+    },
+    {
+      "mode": "body-edit",
+      "lane": "oracle",
+      "samples": 6,
+      "median_ns": 169936227.0,
+      "median_paired_ratio_to_oracle": 1.0
+    },
+    {
+      "mode": "cold-invalid",
+      "lane": "native",
+      "samples": 6,
+      "median_ns": 50636849.5,
+      "median_paired_ratio_to_oracle": 0.41231851035232725
+    },
+    {
+      "mode": "cold-invalid",
+      "lane": "oracle",
+      "samples": 6,
+      "median_ns": 123855408.0,
+      "median_paired_ratio_to_oracle": 1.0
+    },
+    {
+      "mode": "fresh-target",
+      "lane": "native",
+      "samples": 6,
+      "median_ns": 110784060.0,
+      "median_paired_ratio_to_oracle": 0.67556149885283
+    },
+    {
+      "mode": "fresh-target",
+      "lane": "oracle",
+      "samples": 6,
+      "median_ns": 166596819.5,
+      "median_paired_ratio_to_oracle": 1.0
+    },
+    {
+      "mode": "no-change",
+      "lane": "native",
+      "samples": 6,
+      "median_ns": 43060802.0,
+      "median_paired_ratio_to_oracle": 0.47097071281239683
+    },
+    {
+      "mode": "no-change",
+      "lane": "oracle",
+      "samples": 6,
+      "median_ns": 91186661.0,
+      "median_paired_ratio_to_oracle": 1.0
+    },
+    {
+      "mode": "signature-edit",
+      "lane": "native",
+      "samples": 6,
+      "median_ns": 83522427.5,
+      "median_paired_ratio_to_oracle": 0.47847610724612744
+    },
+    {
+      "mode": "signature-edit",
+      "lane": "oracle",
+      "samples": 6,
+      "median_ns": 174130106.5,
+      "median_paired_ratio_to_oracle": 1.0
+    }
+  ],
+  "ordinary_cargo_dev_profile_qualified": true,
+  "native_coverage_cases": 12,
+  "native_coverage_passes_including_expected_invalid_rejections": 5,
+  "native_coverage_gaps": [
+    "unsafe-pointer",
+    "async-await",
+    "generic-associated-type",
+    "dyn-iterator",
+    "return-impl-trait-in-trait",
+    "extern-function",
+    "native-rlib"
+  ],
+  "full_native_rust": false,
+  "full_native_speed_qualified": false,
+  "package_checks": [
+    "no coordinator executable in the package",
+    "complete payload hashes after relocation",
+    "native Cargo build receipt binds the measured executable, source and build settings",
+    "packaged native executables identical to pristine release build",
+    "Rust sysroot relocates without rustup",
+    "installed native compile and actual executable output",
+    "native filesystem operation through relocated library assets",
+    "native unsupported and invalid input remain failures",
+    "offline full-Rust compatibility workspace, proc macro, build script, panic/drop, tests, doctests and borrow rejection",
+    "relocated in-process native Cargo binary compiler, real dep-info, external-input invalidation and explicit unsupported-artifact rejection",
+    "relocated package works while original package and native runtime/library trees are unavailable",
+    "raw paired native cold, daemon no-op and body-edit results with runtime output checks"
+  ],
+  "native_cargo_checks": [
+    "Cargo selects the in-process native compiler directly",
+    "real executables match the Rust oracle, including crate name, nested module_path and file",
+    "unchanged Cargo build is fresh; module, included-file and environment set/change/unset edits invalidate; a new feature variant builds and the previous variant remains reusable",
+    "Cargo incremental selection stays fresh without exposing the compiler's internal cache directory to application macros",
+    "ordinary non-CI Cargo development defaults compile and run correctly with Cargo's debuginfo=2 request and incremental caching, then remain fresh",
+    "native debug assertions, overflow defaults/overrides and panic unwind/abort match the Rust oracle, including exit 101 and SIGABRT",
+    "unsupported rlib, metadata, optimization and foreign targets, plus malformed options, fail without fake artifacts",
+    "type, move and aliasing errors remain compilation failures in both compilers",
+    "balanced paired Cargo timings retain correct outputs, signature/body rebuilds, empty-cache fresh compilation and cold invalid-program rejection",
+    "no compiler executable fallback; compiler-name sentinels remained unused"
+  ],
+  "runner_hashes": {
+    "package": "41a270a4e7e86e63ae1f84e6ff4b937d39678515782a859d8760b8f78e80b64d",
+    "native_cargo": "2f323ae94bb0356f5f83ac503e080cdb08000520bb87d7f08bd768734dabe246",
+    "coverage": "e0531de44e6b5ce723a0dc3506d80232a585dd096d69822d7d09df5542a67c98"
+  },
+  "recorded_evidence_sha256": {
+    "blueFe/blueFe/lustr/dist/package-qualification.json": "536a265cc1bcc77e1e9891d7855ab827125bef25111a85a4104357d34253264b",
+    "blueFe/blueFe/lustr/dist/native-qualification/report.json": "9739d82567b7bb3035ae0b6e38536a6e35126a9845df95f9cc3eb5255e2c0ef8",
+    "_temp/assembly-evidence/verified-inputs.json": "394d02f8fc69cded540d4008b91a7a79febcf94e6621bf33a51024a6314804b3",
+    "_temp/native-cargo-build.json": "6051fefa4953e4e001a7c369e866144f9df2bb3b301d8ebaebd671e01c2c9778"
+  },
+  "scope": "Read-only artifact review. No compilers executed and no timings rerun. Medians were checked against retained raw rows."
+}

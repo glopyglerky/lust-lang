@@ -1,0 +1,1093 @@
+{
+  "schema": "lustr.native-qualification.v1",
+  "host": {
+    "system": "Linux",
+    "machine": "x86_64"
+  },
+  "fixture_manifest_sha256": "bea2668391eb5c8e0fd08cd8ce6ac5bb5f07aadea051d9eb62a96726ea969824",
+  "runner_sha256": "e0531de44e6b5ce723a0dc3506d80232a585dd096d69822d7d09df5542a67c98",
+  "configuration": {
+    "rust_edition": "2024",
+    "panic": "unwind",
+    "overflow_checks": true,
+    "debug_assertions": true,
+    "native_daemon": false,
+    "native_cache": "fresh directory per case",
+    "timeout_seconds": 90
+  },
+  "compilers": {
+    "native": {
+      "path": "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+      "sha256": "bc76bac00a9664ea03517fa57f66ce6ab96dc22b974dccbc6231fd857e21080e",
+      "components": {
+        "lust": "bc76bac00a9664ea03517fa57f66ce6ab96dc22b974dccbc6231fd857e21080e",
+        "lust-core": "32e524f57704467fd3e69e018e1fe01a6128c634729a50695050739893e442e6"
+      },
+      "identity": {
+        "argv": [
+          "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+          "--version"
+        ],
+        "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification",
+        "exit_code": 0,
+        "timed_out": false,
+        "spawn_error": null,
+        "elapsed_ns": 1272105,
+        "stdout_file": "native-identity.stdout",
+        "stderr_file": "native-identity.stderr",
+        "stdout_sha256": "90b5781469d6dcb0d33225b2f20322cb4380c1523379cf9e2860009085e73500",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "oracle": {
+      "path": "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "f92c1e061e47cafb6cd7fd64573df14399425c01921262985f2e76571bd50703",
+      "components": {
+        "rustc": "f92c1e061e47cafb6cd7fd64573df14399425c01921262985f2e76571bd50703"
+      },
+      "identity": {
+        "argv": [
+          "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+          "-vV"
+        ],
+        "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification",
+        "exit_code": 0,
+        "timed_out": false,
+        "spawn_error": null,
+        "elapsed_ns": 13965951,
+        "stdout_file": "oracle-identity.stdout",
+        "stderr_file": "oracle-identity.stderr",
+        "stdout_sha256": "f648fb4c4bb7362af74e94fdf2d961d2d1349d5abf5df7800030b8cc6b28d439",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "existing-generics-traits",
+      "category": "existing",
+      "source": "existing-generics-traits.rs",
+      "source_sha256": "e52040dfa31b273da27cf1ada983db68419a8f1f6800374a35ad65fc2d599ab7",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 62271217,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "a5376977ca78a8037bd02e826048ff173119211b9d80f9d85a7bd0535564460e",
+          "artifact_bytes": 402900,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits/native.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1274981,
+            "stdout_file": "native-run.stdout",
+            "stderr_file": "native-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 69469079,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "69555363fa18f6bf331ecb214a3d0772cbffde351ad69d844de90d28eb4f8c31",
+          "artifact_bytes": 634736,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/existing-generics-traits",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1209709,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_fixture_pass"
+    },
+    {
+      "name": "invalid-type",
+      "category": "invalid",
+      "source": "invalid-type.rs",
+      "source_sha256": "15520848cc09bff4271683eff839d3b0517a0a18350353ef5a479f70c050022e",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-type/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-type/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-type",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 9700294,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "aa9a4a3817f1114db2b54a23e6b8424908274a0e4b0c6645aa878faeef3548d3"
+          },
+          "artifact_present": false,
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-type/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-type/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-type",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 32931638,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "f5e9aad2d7df5a03d38574aead19331257917f252c624ec79083424a58b673c7"
+          },
+          "artifact_present": false,
+          "passed": true
+        }
+      },
+      "status": "native_rejection_pass"
+    },
+    {
+      "name": "invalid-move",
+      "category": "invalid",
+      "source": "invalid-move.rs",
+      "source_sha256": "1c81f6ec573b33f2a957906c15dbb10ce12f18674622d6e3906c6f60aa819c86",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-move/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-move/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-move",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 9478935,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "3d6071435c475e994397f7f9939c1217e6c6825a99b0da69d291ddab664aea49"
+          },
+          "artifact_present": false,
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-move/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-move/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-move",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 36002332,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "d659515a64474817a76a65e3c2a131f790a860a08aa13c379ede8df2ff50e5d9"
+          },
+          "artifact_present": false,
+          "passed": true
+        }
+      },
+      "status": "native_rejection_pass"
+    },
+    {
+      "name": "invalid-alias",
+      "category": "invalid",
+      "source": "invalid-alias.rs",
+      "source_sha256": "8e1926fd85ce2fb9308d18e8052fd87af9164fcd2fbba67e364613928efb7e9b",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-alias/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-alias/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-alias",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 9498227,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "f747e19713832577a4321ca6be054a51affb4b44dad6584c8b6e5eaf264b9f79"
+          },
+          "artifact_present": false,
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-alias/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-alias/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/invalid-alias",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 26602268,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "3f02820695ddcfb84abfaab0faf10d8e08ed0c593bf93aeb96f205648d846504"
+          },
+          "artifact_present": false,
+          "passed": true
+        }
+      },
+      "status": "native_rejection_pass"
+    },
+    {
+      "name": "unsafe-pointer",
+      "category": "expansion",
+      "source": "unsafe-pointer.rs",
+      "source_sha256": "c92ab2b65bac2d2716b4b965adce457e781c980ecfa0db41c02a865f9fc90d00",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/unsafe-pointer/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/unsafe-pointer/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/unsafe-pointer",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 6872591,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "fee301d91c66a5a8f5c2910f813a0034d95d49bb79f5b34cc4f019f170b6d76f"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/unsafe-pointer/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/unsafe-pointer/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/unsafe-pointer",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 62611383,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "65fd1d46d8c7be98180753cc3fe161333f281e21ddd98ad06c4c2747e87562db",
+          "artifact_bytes": 634064,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/unsafe-pointer/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/unsafe-pointer",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1220099,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "async-await",
+      "category": "expansion",
+      "source": "async-await.rs",
+      "source_sha256": "db54cdb3525aa27b288a6a1c224a7e8a68d2e366dd29d521232c56dbbf9a948f",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/async-await/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/async-await/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/async-await",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 9363088,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "74824ace4a2314989951550c92a2401527d6b97a5c2565c056454b3b70c6dc63"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/async-await/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/async-await/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/async-await",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 88811430,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "2b8c366660f7d3bff885b3e5da3a01014e5dca4959e890f118a62409e10da761",
+          "artifact_bytes": 644488,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/async-await/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/async-await",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1286659,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "generic-associated-type",
+      "category": "expansion",
+      "source": "generic-associated-type.rs",
+      "source_sha256": "1998834618d7fbb71d21d7cf21b44d5d08d68ea3a991e236121e65c4a35c5c02",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/generic-associated-type/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/generic-associated-type/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/generic-associated-type",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 10975516,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "5024af005b3c258d62a8074dbc177e6a9ce77079028133b27fc5f3ca20e31aef"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/generic-associated-type/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/generic-associated-type/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/generic-associated-type",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 66855391,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "6150a1e851236725d0b547d3e114bfcb1ea1ff42bf4360d2733bb6e53cdef541",
+          "artifact_bytes": 633544,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/generic-associated-type/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/generic-associated-type",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1206323,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "dyn-iterator",
+      "category": "expansion",
+      "source": "dyn-iterator.rs",
+      "source_sha256": "0f4ba7164a03c8ae2f528bbbf985f48529518d88aaf43d3048703664b43f06a1",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/dyn-iterator/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/dyn-iterator/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/dyn-iterator",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 12736301,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "beefbdcf68b0262d057e95566a798eedf1d7510b4e0db2d593a14108530b1c46"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/dyn-iterator/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/dyn-iterator/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/dyn-iterator",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 79179392,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "9e3d9fa66595658e400078973c322dceff518f190dadbf781c7e01b3977d4c5e",
+          "artifact_bytes": 643536,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/dyn-iterator/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/dyn-iterator",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1227713,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "return-impl-trait-in-trait",
+      "category": "expansion",
+      "source": "return-impl-trait-in-trait.rs",
+      "source_sha256": "ca447e0a55893f8af49a3541a773cb28833a6fb1f416f9038a5c46afd0779c35",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/return-impl-trait-in-trait/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/return-impl-trait-in-trait/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/return-impl-trait-in-trait",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 11860582,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "70036b03083baf542564d05164df7d77cf13087574969c7c55dd5af8c53fbf28"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/return-impl-trait-in-trait/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/return-impl-trait-in-trait/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/return-impl-trait-in-trait",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 74929505,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "e6bd604e14e6126270f10775244dcefce189cc4b599df1a712bd5c8b2848708f",
+          "artifact_bytes": 640528,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/return-impl-trait-in-trait/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/return-impl-trait-in-trait",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1208116,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "offset-of",
+      "category": "expansion",
+      "source": "offset-of.rs",
+      "source_sha256": "445e301b8ff45f61b83a4ff01df7bf345ce6676d7a74006fb00004d39ef7b5e2",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 57806880,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "d4b2c735cbf9dfc672421ef0a60897c292a383eb86fae4a56ab573d17daaa806",
+          "artifact_bytes": 401732,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of/native.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1249534,
+            "stdout_file": "native-run.stdout",
+            "stderr_file": "native-run.stderr",
+            "stdout_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 63560362,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "ad4c4bf7e4be7061ab892da094cc09d57520300d5f169306fd8daf44e215fc42",
+          "artifact_bytes": 633744,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/offset-of",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1189821,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_fixture_pass"
+    },
+    {
+      "name": "extern-function",
+      "category": "expansion",
+      "source": "extern-function.rs",
+      "source_sha256": "f4e41fc8b2c10b39b4d7d6037cff9c240235c0798098756972853df693424179",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/extern-function/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/extern-function/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/extern-function",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 6209058,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "8432e2541e903dde7bd7658d57f286f0a1fad66453f8ea1e93dea1a7f190d1f7"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/extern-function/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/extern-function/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/extern-function",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 62477011,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "32815f6c78be7245cb184a69e29b0f0ede1778702a5ea02492bb035328150664",
+          "artifact_bytes": 633480,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/extern-function/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/extern-function",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1217444,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "native-rlib",
+      "category": "expansion",
+      "source": "native-rlib.rs",
+      "source_sha256": "55ad2cc6a1aac2daf43f0f9a10442d0c07de0f1562680babb87d4240e924475c",
+      "kind": "library",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/input.rs",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/libnative.rlib",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on",
+              "--manifest-path",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/Cargo.toml",
+              "--lib",
+              "--offline"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 5569546,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "b76f0cc2649365ea297f9d1520f06117c6f1f16afe10e40b4957635841d47177"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/liboracle.rlib",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on",
+              "--crate-type=rlib",
+              "--crate-name=lustr_native_fixture"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 34813177,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "616cc3a411bfc266b150d86388baf70ffa10a01f2e61d1423feb0860c58b0327",
+          "artifact_bytes": 22762,
+          "consumer_build": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/consumer.rs",
+              "--edition=2024",
+              "--extern",
+              "lustr_native_fixture=/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/liboracle.rlib",
+              "-o",
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/oracle-consumer.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 59072945,
+            "stdout_file": "oracle-consumer-build.stdout",
+            "stderr_file": "oracle-consumer-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true,
+          "run": {
+            "argv": [
+              "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib/oracle-consumer.bin"
+            ],
+            "cwd": "/home/runner/work/blueFe/blueFe/lustr/dist/native-qualification/native-rlib",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1227963,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "consumer_source_sha256": "1cc68f240da642ec3a27d7af82254076cec1bad845ceaaae239cf22707ecf43f",
+      "status": "native_compile_failure_on_valid_rust"
+    }
+  ],
+  "scope": "Independent single-file and library fixtures, not full Rust qualification",
+  "timing_scope": "One recorded cold observation per command; no speedup conclusion",
+  "unassessed": [
+    "arbitrary Cargo projects",
+    "procedural macros",
+    "build scripts",
+    "cross-crate native artifact compatibility",
+    "warm edit invalidation",
+    "other targets",
+    "full Rust test suite",
+    "performance preservation"
+  ],
+  "full_native_coverage": false,
+  "required_fixture_gates_passed": true,
+  "all_native_fixtures_passed": false,
+  "native_gaps": [
+    "unsafe-pointer",
+    "async-await",
+    "generic-associated-type",
+    "dyn-iterator",
+    "return-impl-trait-in-trait",
+    "extern-function",
+    "native-rlib"
+  ],
+  "result": "pass"
+}

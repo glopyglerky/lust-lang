@@ -1,0 +1,1093 @@
+{
+  "schema": "lustr.native-qualification.v1",
+  "host": {
+    "system": "Linux",
+    "machine": "x86_64"
+  },
+  "fixture_manifest_sha256": "bea2668391eb5c8e0fd08cd8ce6ac5bb5f07aadea051d9eb62a96726ea969824",
+  "runner_sha256": "e0531de44e6b5ce723a0dc3506d80232a585dd096d69822d7d09df5542a67c98",
+  "configuration": {
+    "rust_edition": "2024",
+    "panic": "unwind",
+    "overflow_checks": true,
+    "debug_assertions": true,
+    "native_daemon": false,
+    "native_cache": "fresh directory per case",
+    "timeout_seconds": 90
+  },
+  "compilers": {
+    "native": {
+      "path": "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+      "sha256": "df41ae4636c4eac79a44efeb595866f259124b0652d1bdfd8c2e9a5e982f7316",
+      "components": {
+        "lust": "df41ae4636c4eac79a44efeb595866f259124b0652d1bdfd8c2e9a5e982f7316",
+        "lust-core": "76ca01c0f81094712988b74a915e38769227d8e0f480e2cda6cce3f07812978e"
+      },
+      "identity": {
+        "argv": [
+          "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+          "--version"
+        ],
+        "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification",
+        "exit_code": 0,
+        "timed_out": false,
+        "spawn_error": null,
+        "elapsed_ns": 808269,
+        "stdout_file": "native-identity.stdout",
+        "stderr_file": "native-identity.stderr",
+        "stdout_sha256": "15eb8c9b8ee23fb3322494f7d3c0ea0c37028a7baccec93fb92a17ae19bf7e3e",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "oracle": {
+      "path": "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "components": {
+        "rustc": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853"
+      },
+      "identity": {
+        "argv": [
+          "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+          "-vV"
+        ],
+        "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification",
+        "exit_code": 0,
+        "timed_out": false,
+        "spawn_error": null,
+        "elapsed_ns": 6433393,
+        "stdout_file": "oracle-identity.stdout",
+        "stderr_file": "oracle-identity.stderr",
+        "stdout_sha256": "f22d5e4e9ced367e774ce5bc140d9e6b1235c1882fec80d011044851f3ae6369",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "existing-generics-traits",
+      "category": "existing",
+      "source": "existing-generics-traits.rs",
+      "source_sha256": "e52040dfa31b273da27cf1ada983db68419a8f1f6800374a35ad65fc2d599ab7",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 43983178,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "134bf58d41d9dfefb2ec927f2877bf03d343487842af14907c9f59839d754b5e",
+          "artifact_bytes": 402900,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits/native.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 840047,
+            "stdout_file": "native-run.stdout",
+            "stderr_file": "native-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 44417042,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "f94371931f30e5ab79da0cc7d93faa93bd38cb5172ec01a8c3cb323d86ffaa3c",
+          "artifact_bytes": 4539912,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/existing-generics-traits",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 988761,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_fixture_pass"
+    },
+    {
+      "name": "invalid-type",
+      "category": "invalid",
+      "source": "invalid-type.rs",
+      "source_sha256": "15520848cc09bff4271683eff839d3b0517a0a18350353ef5a479f70c050022e",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-type/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-type/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-type",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 6791713,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e15431e6c78c92365981b479f36988e2d35655ec6f56d1248be12e7da81a1e11"
+          },
+          "artifact_present": false,
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-type/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-type/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-type",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 18101751,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e43935225bb542a785ea116531281e3c5f136f1b60ec4fdc85f67c0fd4448cdd"
+          },
+          "artifact_present": false,
+          "passed": true
+        }
+      },
+      "status": "native_rejection_pass"
+    },
+    {
+      "name": "invalid-move",
+      "category": "invalid",
+      "source": "invalid-move.rs",
+      "source_sha256": "1c81f6ec573b33f2a957906c15dbb10ce12f18674622d6e3906c6f60aa819c86",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-move/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-move/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-move",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 6820788,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "174c43e8e1eee29352afedad4b8459d1a240e3701cf5db6341ba2f6faa1d5d44"
+          },
+          "artifact_present": false,
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-move/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-move/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-move",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 20071903,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "8f41f47f4ccd627c238255134ca89a3c7214453297facb2c6ba0f8a46f5fcaca"
+          },
+          "artifact_present": false,
+          "passed": true
+        }
+      },
+      "status": "native_rejection_pass"
+    },
+    {
+      "name": "invalid-alias",
+      "category": "invalid",
+      "source": "invalid-alias.rs",
+      "source_sha256": "8e1926fd85ce2fb9308d18e8052fd87af9164fcd2fbba67e364613928efb7e9b",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-alias/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-alias/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-alias",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 6427154,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "7c969cec1f895ee30b69f0276c63fb028f1c88846c38503e5902e198eb67f9e2"
+          },
+          "artifact_present": false,
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-alias/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-alias/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/invalid-alias",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 14856998,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "46e08cfb3267ec6e50b3304a54fee38e57e938ddd505c710d4790de66b1224d9"
+          },
+          "artifact_present": false,
+          "passed": true
+        }
+      },
+      "status": "native_rejection_pass"
+    },
+    {
+      "name": "unsafe-pointer",
+      "category": "expansion",
+      "source": "unsafe-pointer.rs",
+      "source_sha256": "c92ab2b65bac2d2716b4b965adce457e781c980ecfa0db41c02a865f9fc90d00",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/unsafe-pointer/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/unsafe-pointer/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/unsafe-pointer",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 4906976,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "988672681368ae3b36da9e5cca919a3e02e64b5a832b6af8da643b0c9cefa6a5"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/unsafe-pointer/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/unsafe-pointer/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/unsafe-pointer",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 41687135,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "5e982e574b3f2f1d27fbe7fbec0f7ccb131ecc377feb3bb3a83bdc899eac02a2",
+          "artifact_bytes": 4539312,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/unsafe-pointer/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/unsafe-pointer",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 943033,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "async-await",
+      "category": "expansion",
+      "source": "async-await.rs",
+      "source_sha256": "db54cdb3525aa27b288a6a1c224a7e8a68d2e366dd29d521232c56dbbf9a948f",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/async-await/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/async-await/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/async-await",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 6065839,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "4b7c6aec0a98a625db07286c9a1e666dda954fa5bd278353af46e457a3d0c95b"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/async-await/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/async-await/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/async-await",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 56224851,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "0a416c9d21ec8185a222b08b6cd99fb324181247a90dc4e3aa4d1ff3bc36e637",
+          "artifact_bytes": 4549432,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/async-await/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/async-await",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 796792,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "generic-associated-type",
+      "category": "expansion",
+      "source": "generic-associated-type.rs",
+      "source_sha256": "1998834618d7fbb71d21d7cf21b44d5d08d68ea3a991e236121e65c4a35c5c02",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/generic-associated-type/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/generic-associated-type/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/generic-associated-type",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 8287900,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "3a273f382ba4d3bfa44ed5c6eb90d47dc5bc0f5c793ca9700031a5d65c725623"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/generic-associated-type/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/generic-associated-type/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/generic-associated-type",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 48102731,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "3f4bdd244939bfe42ee57cb539f62697db548e0b6e3f76d270633d616f32abe9",
+          "artifact_bytes": 4538736,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/generic-associated-type/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/generic-associated-type",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 959687,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "dyn-iterator",
+      "category": "expansion",
+      "source": "dyn-iterator.rs",
+      "source_sha256": "0f4ba7164a03c8ae2f528bbbf985f48529518d88aaf43d3048703664b43f06a1",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/dyn-iterator/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/dyn-iterator/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/dyn-iterator",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 8071538,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "59e0c4a60345c23a25f986374933575d31aebc8c8eb4586889f6aea4338f84de"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/dyn-iterator/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/dyn-iterator/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/dyn-iterator",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 54868586,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "fd195520130f83ad4c09ba1f95b5c13046d3a59eaeb5e6a55d1dfd184f73e7ae",
+          "artifact_bytes": 4548752,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/dyn-iterator/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/dyn-iterator",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 914720,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "return-impl-trait-in-trait",
+      "category": "expansion",
+      "source": "return-impl-trait-in-trait.rs",
+      "source_sha256": "ca447e0a55893f8af49a3541a773cb28833a6fb1f416f9038a5c46afd0779c35",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/return-impl-trait-in-trait/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/return-impl-trait-in-trait/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/return-impl-trait-in-trait",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 9498271,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e0f1c563031ee8260c1907b5bc3d85cdb5a72496ff156e2bb0d6edb8f4e46b73"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/return-impl-trait-in-trait/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/return-impl-trait-in-trait/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/return-impl-trait-in-trait",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 51423159,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "2b1f55b378238a3a454b253c628d7ea629b919ef2b852e470a66ad1c479fa5ef",
+          "artifact_bytes": 4545736,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/return-impl-trait-in-trait/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/return-impl-trait-in-trait",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 1022001,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "offset-of",
+      "category": "expansion",
+      "source": "offset-of.rs",
+      "source_sha256": "445e301b8ff45f61b83a4ff01df7bf345ce6676d7a74006fb00004d39ef7b5e2",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 45153463,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "2d59f62a18e3af0452a3287ce7eb9adc5296f1d78a307929c96d7ec979a2c7f7",
+          "artifact_bytes": 401716,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of/native.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 947999,
+            "stdout_file": "native-run.stdout",
+            "stderr_file": "native-run.stderr",
+            "stdout_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 47613333,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "a053ad8018f8c8fc8bf380bd6a0904683ffc83ca7621351ccd6692103b9c8a3c",
+          "artifact_bytes": 4538504,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/offset-of",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 871565,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_fixture_pass"
+    },
+    {
+      "name": "extern-function",
+      "category": "expansion",
+      "source": "extern-function.rs",
+      "source_sha256": "f4e41fc8b2c10b39b4d7d6037cff9c240235c0798098756972853df693424179",
+      "kind": "binary",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/extern-function/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/extern-function/native.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/extern-function",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 4867552,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "8ee2d749c4b0f09815275d4070f3ffe1ae16322b4d7f0decbbd7dfa9c89477c0"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/extern-function/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/extern-function/oracle.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/extern-function",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 43970943,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "1e48cced3acdac827aa6d6238cde97713b11624e09532a28a9ae92e4f5f29e4d",
+          "artifact_bytes": 4538664,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/extern-function/oracle.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/extern-function",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 907328,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true
+        }
+      },
+      "status": "native_compile_failure_on_valid_rust"
+    },
+    {
+      "name": "native-rlib",
+      "category": "expansion",
+      "source": "native-rlib.rs",
+      "source_sha256": "55ad2cc6a1aac2daf43f0f9a10442d0c07de0f1562680babb87d4240e924475c",
+      "kind": "library",
+      "lanes": {
+        "native": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust",
+              "build",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/input.rs",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/libnative.rlib",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on",
+              "--manifest-path",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/Cargo.toml",
+              "--lib",
+              "--offline"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib",
+            "exit_code": 1,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 3662970,
+            "stdout_file": "native-build.stdout",
+            "stderr_file": "native-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "b76f0cc2649365ea297f9d1520f06117c6f1f16afe10e40b4957635841d47177"
+          },
+          "artifact_present": false,
+          "passed": false
+        },
+        "oracle": {
+          "build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/input.rs",
+              "--edition=2024",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/liboracle.rlib",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on",
+              "--crate-type=rlib",
+              "--crate-name=lustr_native_fixture"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 19248626,
+            "stdout_file": "oracle-build.stdout",
+            "stderr_file": "oracle-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "artifact_present": true,
+          "artifact_sha256": "ae78fbaeb2be494889ab91633e93673ac3ff927f30874ba28fef7cdb5b1346e2",
+          "artifact_bytes": 22706,
+          "consumer_build": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/rustc",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/consumer.rs",
+              "--edition=2024",
+              "--extern",
+              "lustr_native_fixture=/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/liboracle.rlib",
+              "-o",
+              "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/oracle-consumer.bin",
+              "-C",
+              "panic=unwind",
+              "-C",
+              "overflow-checks=on",
+              "-C",
+              "debug-assertions=on"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 37741910,
+            "stdout_file": "oracle-consumer-build.stdout",
+            "stderr_file": "oracle-consumer-build.stderr",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "passed": true,
+          "run": {
+            "argv": [
+              "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib/oracle-consumer.bin"
+            ],
+            "cwd": "/home/runner/work/lustr/lustr/dist/native-qualification/native-rlib",
+            "exit_code": 0,
+            "timed_out": false,
+            "spawn_error": null,
+            "elapsed_ns": 832345,
+            "stdout_file": "oracle-run.stdout",
+            "stderr_file": "oracle-run.stderr",
+            "stdout_sha256": "9a92adbc0cee38ef658c71ce1b1bf8c65668f166bfb213644c895ccb1ad07a25",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "consumer_source_sha256": "1cc68f240da642ec3a27d7af82254076cec1bad845ceaaae239cf22707ecf43f",
+      "status": "native_compile_failure_on_valid_rust"
+    }
+  ],
+  "scope": "Independent single-file and library fixtures, not full Rust qualification",
+  "timing_scope": "One recorded cold observation per command; no speedup conclusion",
+  "unassessed": [
+    "arbitrary Cargo projects",
+    "procedural macros",
+    "build scripts",
+    "cross-crate native artifact compatibility",
+    "warm edit invalidation",
+    "other targets",
+    "full Rust test suite",
+    "performance preservation"
+  ],
+  "full_native_coverage": false,
+  "required_fixture_gates_passed": true,
+  "all_native_fixtures_passed": false,
+  "native_gaps": [
+    "unsafe-pointer",
+    "async-await",
+    "generic-associated-type",
+    "dyn-iterator",
+    "return-impl-trait-in-trait",
+    "extern-function",
+    "native-rlib"
+  ],
+  "result": "pass"
+}

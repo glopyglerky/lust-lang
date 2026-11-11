@@ -1,0 +1,476 @@
+{
+  "result": "pass-with-explicit-native-limitations",
+  "run_id": 42993690480,
+  "job_id": 130432429866,
+  "commit": "f1c4bf2c6a22baa2ea146bb270804be547c15473",
+  "source": {
+    "commit": "f1c4bf2c6a22baa2ea146bb270804be547c15473",
+    "tree": "b13a8f68c908a1569255ef4fece1c6e53253fbe1",
+    "native_tree": "0ab1b09815802894e6078de0af59273cbdf46cb0",
+    "helper_sha256": "3fd53c094d0a6e335afd7d48d569c1962df0405afdeb4e93637f812e88019065"
+  },
+  "artifact_downloads": [
+    {
+      "id": 13843277488,
+      "name": "lustr-package-evidence-f1c4bf2c6a22baa2ea146bb270804be547c15473",
+      "sha256": "7cae6f119ccd7ee50cdac09c971919a327a45ae70021a89b030e486d96157ce8",
+      "size": 11447927,
+      "filename": "f1-standalone-evidence.zip",
+      "directory": "evidence"
+    },
+    {
+      "id": 13843212655,
+      "name": "lustr-native-preview-linux-x86_64-f1c4bf2c6a22baa2ea146bb270804be547c15473",
+      "sha256": "637d6c4b935986010e2a2db8bfb9e84ea69350fa0fe0f6093a733711953a5d0f",
+      "size": 271702513,
+      "filename": "f1-standalone-package.zip",
+      "directory": "package-artifact"
+    }
+  ],
+  "package_archive": {
+    "filename": "lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz",
+    "sha256": "df8a0db995a791830be90529dd22e1267329a1e18e54c9d7a6f7498e072ec711",
+    "size": 271702064
+  },
+  "payload": {
+    "validated_files": 354,
+    "tar_members": 453,
+    "additional_manifest_validated": true,
+    "runtime_coordinator_present": false
+  },
+  "binaries": {
+    "lust": {
+      "sha256": "df41ae4636c4eac79a44efeb595866f259124b0652d1bdfd8c2e9a5e982f7316",
+      "size": 3472984,
+      "mode": "0o755"
+    },
+    "lust-core": {
+      "sha256": "76ca01c0f81094712988b74a915e38769227d8e0f480e2cda6cce3f07812978e",
+      "size": 119247224,
+      "mode": "0o755"
+    },
+    "lustr-native": {
+      "sha256": "74dff196e93d47d285ee291776970738a0cac98bcce307f29c8dafb57fcd4cf9",
+      "size": 27003016,
+      "mode": "0o755"
+    },
+    "rustc": {
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "size": 648536,
+      "mode": "0o755"
+    },
+    "cargo": {
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af",
+      "size": 36148320,
+      "mode": "0o755"
+    }
+  },
+  "receipt": {
+    "profile": "gate",
+    "settings": {
+      "opt_level": 3,
+      "codegen_units": 16,
+      "lto": "thin",
+      "debug": false,
+      "incremental": true
+    },
+    "actual_native_rustc_invocations_in_log": 1,
+    "receipt_sha256": "6d8e5ea28c4f70e37d69506e3fda985c0d15cc29a0e791d91b64e161d2584059",
+    "log_sha256": "294f7eb5427b037edb63436e61e5f247034d74fb13fb9a60d57d910af7ed80ce",
+    "bootstrap": {
+      "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "verbose_version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1"
+    },
+    "local_opt1_artifact_excluded": true
+  },
+  "source_and_runner_hashes_verified_against_exact_git_objects": true,
+  "same_run_pristine_identity": {
+    "ci_assertion": "packaged native executables identical to pristine release build",
+    "components": [
+      "lust",
+      "lust-core"
+    ],
+    "limitation": "Verified successful exact-source CI hash equality assertion and packaged component hashes; a separate pristine baseline artifact was not downloaded."
+  },
+  "package_qualification": {
+    "commands": 105,
+    "timings": 42,
+    "expected_nonzero": {
+      "native-unsupported": 1,
+      "native-invalid": 1,
+      "compatibility-rejection": 101
+    },
+    "unexpected_timeouts": 0,
+    "checks": [
+      "no coordinator executable in the package",
+      "complete payload hashes after relocation",
+      "native Cargo build receipt binds the measured executable, source and build settings",
+      "packaged native executables identical to pristine release build",
+      "Rust sysroot relocates without rustup",
+      "installed native compile and actual executable output",
+      "native filesystem operation through relocated library assets",
+      "native unsupported and invalid input remain failures",
+      "offline full-Rust compatibility workspace, proc macro, build script, panic/drop, tests, doctests and borrow rejection",
+      "relocated in-process native Cargo binary compiler, real dep-info, external-input invalidation and explicit unsupported-artifact rejection",
+      "relocated package works while original package and native runtime/library trees are unavailable",
+      "raw paired native cold, daemon no-op and body-edit results with runtime output checks"
+    ],
+    "summaries": [
+      {
+        "mode": "process-cold",
+        "lane": "pristine",
+        "samples": 7,
+        "median_ns": 37718308,
+        "median_paired_ratio_to_pristine": 1.0,
+        "median_ms": 37.718308
+      },
+      {
+        "mode": "process-cold",
+        "lane": "packaged_native",
+        "samples": 7,
+        "median_ns": 39550091,
+        "median_paired_ratio_to_pristine": 1.0648949486436858,
+        "median_ms": 39.550091
+      },
+      {
+        "mode": "daemon-noop",
+        "lane": "pristine",
+        "samples": 7,
+        "median_ns": 4029524,
+        "median_paired_ratio_to_pristine": 1.0,
+        "median_ms": 4.029524
+      },
+      {
+        "mode": "daemon-noop",
+        "lane": "packaged_native",
+        "samples": 7,
+        "median_ns": 3772354,
+        "median_paired_ratio_to_pristine": 0.9255669652753683,
+        "median_ms": 3.772354
+      },
+      {
+        "mode": "daemon-body-edit",
+        "lane": "pristine",
+        "samples": 7,
+        "median_ns": 5732916,
+        "median_paired_ratio_to_pristine": 1.0,
+        "median_ms": 5.732916
+      },
+      {
+        "mode": "daemon-body-edit",
+        "lane": "packaged_native",
+        "samples": 7,
+        "median_ns": 4958058,
+        "median_paired_ratio_to_pristine": 0.9163790294502833,
+        "median_ms": 4.958058
+      }
+    ]
+  },
+  "native_cargo_qualification": {
+    "commands": 207,
+    "timings": 60,
+    "expected_nonzero": {
+      "native-reject-rlib": 2,
+      "native-reject-metadata": 2,
+      "native-reject-optimized-profile": 2,
+      "native-reject-foreign-target": 2,
+      "native-reject-malformed-check-cfg": 2,
+      "native-reject-malformed-version": 2,
+      "profile-unwind-overflow-on-native-runtime": 101,
+      "profile-abort-overflow-on-native-runtime": -6,
+      "invalid-type-native": 101,
+      "invalid-move-native": 101,
+      "invalid-alias-native": 101,
+      "cold-invalid-native-0": 101,
+      "cold-invalid-native-1": 101,
+      "cold-invalid-native-2": 101,
+      "cold-invalid-native-3": 101,
+      "cold-invalid-native-4": 101,
+      "cold-invalid-native-5": 101,
+      "profile-unwind-overflow-on-oracle-runtime": 101,
+      "profile-abort-overflow-on-oracle-runtime": -6,
+      "invalid-type-oracle": 101,
+      "invalid-move-oracle": 101,
+      "invalid-alias-oracle": 101,
+      "cold-invalid-oracle-0": 101,
+      "cold-invalid-oracle-1": 101,
+      "cold-invalid-oracle-2": 101,
+      "cold-invalid-oracle-3": 101,
+      "cold-invalid-oracle-4": 101,
+      "cold-invalid-oracle-5": 101
+    },
+    "unexpected_timeouts": 0,
+    "checks": [
+      "Cargo selects the in-process native compiler directly",
+      "real executables match the Rust oracle, including crate name, nested module_path and file",
+      "unchanged Cargo build is fresh; module, included-file and environment set/change/unset edits invalidate; a new feature variant builds and the previous variant remains reusable",
+      "Cargo incremental selection stays fresh without exposing the compiler's internal cache directory to application macros",
+      "ordinary non-CI Cargo development defaults compile and run correctly with Cargo's debuginfo=2 request and incremental caching, then remain fresh",
+      "native debug assertions, overflow defaults/overrides and panic unwind/abort match the Rust oracle, including exit 101 and SIGABRT",
+      "unsupported rlib, metadata, optimization and foreign targets, plus malformed options, fail without fake artifacts",
+      "type, move and aliasing errors remain compilation failures in both compilers",
+      "balanced paired Cargo timings retain correct outputs, signature/body rebuilds, empty-cache fresh compilation and cold invalid-program rejection",
+      "no compiler executable fallback; compiler-name sentinels remained unused"
+    ],
+    "default_development_profile": {
+      "manifest": "[package]\nname = \"lustr_native_contract\"\nversion = \"0.0.0\"\nedition = \"2024\"\npublish = false\n\n[workspace]\n\n[features]\nspecial = []\n\n",
+      "environment_policy": {
+        "scenario": "ordinary development outside CI",
+        "CI": "unset",
+        "TF_BUILD": "unset",
+        "CARGO_INCREMENTAL": "unset",
+        "reason": "Cargo disables default incremental compilation when CI or TF_BUILD is present. This scenario removes those markers for both compiler lanes; explicit incremental selection is qualified separately."
+      },
+      "lanes": {
+        "native": {
+          "build_command_index": 51,
+          "runtime_command_index": 52,
+          "fresh_command_index": 53,
+          "cargo_profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "incremental_directory": "/tmp/lustr-native-cargo-fw9yiss6/native default development target/debug/incremental",
+          "removed_inherited_ci_markers": [
+            "CI"
+          ]
+        },
+        "oracle": {
+          "build_command_index": 55,
+          "runtime_command_index": 56,
+          "fresh_command_index": 57,
+          "cargo_profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "incremental_directory": "/tmp/lustr-native-cargo-fw9yiss6/oracle default development target/debug/incremental",
+          "removed_inherited_ci_markers": [
+            "CI"
+          ]
+        }
+      }
+    },
+    "profile_cases": [
+      {
+        "name": "debug-off-default-overflow",
+        "flags": [
+          "-C",
+          "debug-assertions=no"
+        ],
+        "expected_exit": 0,
+        "expected_stdout": "debug=false abort=false next=0\n",
+        "observations": {
+          "native": {
+            "build_command_index": 59,
+            "runtime_command_index": 60,
+            "exit_code": 0,
+            "stdout": "debug=false abort=false next=0\n"
+          },
+          "oracle": {
+            "build_command_index": 61,
+            "runtime_command_index": 62,
+            "exit_code": 0,
+            "stdout": "debug=false abort=false next=0\n"
+          }
+        }
+      },
+      {
+        "name": "abort-overflow-off",
+        "flags": [
+          "-C",
+          "panic=abort",
+          "-C",
+          "overflow-checks=no"
+        ],
+        "expected_exit": 0,
+        "expected_stdout": "debug=true abort=true next=0\n",
+        "observations": {
+          "native": {
+            "build_command_index": 63,
+            "runtime_command_index": 64,
+            "exit_code": 0,
+            "stdout": "debug=true abort=true next=0\n"
+          },
+          "oracle": {
+            "build_command_index": 65,
+            "runtime_command_index": 66,
+            "exit_code": 0,
+            "stdout": "debug=true abort=true next=0\n"
+          }
+        }
+      },
+      {
+        "name": "unwind-overflow-on",
+        "flags": [
+          "-C",
+          "panic=unwind",
+          "-C",
+          "overflow-checks=yes"
+        ],
+        "expected_exit": 101,
+        "expected_stdout": "",
+        "observations": {
+          "native": {
+            "build_command_index": 67,
+            "runtime_command_index": 68,
+            "exit_code": 101,
+            "stdout": ""
+          },
+          "oracle": {
+            "build_command_index": 69,
+            "runtime_command_index": 70,
+            "exit_code": 101,
+            "stdout": ""
+          }
+        }
+      },
+      {
+        "name": "abort-overflow-on",
+        "flags": [
+          "-C",
+          "panic=abort",
+          "-C",
+          "overflow-checks=yes"
+        ],
+        "expected_exit": -6,
+        "expected_stdout": "",
+        "observations": {
+          "native": {
+            "build_command_index": 71,
+            "runtime_command_index": 72,
+            "exit_code": -6,
+            "stdout": ""
+          },
+          "oracle": {
+            "build_command_index": 73,
+            "runtime_command_index": 74,
+            "exit_code": -6,
+            "stdout": ""
+          }
+        }
+      }
+    ],
+    "summaries": [
+      {
+        "mode": "body-edit",
+        "lane": "native",
+        "samples": 6,
+        "median_ns": 42932998.5,
+        "median_paired_ratio_to_oracle": 0.5270485607211686,
+        "median_ms": 42.9329985
+      },
+      {
+        "mode": "body-edit",
+        "lane": "oracle",
+        "samples": 6,
+        "median_ns": 81064624.0,
+        "median_paired_ratio_to_oracle": 1.0,
+        "median_ms": 81.064624
+      },
+      {
+        "mode": "cold-invalid",
+        "lane": "native",
+        "samples": 6,
+        "median_ns": 22642668.5,
+        "median_paired_ratio_to_oracle": 0.427469558146818,
+        "median_ms": 22.6426685
+      },
+      {
+        "mode": "cold-invalid",
+        "lane": "oracle",
+        "samples": 6,
+        "median_ns": 53397073.5,
+        "median_paired_ratio_to_oracle": 1.0,
+        "median_ms": 53.3970735
+      },
+      {
+        "mode": "fresh-target",
+        "lane": "native",
+        "samples": 6,
+        "median_ns": 76380221.5,
+        "median_paired_ratio_to_oracle": 0.8219817154207243,
+        "median_ms": 76.3802215
+      },
+      {
+        "mode": "fresh-target",
+        "lane": "oracle",
+        "samples": 6,
+        "median_ns": 94443094.5,
+        "median_paired_ratio_to_oracle": 1.0,
+        "median_ms": 94.4430945
+      },
+      {
+        "mode": "no-change",
+        "lane": "native",
+        "samples": 6,
+        "median_ns": 21688162.0,
+        "median_paired_ratio_to_oracle": 0.48794111797198336,
+        "median_ms": 21.688162
+      },
+      {
+        "mode": "no-change",
+        "lane": "oracle",
+        "samples": 6,
+        "median_ns": 43984311.0,
+        "median_paired_ratio_to_oracle": 1.0,
+        "median_ms": 43.984311
+      },
+      {
+        "mode": "signature-edit",
+        "lane": "native",
+        "samples": 6,
+        "median_ns": 42844682.5,
+        "median_paired_ratio_to_oracle": 0.550766014215617,
+        "median_ms": 42.8446825
+      },
+      {
+        "mode": "signature-edit",
+        "lane": "oracle",
+        "samples": 6,
+        "median_ns": 77390231.5,
+        "median_paired_ratio_to_oracle": 1.0,
+        "median_ms": 77.3902315
+      }
+    ]
+  },
+  "broader_native_coverage": {
+    "fixtures": 12,
+    "commands": 38,
+    "validated_stdout_stderr_files": 76,
+    "required_fixture_gates_passed": true,
+    "all_native_fixtures_passed": false,
+    "native_gaps": [
+      "unsafe-pointer",
+      "async-await",
+      "generic-associated-type",
+      "dyn-iterator",
+      "return-impl-trait-in-trait",
+      "extern-function",
+      "native-rlib"
+    ],
+    "unexpected_timeouts": 0
+  },
+  "native_full_rust": false,
+  "full_native_speed_qualified": false,
+  "limitations": [
+    "The separate native regression remains red for the preserved upstream external-input request-cache bug.",
+    "Standalone process-cold packaged-native median paired ratio is 1.0648949486436858: this fixture observed a slowdown despite identical same-run native executable bytes.",
+    "Native Cargo timings are six balanced pairs per mode for one bounded dependency-free binary fixture, not whole-Rust performance qualification.",
+    "Cargo no-change measurements are freshness checks without a compiler invocation.",
+    "Full Rust compatibility is provided through direct Cargo selection of the bundled upstream Rust compiler, not full native Lust coverage."
+  ],
+  "github_metadata_verified": {
+    "job_id": 130432429866,
+    "run_id": 42993690480,
+    "conclusion": "success",
+    "successful_steps": 15,
+    "both_artifact_digests_and_head_sha_match": true
+  }
+}
