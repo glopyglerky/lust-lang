@@ -96,7 +96,7 @@ jobs:
             --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
             --cargo "$(rustup which cargo)" \
             --oracle "$(rustup which rustc)" \
-            --output dist/native-library-safe-evidence
+            --output "$RUNNER_TEMP/native-library-safe-evidence"
       - name: Assemble the relocatable package
         run: |
           python3 tools/package-toolchain.py \
@@ -147,7 +147,7 @@ jobs:
           path: |
             dist/package-qualification.json
             dist/package-qualification-native-library
-            dist/native-library-safe-evidence
+            ${{ runner.temp }}/native-library-safe-evidence
             dist/native-qualification
             dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
             ${{ runner.temp }}/native-cargo-build.json
