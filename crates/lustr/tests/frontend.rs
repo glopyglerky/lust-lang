@@ -81,11 +81,9 @@ fn frontend_option_requires_explicit_toolchain_and_target_command() {
 
 #[test]
 fn frontend_plan_is_pure_and_inserts_only_one_argument_boundary() {
-    let selected = cargo_lust::plan(
-        &request(&["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=1", "rustc", "--profile", "check"]),
-        programs(),
-    )
-    .unwrap();
+    let selected =
+        cargo_lust::plan(&request(&["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=1", "rustc", "--profile", "check"]), programs())
+            .unwrap();
     assert_eq!(selected.args, words(&["rustc", "--profile", "check", "--", "-Zunstable-options", "--jobs-frontend=1"]));
     let output = Command::new(env!("CARGO_BIN_EXE_lustr"))
         .args(["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=4", "plan", "rustc", "--lib"])
