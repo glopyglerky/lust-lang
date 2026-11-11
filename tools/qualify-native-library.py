@@ -117,19 +117,50 @@ def inspect_metadata(data: bytes, objects: list[tuple[str, bytes]]) -> dict:
     return result
 
 
+def command_word(command: str, start: int) -> tuple[str, int]:
+    lexer = shlex.shlex(command[start:], posix=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    word = lexer.get_token()
+    require(word is not None, "Cargo invocation ended before a command word")
+    return word, start + lexer.instream.tell()
+
+
 def compiler_invocations(stderr: str, compiler: Path) -> list[dict]:
     result = []
+    executable = str(compiler)
+    whitespace = " \t\r\n"
     for line in stderr.splitlines():
         line = line.strip()
         if not line.startswith("Running `") or not line.endswith("`"):
             continue
-        parts = shlex.split(line[len("Running `"):-1])
+        command = line[len("Running `"):-1]
         environment = {}
-        while parts and re.match(r"^[A-Za-z_][A-Za-z_0-9]*=", parts[0]):
-            key, value = parts.pop(0).split("=", 1)
+        at = 0
+        while at < len(command):
+            while at < len(command) and command[at] in whitespace:
+                at += 1
+            if not re.match(r"[A-Za-z_][A-Za-z_0-9]*=", command[at:]):
+                break
+            assignment, at = command_word(command, at)
+            key, value = assignment.split("=", 1)
             environment[key] = value
-        if parts and Path(parts[0]).resolve() == compiler:
-            result.append({"argv": parts, "environment": environment})
+        if at == len(command):
+            continue
+        # Cargo quotes environment values and arguments but can display its
+        # executable path without quotes. Match the known complete path in the
+        # original text; splitting and rejoining words loses repeated spaces
+        # and literal quote/backslash characters in that path.
+        end = at + len(executable)
+        if not (command.startswith(executable, at)
+                and (end == len(command) or command[end] in whitespace)):
+            # Retain properly quoted executable support. Only the first word
+            # after the environment may identify the compiler, never a wrapper
+            # argument, an environment value or a different path's prefix.
+            quoted, end = command_word(command, at)
+            if quoted != executable:
+                continue
+        result.append({"argv": [executable, *shlex.split(command[end:])], "environment": environment})
     return result
 
 
@@ -176,8 +207,7 @@ def qualifier(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Pa
         "commands": [], "checks": [], "artifacts": {}, "blocked": [],
     }
     if not require_unsafe:
-        report["scope"] = "Supplemental safe primitive library diagnostics. The separate required unsafe producer/caller suite remains a required capability gate and is not replaced by this result."
-        report["unimplemented_followups"].insert(0, "unsafe producer definitions and unsafe consumer calls; full required suite remains red")
+        report["scope"] = "Supplemental safe primitive library diagnostics. This supplement does not exercise the required unsafe producer/caller contract; its result does not replace the separate required suite."
     projects = {}
     environments = {}
     hidden = []

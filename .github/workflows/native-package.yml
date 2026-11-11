@@ -13,6 +13,7 @@ on:
       - 'tools/qualify-package.py'
       - 'tools/qualify-native-cargo.py'
       - 'tools/qualify-native-library.py'
+      - 'tools/test-native-library-invocations.py'
       - 'tools/test-native-protocol.py'
       - 'tools/check-native-unsafe-regressions.py'
       - 'tools/diagnose-native-library-safe.py'
@@ -34,6 +35,7 @@ on:
       - 'tools/qualify-package.py'
       - 'tools/qualify-native-cargo.py'
       - 'tools/qualify-native-library.py'
+      - 'tools/test-native-library-invocations.py'
       - 'tools/test-native-protocol.py'
       - 'tools/check-native-unsafe-regressions.py'
       - 'tools/diagnose-native-library-safe.py'
@@ -77,6 +79,8 @@ jobs:
         run: |
           rustc --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
           "$RUNNER_TEMP/lust-upstream-check"
+      - name: Check compiler invocation evidence parsing
+        run: python3 tools/test-native-library-invocations.py
       - name: Build the native compilers and runtime
         run: |
           compiler/native/scripts/build-tcc.sh
