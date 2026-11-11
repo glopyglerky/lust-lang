@@ -28,6 +28,14 @@ LUST_TCC_HOME=/absolute/tcc CARGO_TARGET_DIR=/absolute/lustr-native-build \
 /absolute/lustr-native-build/release/lust build unchanged.rs -o application
 ```
 
+When using `lustr --engine lust check|build|run`, the coordinator also guards a
+known upstream response-cache gap. External-input names such as `env` and
+`include_str` force a fresh native process with caching disabled, including when
+comments separate the macro name from `!`. Source and compiler arguments stay
+unchanged. The [cache guard decision](docs/compiler-set/design.md#native-cache-guard)
+describes its conservative scope and performance cost. Direct `lust` commands
+above do not pass through this guard.
+
 ## Compatibility toolchain
 
 For versioned binary bundles, see [BlueFe releases](https://github.com/glopyglerky/blueFe/releases)
@@ -89,7 +97,7 @@ cargo install --path crates/lustr --locked
 | Path | Responsibility |
 | --- | --- |
 | `compiler/native` | Exact pinned upstream Lust source, including its native compiler, libraries, TinyCC integration and differential fixtures. No Lustr-owned edits are admitted here. |
-| `crates/lustr` | Transitional Cargo/rustc coordinator, BlueFe tool selection and compatibility qualification. |
+| `crates/lustr` | Transitional Cargo/rustc coordinator, BlueFe tool selection, native invocation cache guard and compatibility qualification. |
 | `upstream/lust.pin` and `tools/lust-upstream-check.rs` | Upstream revision/tree identity and the Rust source-preservation guard. |
 | `crates/lustr-semantic` | Optional version-pinned rustc inspection. It exports inspection data, not executable MIR. |
 | `crates/lustr-bench` | Standalone paired benchmark runner and correctness gates. It is outside the coordinator workspace. |

@@ -51,6 +51,38 @@ The existing compatibility coordinator has two real interfaces:
 
 Those interfaces remain usable during development. They are not the target architecture or proof of full native compilation. The coordinator does not parse application source or recreate Cargo's dependency graph merely to choose a compiler.
 
+## Native cache guard
+
+The pinned upstream response cache excludes external-input macros by searching
+for literal names followed immediately by `!`. Rust permits comments and
+whitespace between those tokens. The native qualification reproduced a stale
+`env /* gap */ !` error after its environment variable changed from absent to
+present. The same test compares `option_env` and `include_str` edits against
+rustc, including actual program output. Its acceptance and rejection assertions
+remain unchanged.
+
+`crates/lustr/src/native_cache.rs` applies an invocation guard to explicit native
+`check`, `build` and `run` commands. Before execution it reads at most 4 MiB plus
+one byte of the named source. Complete `env`, `option_env`, `include`,
+`include_str` or `include_bytes` names disable Lust caching for that invocation.
+This conservative check also matches names in comments and strings. A missing,
+unreadable, non-file or larger source, or flags before the source path, also
+forces recomputation because this guard cannot establish the relevant input.
+Lust still parses every argument and reports its own errors.
+
+The guard sets `LUST_NO_CACHE=1` and `LUST_NO_DAEMON=1` on the child process even
+if inherited values request caching. Starting a fresh process prevents an
+already-running daemon from retaining its earlier cache policy. Ordinary source
+without those names keeps the inherited cache settings. Plans remain pure and
+do not read source. Compiler selection, source bytes, flags, other environment
+inputs, stdout, stderr and failure status retain their existing behavior.
+
+This repair lives entirely outside `compiler/native`. It adds no Rust language
+support and does not certify every remaining upstream cache path. A guarded
+request loses daemon and cache reuse; source inspection also adds work to native
+invocations. No speed improvement is claimed. Removing the guard requires a
+qualified native interface that tracks these external inputs correctly.
+
 ## Existing Cranelift compatibility experiment
 
 Use the [official Cargo profile backend mechanism](https://doc.rust-lang.org/cargo/reference/unstable.html#codegen-backend). Keep the selected Rust toolchain. Do not install a nightly, use `RUSTC_BOOTSTRAP`, change the user's default toolchain, or rewrite project manifests during a build.
