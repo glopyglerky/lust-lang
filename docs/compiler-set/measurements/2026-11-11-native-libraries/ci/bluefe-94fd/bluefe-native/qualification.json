@@ -1,0 +1,54 @@
+{
+  "schema": "bluefe.lustr-only-build.v1",
+  "success": false,
+  "source": {
+    "repository": "glopyglerky/blueFe",
+    "commit": "94fd9940bf37268ca6d7fce95841eb1fff3c0c78"
+  },
+  "compiler": {
+    "path": "/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native",
+    "sha256": "6121837e304eb3cd7a22392d8074f07655153dc8ef0581f3b9f266eab329bf44",
+    "version": "lustr-native 0.1.0 (Lust 0.2.0, build 6fae46ced14deb5a)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n"
+  },
+  "cargo": {
+    "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af"
+  },
+  "stage": 0,
+  "stock_rustc_fallback": false,
+  "complete_native_lustr": false,
+  "process_trace_required": true,
+  "diagnostic_only": false,
+  "configuration_sha256": "70bf3ee5199907ecde1aa83f6218ddbe7192610900429876859e5c2dcc7039ad",
+  "command": [
+    "/usr/bin/python3",
+    "/home/runner/work/blueFe/blueFe/blueFe/x.py",
+    "--config",
+    "/home/runner/work/_temp/bluefe-native/bootstrap.toml",
+    "--build-dir",
+    "/home/runner/work/_temp/bluefe-native/build",
+    "-vv",
+    "build",
+    "--stage",
+    "0",
+    "compiler/rustc"
+  ],
+  "elapsed_seconds": 0.4763865500000293,
+  "returncode": 1,
+  "executed_programs": [
+    "/usr/bin/python3",
+    "/usr/bin/git",
+    "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native",
+    "/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native"
+  ],
+  "native_compiler_executions": 2,
+  "unexpected_compilers": [],
+  "error": "unchanged BlueFe build failed; inspect build.log and process evidence to distinguish native gaps from build-environment failures",
+  "source_guard_after": {
+    "returncode": 0,
+    "stdout": "Protected Rust sources match upstream 5b7b37aefcb5b2fba3c2392bc9065b9e4602d494; no source divergence admitted\n",
+    "stderr": ""
+  },
+  "compiler_unchanged": true
+}

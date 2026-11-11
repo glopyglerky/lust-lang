@@ -1,0 +1,1 @@
+3763  execve("/home/runner/work/_temp/native-library-safe-evidence/native-function_imports output/lustr_library_contract-68129d507d5e866b", ["/home/runner/work/_temp/native-library-safe-evidence/native-function_imports output/lustr_library_contract-68129d507d5e866b"], 0x7fff98c36c28 /* 123 vars */) = 0

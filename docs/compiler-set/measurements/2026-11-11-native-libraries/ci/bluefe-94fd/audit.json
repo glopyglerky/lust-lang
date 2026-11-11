@@ -1,0 +1,29 @@
+{
+  "bluefe_source": "94fd9940bf37268ca6d7fce95841eb1fff3c0c78",
+  "lustr_source": "9fd796650b935db4a25de58263a7035e946d14d7",
+  "run": 43005192822,
+  "artifact": 13847709142,
+  "artifact_sha256": "09e561aa4a691fe8ccbfea8bbfbf767f91d15b5d50a6d9e437dba8f112c76946",
+  "compiler_sha256": "6121837e304eb3cd7a22392d8074f07655153dc8ef0581f3b9f266eab329bf44",
+  "actual_build_settings": {
+    "opt_level": 3,
+    "codegen_units": 16,
+    "lto": "thin",
+    "debug": false,
+    "incremental": true
+  },
+  "receipt_sha256": "6594199356f4d08f5b994203da09d1b260e1b8a835673a919598c080b04ed9fb",
+  "log_sha256": "15b05db22d8eff8433b3ba9d7e775d17da442f1f444052c329a8d118fa4562ef",
+  "native_compiler_executions": 2,
+  "executed_programs": [
+    "/usr/bin/python3",
+    "/usr/bin/git",
+    "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native",
+    "/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native"
+  ],
+  "source_guard_after_passed": true,
+  "bluefe_build_succeeded": false,
+  "first_native_error": "unsupported -Zallow-features=",
+  "limits": "The failing target-information probe is actual native execution, not successful Rust source compilation. Compiler binary bytes are not in this artifact; binary digest agrees between the build receipt and execution report."
+}

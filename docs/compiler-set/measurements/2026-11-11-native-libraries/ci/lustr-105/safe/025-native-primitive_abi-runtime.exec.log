@@ -1,0 +1,1 @@
+3723  execve("/home/runner/work/_temp/native-library-safe-evidence/native-primitive_abi output/lustr_library_contract-68129d507d5e866b", ["/home/runner/work/_temp/native-library-safe-evidence/native-primitive_abi output/lustr_library_contract-68129d507d5e866b"], 0x7ffd099046e8 /* 123 vars */) = 0

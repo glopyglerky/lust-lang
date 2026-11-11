@@ -1,0 +1,19 @@
+change-id = "ignore"
+[build]
+build = "x86_64-unknown-linux-gnu"
+host = ["x86_64-unknown-linux-gnu"]
+target = ["x86_64-unknown-linux-gnu"]
+rustc = "/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native"
+cargo = "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo"
+rustdoc = "/home/runner/work/_temp/bluefe-native/blocked-bin/rustdoc"
+build-dir = "/home/runner/work/_temp/bluefe-native/build"
+build-stage = 0
+jobs = 2
+docs = false
+submodules = false
+locked-deps = true
+[llvm]
+download-ci-llvm = true
+[rust]
+download-rustc = false
+deny-warnings = false

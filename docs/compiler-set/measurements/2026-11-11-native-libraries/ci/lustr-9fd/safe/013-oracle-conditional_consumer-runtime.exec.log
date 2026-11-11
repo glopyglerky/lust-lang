@@ -1,0 +1,1 @@
+3657  execve("/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/oracle-conditional_consumer output/lustr_library_contract-a37c421970c7e546", ["/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/oracle-conditional_consumer output/lustr_library_contract-a37c421970c7e546"], 0x7ffe036fd4c8 /* 123 vars */) = 0

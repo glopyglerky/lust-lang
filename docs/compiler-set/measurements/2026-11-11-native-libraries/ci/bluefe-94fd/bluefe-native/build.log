@@ -1,0 +1,20 @@
+running: /home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo build --jobs=2 --manifest-path /home/runner/work/blueFe/blueFe/blueFe/src/bootstrap/Cargo.toml -Zroot-dir=/home/runner/work/blueFe/blueFe/blueFe --verbose --locked
+::group::Building bootstrap
+error: failed to run `rustc` to learn about target-specific information
+
+Caused by:
+  process didn't exit successfully: `/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native - --crate-name ___ --print=file-names -Zallow-features= -Wrust_2018_idioms -Wunused_lifetimes --crate-type bin --crate-type rlib --crate-type dylib --crate-type cdylib --crate-type staticlib --crate-type proc-macro --print=sysroot --print=split-debuginfo --print=crate-name --print=cfg -Wwarnings` (exit status: 2)
+  --- stderr
+  error: lustr-native: unsupported native rustc option `-Zallow-features=`
+Traceback (most recent call last):
+  File "/home/runner/work/blueFe/blueFe/blueFe/x.py", line 53, in <module>
+    bootstrap.main()
+  File "/home/runner/work/blueFe/blueFe/blueFe/src/bootstrap/bootstrap.py", line 1456, in main
+    bootstrap(args)
+  File "/home/runner/work/blueFe/blueFe/blueFe/src/bootstrap/bootstrap.py", line 1406, in bootstrap
+    build.build_bootstrap()
+  File "/home/runner/work/blueFe/blueFe/blueFe/src/bootstrap/bootstrap.py", line 1062, in build_bootstrap
+    run(args, env=env, verbose=self.verbose, cwd=self.rust_root)
+  File "/home/runner/work/blueFe/blueFe/blueFe/src/bootstrap/bootstrap.py", line 237, in run
+    raise RuntimeError(err)
+RuntimeError: failed to run: /home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo build --jobs=2 --manifest-path /home/runner/work/blueFe/blueFe/blueFe/src/bootstrap/Cargo.toml -Zroot-dir=/home/runner/work/blueFe/blueFe/blueFe --verbose --locked

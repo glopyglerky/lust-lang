@@ -1,0 +1,1 @@
+6562  execve("/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native", ["/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native", "-vV"], 0x7fffce192140 /* 123 vars */) = 0

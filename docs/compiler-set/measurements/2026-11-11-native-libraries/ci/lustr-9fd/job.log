@@ -1,0 +1,1013 @@
+﻿2026-11-11T10:32:38.7708018Z Current runner version: '2.338.2'
+2026-11-11T10:32:38.7724754Z ##[group]Runner Image Provisioner
+2026-11-11T10:32:38.7725257Z Hosted Compute Agent
+2026-11-11T10:32:38.7725683Z Version: 20261028.624
+2026-11-11T10:32:38.7726091Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-11T10:32:38.7726498Z Build Date: 2026-10-28T21:51:42Z
+2026-11-11T10:32:38.7726919Z Worker ID: {8220894b-c3fa-455d-b2c6-e334c566fbf0}
+2026-11-11T10:32:38.7727319Z Region: centralus
+2026-11-11T10:32:38.7727630Z Cloud: Azure
+2026-11-11T10:32:38.7728020Z ##[endgroup]
+2026-11-11T10:32:38.7728705Z ##[group]Operating System
+2026-11-11T10:32:38.7729088Z Ubuntu
+2026-11-11T10:32:38.7729411Z 24.04.5
+2026-11-11T10:32:38.7729712Z LTS
+2026-11-11T10:32:38.7730106Z ##[endgroup]
+2026-11-11T10:32:38.7730427Z ##[group]Runner Image
+2026-11-11T10:32:38.7730798Z Image: ubuntu-24.04
+2026-11-11T10:32:38.7731139Z Version: 20261101.360.1
+2026-11-11T10:32:38.7731904Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-11T10:32:38.7732759Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-11T10:32:38.7733427Z ##[endgroup]
+2026-11-11T10:32:38.7734087Z ##[group]GITHUB_TOKEN Permissions
+2026-11-11T10:32:38.7735251Z Contents: read
+2026-11-11T10:32:38.7735597Z Metadata: read
+2026-11-11T10:32:38.7735921Z ##[endgroup]
+2026-11-11T10:32:38.7737410Z Secret source: Actions
+2026-11-11T10:32:38.7737992Z Cache mode: write
+2026-11-11T10:32:38.7738449Z Prepare workflow directory
+2026-11-11T10:32:38.8038375Z Prepare all required actions
+2026-11-11T10:32:38.8071497Z Getting action download info
+2026-11-11T10:32:39.0627372Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-11T10:32:39.1424166Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-11T10:32:39.3374205Z Complete job name: Native-only package (Linux x86_64)
+2026-11-11T10:32:39.3940137Z ##[group]Run actions/checkout@v4
+2026-11-11T10:32:39.3940540Z with:
+2026-11-11T10:32:39.3940795Z   ref: 9fd796650b935db4a25de58263a7035e946d14d7
+2026-11-11T10:32:39.3941115Z   repository: glopyglerky/lustr
+2026-11-11T10:32:39.3942993Z   token: ***
+2026-11-11T10:32:39.3943217Z   ssh-strict: true
+2026-11-11T10:32:39.3943576Z   ssh-user: git
+2026-11-11T10:32:39.3943811Z   persist-credentials: true
+2026-11-11T10:32:39.3944064Z   clean: true
+2026-11-11T10:32:39.3944302Z   sparse-checkout-cone-mode: true
+2026-11-11T10:32:39.3944575Z   fetch-depth: 1
+2026-11-11T10:32:39.3944804Z   fetch-tags: false
+2026-11-11T10:32:39.3945041Z   show-progress: true
+2026-11-11T10:32:39.3945275Z   lfs: false
+2026-11-11T10:32:39.3945496Z   submodules: false
+2026-11-11T10:32:39.3945733Z   set-safe-directory: true
+2026-11-11T10:32:39.3946000Z   allow-unsafe-pr-checkout: false
+2026-11-11T10:32:39.3946333Z env:
+2026-11-11T10:32:39.3946551Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:32:39.3946842Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:32:39.3947110Z ##[endgroup]
+2026-11-11T10:32:39.6113138Z Syncing repository: glopyglerky/lustr
+2026-11-11T10:32:39.6114516Z ##[group]Getting Git version info
+2026-11-11T10:32:39.6114887Z Working directory is '/home/runner/work/lustr/lustr'
+2026-11-11T10:32:39.6115503Z [command]/usr/bin/git version
+2026-11-11T10:32:39.6202709Z git version 2.56.0
+2026-11-11T10:32:39.6222119Z ##[endgroup]
+2026-11-11T10:32:39.6236279Z Temporarily overriding HOME='/home/runner/work/_temp/dbe7a532-ea12-46e9-aa13-1d79fdef15db' before making global git config changes
+2026-11-11T10:32:39.6237607Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-11T10:32:39.6239559Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/lustr/lustr
+2026-11-11T10:32:39.6285087Z Deleting the contents of '/home/runner/work/lustr/lustr'
+2026-11-11T10:32:39.6287737Z ##[group]Initializing the repository
+2026-11-11T10:32:39.6290101Z [command]/usr/bin/git init /home/runner/work/lustr/lustr
+2026-11-11T10:32:39.6385472Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-11T10:32:39.6386408Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-11T10:32:39.6387317Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-11T10:32:39.6388061Z hint: call:
+2026-11-11T10:32:39.6388440Z hint:
+2026-11-11T10:32:39.6388927Z hint: 	git config --global init.defaultBranch <name>
+2026-11-11T10:32:39.6389493Z hint:
+2026-11-11T10:32:39.6390023Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-11T10:32:39.6390888Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-11T10:32:39.6391617Z hint:
+2026-11-11T10:32:39.6392021Z hint: 	git branch -m <name>
+2026-11-11T10:32:39.6392471Z hint:
+2026-11-11T10:32:39.6393050Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-11T10:32:39.6394475Z Initialized empty Git repository in /home/runner/work/lustr/lustr/.git/
+2026-11-11T10:32:39.6401916Z [command]/usr/bin/git remote add origin https://github.com/glopyglerky/lustr
+2026-11-11T10:32:39.6442926Z ##[endgroup]
+2026-11-11T10:32:39.6443721Z ##[group]Disabling automatic garbage collection
+2026-11-11T10:32:39.6444769Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-11T10:32:39.6470351Z ##[endgroup]
+2026-11-11T10:32:39.6471089Z ##[group]Setting up auth
+2026-11-11T10:32:39.6474998Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-11T10:32:39.6504276Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-11T10:32:39.6822901Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-11T10:32:39.6861013Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-11T10:32:39.7052288Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-11T10:32:39.7087357Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-11T10:32:39.7270653Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-11T10:32:39.7310983Z ##[endgroup]
+2026-11-11T10:32:39.7311570Z ##[group]Fetching the repository
+2026-11-11T10:32:39.7320042Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 9fd796650b935db4a25de58263a7035e946d14d7
+2026-11-11T10:32:41.0098282Z From https://github.com/glopyglerky/lustr
+2026-11-11T10:32:41.0101999Z  * branch            9fd796650b935db4a25de58263a7035e946d14d7 -> FETCH_HEAD
+2026-11-11T10:32:41.0107169Z ##[endgroup]
+2026-11-11T10:32:41.0108469Z ##[group]Determining the checkout info
+2026-11-11T10:32:41.0111177Z ##[endgroup]
+2026-11-11T10:32:41.0122264Z [command]/usr/bin/git sparse-checkout disable
+2026-11-11T10:32:41.0192812Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-11T10:32:41.0225548Z ##[group]Checking out the ref
+2026-11-11T10:32:41.0227666Z [command]/usr/bin/git checkout --progress --force 9fd796650b935db4a25de58263a7035e946d14d7
+2026-11-11T10:32:41.5581037Z Note: switching to '9fd796650b935db4a25de58263a7035e946d14d7'.
+2026-11-11T10:32:41.5581322Z 
+2026-11-11T10:32:41.5581466Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-11T10:32:41.5581759Z changes and commit them, and you can discard any commits you make in this
+2026-11-11T10:32:41.5582089Z state without impacting any branches by switching back to a branch.
+2026-11-11T10:32:41.5582284Z 
+2026-11-11T10:32:41.5582532Z If you want to create a new branch to retain commits you create, you may
+2026-11-11T10:32:41.5583173Z do so (now or later) by using -c with the switch command. Example:
+2026-11-11T10:32:41.5583505Z 
+2026-11-11T10:32:41.5583610Z   git switch -c <new-branch-name>
+2026-11-11T10:32:41.5583726Z 
+2026-11-11T10:32:41.5583818Z Or undo this operation with:
+2026-11-11T10:32:41.5583935Z 
+2026-11-11T10:32:41.5584009Z   git switch -
+2026-11-11T10:32:41.5584110Z 
+2026-11-11T10:32:41.5584283Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-11T10:32:41.5584501Z 
+2026-11-11T10:32:41.5584652Z HEAD is now at 9fd7966 feat(native): compile real library objects and checked Cargo imports
+2026-11-11T10:32:41.5605341Z ##[endgroup]
+2026-11-11T10:32:41.5653530Z [command]/usr/bin/git log -1 --format=%H
+2026-11-11T10:32:41.5684231Z 9fd796650b935db4a25de58263a7035e946d14d7
+2026-11-11T10:32:41.5862062Z ##[group]Run rustup toolchain install 1.99.1 --profile minimal
+2026-11-11T10:32:41.5862400Z [36;1mrustup toolchain install 1.99.1 --profile minimal[0m
+2026-11-11T10:32:41.5881086Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:32:41.5881284Z env:
+2026-11-11T10:32:41.5881425Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:32:41.5881592Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:32:41.5881755Z ##[endgroup]
+2026-11-11T10:32:41.6338670Z info: syncing channel updates for 1.99.1-x86_64-unknown-linux-gnu
+2026-11-11T10:32:41.8925341Z info: latest update on 2026-10-15 for version 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-11T10:32:41.8927447Z info: downloading 3 components
+2026-11-11T10:32:48.0925078Z 
+2026-11-11T10:32:48.0981402Z   1.99.1-x86_64-unknown-linux-gnu installed - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-11T10:32:48.0981752Z 
+2026-11-11T10:32:48.1134684Z ##[group]Run sudo apt-get update
+2026-11-11T10:32:48.1134878Z [36;1msudo apt-get update[0m
+2026-11-11T10:32:48.1135070Z [36;1msudo apt-get install --no-install-recommends -y strace binutils[0m
+2026-11-11T10:32:48.1151175Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:32:48.1151304Z env:
+2026-11-11T10:32:48.1151419Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:32:48.1151565Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:32:48.1151693Z ##[endgroup]
+2026-11-11T10:32:48.1714742Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-11-11T10:32:48.2302309Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+2026-11-11T10:32:48.2309870Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2026-11-11T10:32:48.2340143Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2026-11-11T10:32:48.2356011Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-11-11T10:32:48.3158052Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1444 kB]
+2026-11-11T10:32:48.3264630Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [315 kB]
+2026-11-11T10:32:48.3278676Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1711 kB]
+2026-11-11T10:32:48.3343423Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [344 kB]
+2026-11-11T10:32:48.3394644Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1879 kB]
+2026-11-11T10:32:48.3453956Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [429 kB]
+2026-11-11T10:32:48.3468312Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [50.7 kB]
+2026-11-11T10:32:48.3476153Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse Translation-en [14.3 kB]
+2026-11-11T10:32:48.4045697Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1160 kB]
+2026-11-11T10:32:48.4090333Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [234 kB]
+2026-11-11T10:32:48.4535028Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1228 kB]
+2026-11-11T10:32:48.4561933Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [248 kB]
+2026-11-11T10:32:48.4597180Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1729 kB]
+2026-11-11T10:32:48.4646339Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [396 kB]
+2026-11-11T10:32:48.4665832Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [45.4 kB]
+2026-11-11T10:32:48.4674292Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse Translation-en [12.4 kB]
+2026-11-11T10:32:48.4792809Z Get:22 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+2026-11-11T10:32:48.5235266Z Get:23 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [760 kB]
+2026-11-11T10:32:48.5327101Z Get:24 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [690 kB]
+2026-11-11T10:32:48.5400652Z Get:25 https://packages.microsoft.com/ubuntu/24.04/prod noble/main armhf Packages [12.6 kB]
+2026-11-11T10:32:51.2939909Z Fetched 13.1 MB in 1s (13.2 MB/s)
+2026-11-11T10:32:51.9755498Z Reading package lists...
+2026-11-11T10:32:52.0064244Z Reading package lists...
+2026-11-11T10:32:52.1790713Z Building dependency tree...
+2026-11-11T10:32:52.1796041Z Reading state information...
+2026-11-11T10:32:52.3095956Z strace is already the newest version (6.8-0ubuntu2).
+2026-11-11T10:32:52.3096274Z strace set to manually installed.
+2026-11-11T10:32:52.3096529Z binutils is already the newest version (2.42-4ubuntu2.10).
+2026-11-11T10:32:52.3096858Z 0 upgraded, 0 newly installed, 0 to remove and 40 not upgraded.
+2026-11-11T10:32:52.3139416Z ##[group]Run rustc --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
+2026-11-11T10:32:52.3139819Z [36;1mrustc --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"[0m
+2026-11-11T10:32:52.3140070Z [36;1m"$RUNNER_TEMP/lust-upstream-check"[0m
+2026-11-11T10:32:52.3155772Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:32:52.3155900Z env:
+2026-11-11T10:32:52.3156011Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:32:52.3156154Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:32:52.3156283Z ##[endgroup]
+2026-11-11T10:32:52.6526450Z Lust tracked source matches upstream 240e08d91d4aed0299639f6f11fd522912b248f9; no divergences admitted
+2026-11-11T10:32:52.6553021Z ##[group]Run compiler/native/scripts/build-tcc.sh
+2026-11-11T10:32:52.6553249Z [36;1mcompiler/native/scripts/build-tcc.sh[0m
+2026-11-11T10:32:52.6553667Z [36;1mcargo build --manifest-path compiler/native/Cargo.toml --release --locked[0m
+2026-11-11T10:32:52.6553901Z [36;1mpython3 tools/build-native-cargo.py \[0m
+2026-11-11T10:32:52.6554067Z [36;1m  --repository "$GITHUB_WORKSPACE" \[0m
+2026-11-11T10:32:52.6554233Z [36;1m  --cargo "$(rustup which cargo)" \[0m
+2026-11-11T10:32:52.6554389Z [36;1m  --rustc "$(rustup which rustc)" \[0m
+2026-11-11T10:32:52.6554663Z [36;1m  --tcc-root "$GITHUB_WORKSPACE/compiler/native/third_party/tcc" \[0m
+2026-11-11T10:32:52.6554891Z [36;1m  --target-dir "$RUNNER_TEMP/lustr-native-cargo" \[0m
+2026-11-11T10:32:52.6555108Z [36;1m  --receipt "$RUNNER_TEMP/native-cargo-build.json"[0m
+2026-11-11T10:32:52.6570568Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:32:52.6570704Z env:
+2026-11-11T10:32:52.6570813Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:32:52.6570967Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:32:52.6571093Z ##[endgroup]
+2026-11-11T10:32:56.9620793Z tcc 43c7708 installed in /home/runner/work/lustr/lustr/compiler/native/third_party/tcc
+2026-11-11T10:32:56.9895095Z     Updating crates.io index
+2026-11-11T10:32:57.1258414Z  Downloading crates ...
+2026-11-11T10:32:57.2353545Z   Downloaded shlex v2.0.1
+2026-11-11T10:32:57.2433100Z   Downloaded mimalloc v0.1.52
+2026-11-11T10:32:57.2446362Z   Downloaded find-msvc-tools v0.1.14
+2026-11-11T10:32:57.2519506Z   Downloaded cc v1.8.0
+2026-11-11T10:32:57.2661877Z   Downloaded libmimalloc-sys v0.1.49
+2026-11-11T10:32:57.7326212Z    Compiling find-msvc-tools v0.1.14
+2026-11-11T10:32:57.7326455Z    Compiling shlex v2.0.1
+2026-11-11T10:32:57.7326712Z    Compiling lust v0.2.0 (/home/runner/work/lustr/lustr/compiler/native)
+2026-11-11T10:32:57.7809273Z    Compiling cc v1.8.0
+2026-11-11T10:32:58.2920244Z    Compiling libmimalloc-sys v0.1.49
+2026-11-11T10:33:01.1840197Z    Compiling mimalloc v0.1.52
+2026-11-11T10:33:02.4974411Z warning: unused imports: `Pat` and `Stmt`
+2026-11-11T10:33:02.5004030Z     --> src/check/collect.rs:2145:35
+2026-11-11T10:33:02.5033860Z      |
+2026-11-11T10:33:02.5063975Z 2145 |     use crate::ast::{BinOp, Expr, Pat, Stmt};
+2026-11-11T10:33:02.5064321Z      |                                   ^^^  ^^^^
+2026-11-11T10:33:02.5064564Z      |
+2026-11-11T10:33:02.5064842Z      = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+2026-11-11T10:33:02.5065120Z 
+2026-11-11T10:33:02.5065288Z warning: unused import: `IterKind as K`
+2026-11-11T10:33:02.5093836Z    --> src/check/iter.rs:834:13
+2026-11-11T10:33:02.5094073Z     |
+2026-11-11T10:33:02.5094231Z 834 |         use IterKind as K;
+2026-11-11T10:33:02.5094425Z     |             ^^^^^^^^^^^^^
+2026-11-11T10:33:02.5094583Z 
+2026-11-11T10:33:02.5154090Z warning: unused imports: `ItemKind` and `self`
+2026-11-11T10:33:02.5183937Z   --> src/check/variance.rs:12:18
+2026-11-11T10:33:02.5213908Z    |
+2026-11-11T10:33:02.5243947Z 12 | use crate::ast::{self, ItemKind};
+2026-11-11T10:33:02.5244201Z    |                  ^^^^  ^^^^^^^^
+2026-11-11T10:33:02.5244350Z 
+2026-11-11T10:33:02.5274751Z warning: unused import: `crate::check::sync::SyncOp`
+2026-11-11T10:33:02.5303814Z     --> src/check/mod.rs:4183:17
+2026-11-11T10:33:02.5304069Z      |
+2026-11-11T10:33:02.5304293Z 4183 |             use crate::check::sync::SyncOp;
+2026-11-11T10:33:02.5304552Z      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:02.5304716Z 
+2026-11-11T10:33:02.5304823Z warning: unused import: `crate::ty::sync::SyncTy`
+2026-11-11T10:33:02.5305070Z     --> src/check/mod.rs:4184:17
+2026-11-11T10:33:02.5305266Z      |
+2026-11-11T10:33:02.5305452Z 4184 |             use crate::ty::sync::SyncTy;
+2026-11-11T10:33:02.5305724Z      |                 ^^^^^^^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:02.5305878Z 
+2026-11-11T10:33:02.5333827Z warning: unused import: `crate::intern::FxMap`
+2026-11-11T10:33:02.5363774Z   --> src/driver/kept_delta.rs:50:5
+2026-11-11T10:33:02.5394199Z    |
+2026-11-11T10:33:02.5423753Z 50 | use crate::intern::FxMap;
+2026-11-11T10:33:02.5453702Z    |     ^^^^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:02.5483526Z 
+2026-11-11T10:33:08.8751590Z warning: unused import: `crate::ty::TyIntern`
+2026-11-11T10:33:08.8751921Z     --> src/check/collect.rs:7298:9
+2026-11-11T10:33:08.8752123Z      |
+2026-11-11T10:33:08.8752286Z 7298 |     use crate::ty::TyIntern;
+2026-11-11T10:33:08.8752495Z      |         ^^^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:08.8752622Z 
+2026-11-11T10:33:09.2181941Z warning: unused variable: `dt`
+2026-11-11T10:33:09.2182245Z     --> src/borrowck/regions.rs:6096:57
+2026-11-11T10:33:09.2182390Z      |
+2026-11-11T10:33:09.2182639Z 6096 |     fn call_from_ref(&mut self, avs: &[(Ty, Vec<u32>)], dt: Ty, dv: &[u32]) -> bool {
+2026-11-11T10:33:09.2182980Z      |                                                         ^^ help: if this is intentional, prefix it with an underscore: `_dt`
+2026-11-11T10:33:09.2183191Z      |
+2026-11-11T10:33:09.2183628Z      = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+2026-11-11T10:33:09.2183784Z 
+2026-11-11T10:33:10.0057805Z warning: variable does not need to be mutable
+2026-11-11T10:33:10.0058096Z    --> src/cgen/kconst.rs:643:9
+2026-11-11T10:33:10.0058233Z     |
+2026-11-11T10:33:10.0058422Z 643 |     let mut bytes = |at: usize, val: u128, n: usize, b: &mut [u8], cls: &mut [u8]| {
+2026-11-11T10:33:10.0058627Z     |         ----^^^^^
+2026-11-11T10:33:10.0058743Z     |         |
+2026-11-11T10:33:10.0058856Z     |         help: remove this `mut`
+2026-11-11T10:33:10.0058987Z     |
+2026-11-11T10:33:10.0059136Z     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+2026-11-11T10:33:10.0059278Z 
+2026-11-11T10:33:10.1877314Z warning: unused variable: `variants`
+2026-11-11T10:33:10.1878011Z     --> src/cgen.rs:1437:30
+2026-11-11T10:33:10.1878195Z      |
+2026-11-11T10:33:10.1878409Z 1437 | fn enum_is_exact(l: &Layout, variants: usize) -> bool {
+2026-11-11T10:33:10.1878826Z      |                              ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_variants`
+2026-11-11T10:33:10.1879090Z 
+2026-11-11T10:33:10.7598666Z warning: variable does not need to be mutable
+2026-11-11T10:33:10.7598950Z    --> src/check/any.rs:722:9
+2026-11-11T10:33:10.7599085Z     |
+2026-11-11T10:33:10.7599436Z 722 |     let mut one = |p: &Program, tys: &mut _, path: &str| Some(tn_apply(path, vec![tn_first(p, tys, t, open, in_sig)?]));
+2026-11-11T10:33:10.7599702Z     |         ----^^^
+2026-11-11T10:33:10.7599815Z     |         |
+2026-11-11T10:33:10.7599932Z     |         help: remove this `mut`
+2026-11-11T10:33:10.7600034Z 
+2026-11-11T10:33:10.7688797Z warning: variable does not need to be mutable
+2026-11-11T10:33:10.7689073Z    --> src/check/any.rs:859:9
+2026-11-11T10:33:10.7689297Z     |
+2026-11-11T10:33:10.7689478Z 859 |     let mut arg = |tys: &mut _, i: usize| tn_arg(p, tys, *args.get(i)?, open, in_sig);
+2026-11-11T10:33:10.7689686Z     |         ----^^^
+2026-11-11T10:33:10.7689807Z     |         |
+2026-11-11T10:33:10.7689920Z     |         help: remove this `mut`
+2026-11-11T10:33:10.7690015Z 
+2026-11-11T10:33:10.8520418Z warning: unused variable: `def`
+2026-11-11T10:33:10.8520701Z     --> src/check/closure.rs:2333:33
+2026-11-11T10:33:10.8520840Z      |
+2026-11-11T10:33:10.8521136Z 2333 |                 TyKind::Closure(def, _) => {
+2026-11-11T10:33:10.8521379Z      |                                 ^^^ help: if this is intentional, prefix it with an underscore: `_def`
+2026-11-11T10:33:10.8521543Z 
+2026-11-11T10:33:10.9567495Z warning: unused variable: `x`
+2026-11-11T10:33:10.9568037Z     --> src/check/collect.rs:2433:20
+2026-11-11T10:33:10.9568485Z      |
+2026-11-11T10:33:10.9569005Z 2433 |         (SVal::Int(x, None), SVal::Int(_, Some(it))) if !matches!(op, BinOp::Shl | BinOp::Shr) => {
+2026-11-11T10:33:10.9569618Z      |                    ^ help: if this is intentional, prefix it with an underscore: `_x`
+2026-11-11T10:33:10.9569940Z 
+2026-11-11T10:33:11.0766047Z warning: value assigned to `static_count` is never read
+2026-11-11T10:33:11.0766269Z     --> src/check/collect.rs:6231:28
+2026-11-11T10:33:11.0766403Z      |
+2026-11-11T10:33:11.0766507Z 6231 |     let mut static_count = 0u32;
+2026-11-11T10:33:11.0766682Z      |                            ^^^^ this value is reassigned later and never used
+2026-11-11T10:33:11.0766849Z ...
+2026-11-11T10:33:11.0767001Z 6409 |         static_count = ranks.iter().copied().max().map_or(0, |m| m + 1);
+2026-11-11T10:33:11.0767322Z      |         --------------------------------------------------------------- `static_count` is overwritten here before the previous value is read
+2026-11-11T10:33:11.0767582Z      |
+2026-11-11T10:33:11.0767738Z      = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+2026-11-11T10:33:11.0767897Z 
+2026-11-11T10:33:11.0973446Z warning: variable does not need to be mutable
+2026-11-11T10:33:11.0973713Z     --> src/check/collect.rs:6942:9
+2026-11-11T10:33:11.0973907Z      |
+2026-11-11T10:33:11.0974171Z 6942 |     let mut take = |g: &ast::Generics, out: &mut Vec<Sym>| {
+2026-11-11T10:33:11.0974379Z      |         ----^^^^
+2026-11-11T10:33:11.0974494Z      |         |
+2026-11-11T10:33:11.0974606Z      |         help: remove this `mut`
+2026-11-11T10:33:11.0974697Z 
+2026-11-11T10:33:11.1089907Z warning: variable does not need to be mutable
+2026-11-11T10:33:11.1090158Z     --> src/check/collect.rs:7308:9
+2026-11-11T10:33:11.1090351Z      |
+2026-11-11T10:33:11.1090753Z 7308 |     let mut args_match = |a: crate::ty::ArgsId, b: crate::ty::ArgsId, map: &mut Vec<(u32, Ty)>, cmap: &mut Vec<(u32, crate::ty::Co...
+2026-11-11T10:33:11.1091166Z      |         ----^^^^^^^^^^
+2026-11-11T10:33:11.1091348Z      |         |
+2026-11-11T10:33:11.1091489Z      |         help: remove this `mut`
+2026-11-11T10:33:11.1091791Z 
+2026-11-11T10:33:11.3518689Z warning: unused variable: `extend`
+2026-11-11T10:33:11.3518939Z    --> src/check/generics.rs:206:13
+2026-11-11T10:33:11.3519079Z     |
+2026-11-11T10:33:11.3519248Z 206 |         let extend = lang_trait(&["core", "iter"], "Extend");
+2026-11-11T10:33:11.3519510Z     |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_extend`
+2026-11-11T10:33:11.3519670Z 
+2026-11-11T10:33:11.3532024Z warning: unreachable pattern
+2026-11-11T10:33:11.3532216Z    --> src/check/generics.rs:392:13
+2026-11-11T10:33:11.3532355Z     |
+2026-11-11T10:33:11.3532470Z 388 |             "Extend" => self.extend,
+2026-11-11T10:33:11.3532640Z     |             -------- matches all the relevant values
+2026-11-11T10:33:11.3532791Z ...
+2026-11-11T10:33:11.3532897Z 392 |             "Extend" => self.extend,
+2026-11-11T10:33:11.3533050Z     |             ^^^^^^^^ no value can reach this
+2026-11-11T10:33:11.3533191Z     |
+2026-11-11T10:33:11.3533499Z     = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+2026-11-11T10:33:11.3533667Z 
+2026-11-11T10:33:11.3899856Z warning: variable does not need to be mutable
+2026-11-11T10:33:11.3900072Z     --> src/check/generics.rs:1594:9
+2026-11-11T10:33:11.3900227Z      |
+2026-11-11T10:33:11.3900487Z 1594 |     let mut lt = |lt: ast::Lifetime, bound: &[Sym], out: &mut Vec<(ast::Lifetime, bool)>| {
+2026-11-11T10:33:11.3900706Z      |         ----^^
+2026-11-11T10:33:11.3900818Z      |         |
+2026-11-11T10:33:11.3900934Z      |         help: remove this `mut`
+2026-11-11T10:33:11.3901028Z 
+2026-11-11T10:33:11.8086723Z warning: value assigned to `to_glue` is never read
+2026-11-11T10:33:11.8086963Z      --> src/check/generics.rs:11755:27
+2026-11-11T10:33:11.8087104Z       |
+2026-11-11T10:33:11.8087218Z 11755 |           let mut to_glue = false;
+2026-11-11T10:33:11.8087396Z       |                             ^^^^^ this value is reassigned later and never used
+2026-11-11T10:33:11.8087566Z ...
+2026-11-11T10:33:11.8087706Z 11768 | /             to_glue = !has_rel
+2026-11-11T10:33:11.8087947Z 11769 | |                 && !prove_goal(p, &[], TraitRef { def: lang.ord, args: ord_args, bindings: EMPTY_BINDINGS })
+2026-11-11T10:33:11.8088529Z 11770 | |                 && crate::check::collect::has_ord(p, &p.tys, self_ty);
+2026-11-11T10:33:11.8088821Z       | |_____________________________________________________________________- `to_glue` is overwritten here before the previous value is read
+2026-11-11T10:33:11.8089026Z 
+2026-11-11T10:33:11.8699892Z warning: unused variable: `m`
+2026-11-11T10:33:11.8700223Z      --> src/check/generics.rs:13393:28
+2026-11-11T10:33:11.8700451Z       |
+2026-11-11T10:33:11.8700912Z 13393 |             TyKind::Ref(_, m, e) if is_default => matches!(cx.tys.kind(e), TyKind::Str | TyKind::Slice(_)).then_some(Vec::new()),
+2026-11-11T10:33:11.8701452Z       |                            ^ help: if this is intentional, prefix it with an underscore: `_m`
+2026-11-11T10:33:11.8701699Z 
+2026-11-11T10:33:11.9969384Z warning: unreachable pattern
+2026-11-11T10:33:11.9969694Z     --> src/check/iter.rs:1667:19
+2026-11-11T10:33:11.9969892Z      |
+2026-11-11T10:33:11.9970050Z 1635 |                 | "size_hint"
+2026-11-11T10:33:11.9970346Z      |                   ----------- matches all the relevant values
+2026-11-11T10:33:11.9970620Z ...
+2026-11-11T10:33:11.9990717Z 1667 |                 | "size_hint"
+2026-11-11T10:33:11.9991027Z      |                   ^^^^^^^^^^^ no value can reach this
+2026-11-11T10:33:11.9991209Z 
+2026-11-11T10:33:12.2026778Z warning: variable does not need to be mutable
+2026-11-11T10:33:12.2027114Z    --> src/check/depth.rs:397:9
+2026-11-11T10:33:12.2027324Z     |
+2026-11-11T10:33:12.2027552Z 397 |     let mut max_of = |ts: Vec<Ty>, memo: &mut FxMap<Ty, usize>| {
+2026-11-11T10:33:12.2027846Z     |         ----^^^^^^
+2026-11-11T10:33:12.2028030Z     |         |
+2026-11-11T10:33:12.2028212Z     |         help: remove this `mut`
+2026-11-11T10:33:12.2028360Z 
+2026-11-11T10:33:12.2079893Z warning: unused variable: `p`
+2026-11-11T10:33:12.2080141Z   --> src/check/opaque.rs:88:13
+2026-11-11T10:33:12.2080276Z    |
+2026-11-11T10:33:12.2080487Z 88 |         let p = self.p;
+2026-11-11T10:33:12.2080777Z    |             ^ help: if this is intentional, prefix it with an underscore: `_p`
+2026-11-11T10:33:12.2080996Z 
+2026-11-11T10:33:12.2433763Z warning: variable does not need to be mutable
+2026-11-11T10:33:12.2434042Z     --> src/check/opaque.rs:1138:9
+2026-11-11T10:33:12.2434183Z      |
+2026-11-11T10:33:12.2434329Z 1138 |     let mut in_args = |a: ArgsId, out: &mut Vec<Ty>| {
+2026-11-11T10:33:12.2434508Z      |         ----^^^^^^^
+2026-11-11T10:33:12.2434624Z      |         |
+2026-11-11T10:33:12.2434741Z      |         help: remove this `mut`
+2026-11-11T10:33:12.2434833Z 
+2026-11-11T10:33:12.7408875Z warning: unused variable: `p`
+2026-11-11T10:33:12.7409189Z     --> src/check/mod.rs:9128:13
+2026-11-11T10:33:12.7409389Z      |
+2026-11-11T10:33:12.7409555Z 9128 |         let p = self.p;
+2026-11-11T10:33:12.7409882Z      |             ^ help: if this is intentional, prefix it with an underscore: `_p`
+2026-11-11T10:33:12.7410121Z 
+2026-11-11T10:33:12.9176857Z warning: unused variable: `a`
+2026-11-11T10:33:12.9177115Z      --> src/check/mod.rs:16526:26
+2026-11-11T10:33:12.9177265Z       |
+2026-11-11T10:33:12.9177391Z 16526 |         for (_, _, n, _, a, g) in &spine {
+2026-11-11T10:33:12.9177627Z       |                          ^ help: if this is intentional, prefix it with an underscore: `_a`
+2026-11-11T10:33:12.9177787Z 
+2026-11-11T10:33:13.1815559Z warning: value assigned to `last` is never read
+2026-11-11T10:33:13.1815914Z     --> src/daemon.rs:1139:9
+2026-11-11T10:33:13.1816117Z      |
+2026-11-11T10:33:13.1816363Z 1139 |         last = std::time::Instant::now();
+2026-11-11T10:33:13.1816702Z      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+2026-11-11T10:33:13.1816981Z ...
+2026-11-11T10:33:13.1817159Z 1185 |         last = std::time::Instant::now();
+2026-11-11T10:33:13.1817567Z      |         -------------------------------- `last` is overwritten here before the previous value is read
+2026-11-11T10:33:13.1817843Z 
+2026-11-11T10:33:14.2577631Z warning: variable does not need to be mutable
+2026-11-11T10:33:14.2578154Z    --> src/driver/span_shift.rs:178:9
+2026-11-11T10:33:14.2578298Z     |
+2026-11-11T10:33:14.2578586Z 178 |     let mut list = |extras: &mut Vec<ExtraNodes>, own: Span, spans: &[Span], pick: fn(&mut ExtraNodes) -> &mut Vec<usize>, i: usize...
+2026-11-11T10:33:14.2578878Z     |         ----^^^^
+2026-11-11T10:33:14.2578996Z     |         |
+2026-11-11T10:33:14.2579111Z     |         help: remove this `mut`
+2026-11-11T10:33:14.2579207Z 
+2026-11-11T10:33:14.7851775Z warning: variable does not need to be mutable
+2026-11-11T10:33:14.7852014Z    --> src/ir.rs:395:9
+2026-11-11T10:33:14.7852134Z     |
+2026-11-11T10:33:14.7852284Z 395 |     let mut scan_rv = |rv: &Rvalue, bad: &mut Vec<bool>| match rv {
+2026-11-11T10:33:14.7852484Z     |         ----^^^^^^^
+2026-11-11T10:33:14.7852634Z     |         |
+2026-11-11T10:33:14.7852750Z     |         help: remove this `mut`
+2026-11-11T10:33:14.7852848Z 
+2026-11-11T10:33:14.8321308Z warning: variable does not need to be mutable
+2026-11-11T10:33:14.8321560Z    --> src/lower/any.rs:177:13
+2026-11-11T10:33:14.8321719Z     |
+2026-11-11T10:33:14.8321849Z 177 |         let mut word = |this: &mut Self, k: u32| {
+2026-11-11T10:33:14.8322018Z     |             ----^^^^
+2026-11-11T10:33:14.8322136Z     |             |
+2026-11-11T10:33:14.8322258Z     |             help: remove this `mut`
+2026-11-11T10:33:14.8322356Z 
+2026-11-11T10:33:14.8684208Z warning: unreachable pattern
+2026-11-11T10:33:14.8684609Z    --> src/lower/iter.rs:100:15
+2026-11-11T10:33:14.8684869Z     |
+2026-11-11T10:33:14.8685100Z  49 |             | B::IterNextBack
+2026-11-11T10:33:14.8685352Z     |               --------------- matches all the relevant values
+2026-11-11T10:33:14.8685598Z ...
+2026-11-11T10:33:14.8685751Z 100 |             | B::IterNextBack
+2026-11-11T10:33:14.8686238Z     |               ^^^^^^^^^^^^^^^ no value can reach this
+2026-11-11T10:33:14.8686402Z 
+2026-11-11T10:33:14.8686480Z warning: unreachable pattern
+2026-11-11T10:33:14.8686682Z    --> src/lower/iter.rs:116:15
+2026-11-11T10:33:14.8686880Z     |
+2026-11-11T10:33:14.8687033Z  50 |             | B::IterSizeHint
+2026-11-11T10:33:14.8687259Z     |               --------------- matches all the relevant values
+2026-11-11T10:33:14.8687493Z ...
+2026-11-11T10:33:14.8687638Z 116 |             | B::IterSizeHint
+2026-11-11T10:33:14.8687853Z     |               ^^^^^^^^^^^^^^^ no value can reach this
+2026-11-11T10:33:14.8688015Z 
+2026-11-11T10:33:14.8688066Z warning: unreachable pattern
+2026-11-11T10:33:14.8688197Z    --> src/lower/iter.rs:142:15
+2026-11-11T10:33:14.8688318Z     |
+2026-11-11T10:33:14.8688422Z  51 |             | B::IterLen
+2026-11-11T10:33:14.8688564Z     |               ---------- matches all the relevant values
+2026-11-11T10:33:14.8688713Z ...
+2026-11-11T10:33:14.8688808Z 142 |             | B::IterLen
+2026-11-11T10:33:14.8688947Z     |               ^^^^^^^^^^ no value can reach this
+2026-11-11T10:33:14.8689051Z 
+2026-11-11T10:33:15.0589199Z warning: variable does not need to be mutable
+2026-11-11T10:33:15.0589622Z     --> src/lower/iter.rs:5954:13
+2026-11-11T10:33:15.0589851Z      |
+2026-11-11T10:33:15.0590158Z 5954 |         let mut side_ok = |this: &mut Self, side: Place, is_start: bool| -> Local {
+2026-11-11T10:33:15.0590532Z      |             ----^^^^^^^
+2026-11-11T10:33:15.0590741Z      |             |
+2026-11-11T10:33:15.0591022Z      |             help: remove this `mut`
+2026-11-11T10:33:15.0614157Z 
+2026-11-11T10:33:15.0882580Z warning: variable does not need to be mutable
+2026-11-11T10:33:15.0882908Z     --> src/lower/iter.rs:6784:13
+2026-11-11T10:33:15.0883115Z      |
+2026-11-11T10:33:15.0883554Z 6784 |         let mut side = |this: &mut Self, v: Local, vt: Ty, q: Option<(AdtId, Ty)>, dt: Ty| -> Operand {
+2026-11-11T10:33:15.0883812Z      |             ----^^^^
+2026-11-11T10:33:15.0883974Z      |             |
+2026-11-11T10:33:15.0884106Z      |             help: remove this `mut`
+2026-11-11T10:33:15.0884209Z 
+2026-11-11T10:33:15.1223792Z warning: variable does not need to be mutable
+2026-11-11T10:33:15.1224280Z   --> src/lower/range_fmt.rs:24:13
+2026-11-11T10:33:15.1224424Z    |
+2026-11-11T10:33:15.1224571Z 24 |         let mut field = |this: &mut Self, i: u32| -> FmtPart {
+2026-11-11T10:33:15.1224756Z    |             ----^^^^^
+2026-11-11T10:33:15.1224876Z    |             |
+2026-11-11T10:33:15.1224996Z    |             help: remove this `mut`
+2026-11-11T10:33:15.1225093Z 
+2026-11-11T10:33:15.1907677Z warning: unreachable pattern
+2026-11-11T10:33:15.1908004Z     --> src/lower.rs:3094:13
+2026-11-11T10:33:15.1908212Z      |
+2026-11-11T10:33:15.1908685Z 2087 |             Expr::Int(..) | Expr::Float(_) | Expr::Bool(_) | Expr::Char(_) | Expr::Str(_) | Expr::ByteStr(_) | Expr::Unit => {
+2026-11-11T10:33:15.1909188Z      |                             -------------- matches all the relevant values
+2026-11-11T10:33:15.1909514Z ...
+2026-11-11T10:33:15.1909681Z 3094 |             Expr::Float(_)
+2026-11-11T10:33:15.1909919Z      |             ^^^^^^^^^^^^^^ no value can reach this
+2026-11-11T10:33:15.1910093Z 
+2026-11-11T10:33:15.2330199Z warning: variable does not need to be mutable
+2026-11-11T10:33:15.2330527Z     --> src/lower.rs:3987:13
+2026-11-11T10:33:15.2330658Z      |
+2026-11-11T10:33:15.2330784Z 3987 |         let mut dest_arg = |this: &mut Self| {
+2026-11-11T10:33:15.2330949Z      |             ----^^^^^^^^
+2026-11-11T10:33:15.2331087Z      |             |
+2026-11-11T10:33:15.2331206Z      |             help: remove this `mut`
+2026-11-11T10:33:15.2331304Z 
+2026-11-11T10:33:15.2375402Z warning: variable does not need to be mutable
+2026-11-11T10:33:15.2375626Z     --> src/lower.rs:4176:21
+2026-11-11T10:33:15.2375744Z      |
+2026-11-11T10:33:15.2376042Z 4176 |                 let mut side = |this: &mut Self, site: ExprId, f: LocalDefId| -> (Operand, Operand) {
+2026-11-11T10:33:15.2376633Z      |                     ----^^^^
+2026-11-11T10:33:15.2376826Z      |                     |
+2026-11-11T10:33:15.2377019Z      |                     help: remove this `mut`
+2026-11-11T10:33:15.2377147Z 
+2026-11-11T10:33:15.2628350Z warning: unused variable: `a`
+2026-11-11T10:33:15.2628624Z     --> src/lower.rs:5104:27
+2026-11-11T10:33:15.2628797Z      |
+2026-11-11T10:33:15.2628983Z 5104 |                 for (ai, &a) in args.iter().enumerate() {
+2026-11-11T10:33:15.2634341Z      |                           ^ help: if this is intentional, prefix it with an underscore: `_a`
+2026-11-11T10:33:15.2634731Z 
+2026-11-11T10:33:15.3046389Z warning: unreachable pattern
+2026-11-11T10:33:15.3046684Z     --> src/lower.rs:6971:13
+2026-11-11T10:33:15.3046860Z      |
+2026-11-11T10:33:15.3047067Z 6881 |             Pat::Slice { prefix, middle, suffix } => {
+2026-11-11T10:33:15.3047296Z      |             ------------------------------------- matches all the relevant values
+2026-11-11T10:33:15.3047479Z ...
+2026-11-11T10:33:15.3047663Z 6971 |             Pat::Slice { .. } | Pat::QPath { .. } | Pat::MacroCall(_) => {}
+2026-11-11T10:33:15.3047870Z      |             ^^^^^^^^^^^^^^^^^ no value can reach this
+2026-11-11T10:33:15.3047983Z 
+2026-11-11T10:33:15.3048044Z warning: unreachable pattern
+2026-11-11T10:33:15.3048174Z     --> src/lower.rs:6971:33
+2026-11-11T10:33:15.3048294Z      |
+2026-11-11T10:33:15.3048471Z 6910 |             Pat::Path(_) | Pat::QPath { .. } | Pat::TupleStruct { .. } | Pat::Struct { .. } => {
+2026-11-11T10:33:15.3048717Z      |                            ----------------- matches all the relevant values
+2026-11-11T10:33:15.3048883Z ...
+2026-11-11T10:33:15.3049027Z 6971 |             Pat::Slice { .. } | Pat::QPath { .. } | Pat::MacroCall(_) => {}
+2026-11-11T10:33:15.3049233Z      |                                 ^^^^^^^^^^^^^^^^^ no value can reach this
+2026-11-11T10:33:15.3049350Z 
+2026-11-11T10:33:15.9961109Z warning: value assigned to `last` is never read
+2026-11-11T10:33:15.9961436Z     --> src/resolve/worklist.rs:3499:13
+2026-11-11T10:33:15.9961619Z      |
+2026-11-11T10:33:15.9961728Z 3499 |             last = now;
+2026-11-11T10:33:15.9961858Z      |             ^^^^^^^^^^
+2026-11-11T10:33:15.9961978Z ...
+2026-11-11T10:33:15.9962366Z 4311 |     lap!("resolve: chunk scan+concat");
+2026-11-11T10:33:15.9962552Z      |     ---------------------------------- in this macro invocation
+2026-11-11T10:33:15.9962719Z      |
+2026-11-11T10:33:15.9962845Z      = help: maybe it is overwritten before being read?
+2026-11-11T10:33:15.9963138Z      = note: this warning originates in the macro `lap` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-11-11T10:33:15.9963529Z 
+2026-11-11T10:33:16.5203802Z warning: unreachable pattern
+2026-11-11T10:33:16.5204025Z     --> src/ty/consteval.rs:4117:13
+2026-11-11T10:33:16.5204167Z      |
+2026-11-11T10:33:16.5204370Z 4114 |             ConstValue::Aggregate(vals) => vals.get(i).cloned(),
+2026-11-11T10:33:16.5204603Z      |             --------------------------- matches all the relevant values
+2026-11-11T10:33:16.5204806Z ...
+2026-11-11T10:33:16.5204952Z 4117 |             ConstValue::Aggregate(_) | ConstValue::Repeat(..) => None,
+2026-11-11T10:33:16.5205162Z      |             ^^^^^^^^^^^^^^^^^^^^^^^^ no value can reach this
+2026-11-11T10:33:16.5205272Z 
+2026-11-11T10:33:16.6387171Z warning: variable does not need to be mutable
+2026-11-11T10:33:16.6387402Z     --> src/ty/lang.rs:2301:9
+2026-11-11T10:33:16.6387532Z      |
+2026-11-11T10:33:16.6387748Z 2301 |     let mut find = |rows: &[&str], kind| rows.iter().any(|r| std_row_eq(r, path)).then_some(kind);
+2026-11-11T10:33:16.6387988Z      |         ----^^^^
+2026-11-11T10:33:16.6388103Z      |         |
+2026-11-11T10:33:16.6388218Z      |         help: remove this `mut`
+2026-11-11T10:33:16.6388317Z 
+2026-11-11T10:33:16.7450490Z warning: variable does not need to be mutable
+2026-11-11T10:33:16.7450706Z    --> src/main.rs:120:9
+2026-11-11T10:33:16.7450830Z     |
+2026-11-11T10:33:16.7451026Z 120 |     let mut row = |rows: &mut Vec<(String, usize)>, name: &str, f: &mut dyn FnMut()| {
+2026-11-11T10:33:16.7451540Z     |         ----^^^
+2026-11-11T10:33:16.7451652Z     |         |
+2026-11-11T10:33:16.7451769Z     |         help: remove this `mut`
+2026-11-11T10:33:16.7451874Z 
+2026-11-11T10:33:16.7656677Z warning: type `UnitDefs` is more private than the item `Mode::from_env`
+2026-11-11T10:33:16.7656929Z    --> src/cc/pgo.rs:74:5
+2026-11-11T10:33:16.7657053Z     |
+2026-11-11T10:33:16.7657304Z  74 |     pub fn from_env(spec: &CcSpec, work: &Path, defs: Option<&UnitDefs>, warm: Option<&Warm>) -> Result<Option<Mode>, String> {
+2026-11-11T10:33:16.7657746Z     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ associated function `Mode::from_env` is reachable at visibility `pub(crate)`
+2026-11-11T10:33:16.7658019Z     |
+2026-11-11T10:33:16.7658184Z note: but type `UnitDefs` is only usable at visibility `pub(in crate::cc)`
+2026-11-11T10:33:16.7658390Z    --> src/cc/pgo.rs:592:1
+2026-11-11T10:33:16.7658531Z     |
+2026-11-11T10:33:16.7658639Z 592 | pub(super) struct UnitDefs {
+2026-11-11T10:33:16.7658777Z     | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:16.7658939Z     = note: `#[warn(private_interfaces)]` on by default
+2026-11-11T10:33:16.7659061Z 
+2026-11-11T10:33:16.7659156Z warning: type `Warm` is more private than the item `Mode::from_env`
+2026-11-11T10:33:16.7659342Z    --> src/cc/pgo.rs:74:5
+2026-11-11T10:33:16.7659457Z     |
+2026-11-11T10:33:16.7659692Z  74 |     pub fn from_env(spec: &CcSpec, work: &Path, defs: Option<&UnitDefs>, warm: Option<&Warm>) -> Result<Option<Mode>, String> {
+2026-11-11T10:33:16.7660353Z     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ associated function `Mode::from_env` is reachable at visibility `pub(crate)`
+2026-11-11T10:33:16.7660743Z     |
+2026-11-11T10:33:16.7660958Z note: but type `Warm` is only usable at visibility `pub(in crate::cc)`
+2026-11-11T10:33:16.7661233Z    --> src/cc/pgo.rs:186:1
+2026-11-11T10:33:16.7661411Z     |
+2026-11-11T10:33:16.7661566Z 186 | pub(super) struct Warm {
+2026-11-11T10:33:16.7661755Z     | ^^^^^^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:16.7661865Z 
+2026-11-11T10:33:16.9511211Z warning: function `build` is never used
+2026-11-11T10:33:16.9511522Z    --> src/cc.rs:740:8
+2026-11-11T10:33:16.9511695Z     |
+2026-11-11T10:33:16.9512149Z 740 | pub fn build(units: &[UnitIn], spec: &CcSpec, out: &Path, debug: bool, cache: Option<&crate::driver::cache::Cache>, work: &Path) ->...
+2026-11-11T10:33:16.9512589Z     |        ^^^^^
+2026-11-11T10:33:16.9512748Z     |
+2026-11-11T10:33:16.9512967Z     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+2026-11-11T10:33:16.9513181Z 
+2026-11-11T10:33:16.9513421Z warning: variant `OneStep` is never constructed
+2026-11-11T10:33:16.9513642Z      --> src/cgen.rs:12373:5
+2026-11-11T10:33:16.9513764Z       |
+2026-11-11T10:33:16.9513866Z 12366 | pub(crate) enum Decls {
+2026-11-11T10:33:16.9514056Z       |                 ----- variant in this enum
+2026-11-11T10:33:16.9514277Z ...
+2026-11-11T10:33:16.9514435Z 12373 |     OneStep { blocks: bool },
+2026-11-11T10:33:16.9514595Z       |     ^^^^^^^
+2026-11-11T10:33:16.9514698Z       |
+2026-11-11T10:33:16.9515040Z       = note: `Decls` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+2026-11-11T10:33:16.9515360Z 
+2026-11-11T10:33:16.9515455Z warning: function `glue_shards` is never used
+2026-11-11T10:33:16.9515665Z    --> src/cgen/names.rs:257:8
+2026-11-11T10:33:16.9515786Z     |
+2026-11-11T10:33:16.9515967Z 257 | pub fn glue_shards(p: &Program, g: &GlueSet, out: &[FnOut], target: usize) -> Vec<String> {
+2026-11-11T10:33:16.9516307Z     |        ^^^^^^^^^^^
+2026-11-11T10:33:16.9516416Z 
+2026-11-11T10:33:16.9516495Z warning: method `is_empty` is never used
+2026-11-11T10:33:16.9516718Z    --> src/cgen/record.rs:141:12
+2026-11-11T10:33:16.9516901Z     |
+2026-11-11T10:33:16.9517046Z  94 | impl ReadTable {
+2026-11-11T10:33:16.9517394Z     | -------------- method in this implementation
+2026-11-11T10:33:16.9517609Z ...
+2026-11-11T10:33:16.9517768Z 141 |     pub fn is_empty(&self) -> bool {
+2026-11-11T10:33:16.9517976Z     |            ^^^^^^^^
+2026-11-11T10:33:16.9518089Z 
+2026-11-11T10:33:16.9518182Z warning: function `llvm_triple` is never used
+2026-11-11T10:33:16.9518407Z     --> src/cgen/ll.rs:3132:8
+2026-11-11T10:33:16.9518582Z      |
+2026-11-11T10:33:16.9518757Z 3132 | pub fn llvm_triple(triple: &str) -> String {
+2026-11-11T10:33:16.9519004Z      |        ^^^^^^^^^^^
+2026-11-11T10:33:16.9519108Z 
+2026-11-11T10:33:16.9519205Z warning: method `check_method_vis` is never used
+2026-11-11T10:33:16.9519435Z     --> src/check/mod.rs:3865:8
+2026-11-11T10:33:16.9519613Z      |
+2026-11-11T10:33:16.9519769Z 3102 | impl<'p> Ctx<'p> {
+2026-11-11T10:33:16.9519974Z      | ---------------- method in this implementation
+2026-11-11T10:33:16.9520190Z ...
+2026-11-11T10:33:16.9520412Z 3865 |     fn check_method_vis(&mut self, base: Ty, name: Sym, span: Span) {
+2026-11-11T10:33:16.9520698Z      |        ^^^^^^^^^^^^^^^^
+2026-11-11T10:33:16.9520814Z 
+2026-11-11T10:33:16.9520907Z warning: variant `Trait` is never constructed
+2026-11-11T10:33:16.9521141Z    --> src/check/collect.rs:145:5
+2026-11-11T10:33:16.9521326Z     |
+2026-11-11T10:33:16.9521479Z 141 | pub enum BodyTypeItem {
+2026-11-11T10:33:16.9521681Z     |          ------------ variant in this enum
+2026-11-11T10:33:16.9521887Z ...
+2026-11-11T10:33:16.9522027Z 145 |     Trait(DefId),
+2026-11-11T10:33:16.9522190Z     |     ^^^^^
+2026-11-11T10:33:16.9522335Z     |
+2026-11-11T10:33:16.9522712Z     = note: `BodyTypeItem` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+2026-11-11T10:33:16.9523084Z 
+2026-11-11T10:33:16.9523183Z warning: function `named_const_int` is never used
+2026-11-11T10:33:16.9523530Z     --> src/check/collect.rs:1875:8
+2026-11-11T10:33:16.9523720Z      |
+2026-11-11T10:33:16.9524025Z 1875 | pub fn named_const_int(ast: &Ast, interner: &Interner, known: &Known, names: &[Sym]) -> Option<u128> {
+2026-11-11T10:33:16.9524383Z      |        ^^^^^^^^^^^^^^^
+2026-11-11T10:33:16.9524500Z 
+2026-11-11T10:33:16.9524703Z warning: function `truncate_to_int` is never used
+2026-11-11T10:33:16.9524938Z     --> src/check/collect.rs:3143:4
+2026-11-11T10:33:16.9525127Z      |
+2026-11-11T10:33:16.9525315Z 3143 | fn truncate_to_int(v: i128, it: IntTy) -> i128 {
+2026-11-11T10:33:16.9525545Z      |    ^^^^^^^^^^^^^^^
+2026-11-11T10:33:16.9525651Z 
+2026-11-11T10:33:16.9525727Z warning: field `span` is never read
+2026-11-11T10:33:16.9525934Z   --> src/check/const_body.rs:48:5
+2026-11-11T10:33:16.9526136Z    |
+2026-11-11T10:33:16.9526412Z 39 | struct Site {
+2026-11-11T10:33:16.9526582Z    |        ---- field in this struct
+2026-11-11T10:33:16.9526774Z ...
+2026-11-11T10:33:16.9526915Z 48 |     span: Span,
+2026-11-11T10:33:16.9527074Z    |     ^^^^
+2026-11-11T10:33:16.9527162Z 
+2026-11-11T10:33:16.9527255Z warning: function `build_generics` is never used
+2026-11-11T10:33:16.9527495Z     --> src/check/generics.rs:5042:8
+2026-11-11T10:33:16.9527689Z      |
+2026-11-11T10:33:16.9527852Z 5042 | pub fn build_generics(
+2026-11-11T10:33:16.9528036Z      |        ^^^^^^^^^^^^^^
+2026-11-11T10:33:16.9528154Z 
+2026-11-11T10:33:16.9528250Z warning: method `conversion_call` is never used
+2026-11-11T10:33:16.9528480Z    --> src/check/own.rs:365:19
+2026-11-11T10:33:16.9528659Z     |
+2026-11-11T10:33:16.9528803Z 360 | impl<'p> Ctx<'p> {
+2026-11-11T10:33:16.9529027Z     | ---------------- method in this implementation
+2026-11-11T10:33:16.9529276Z ...
+2026-11-11T10:33:16.9529474Z 365 |     pub(super) fn conversion_call(&self, e: ExprId) -> bool {
+2026-11-11T10:33:16.9529738Z     |                   ^^^^^^^^^^^^^^^
+2026-11-11T10:33:16.9529867Z 
+2026-11-11T10:33:16.9529953Z warning: function `reading` is never used
+2026-11-11T10:33:16.9530171Z    --> src/check/spec.rs:228:8
+2026-11-11T10:33:16.9530354Z     |
+2026-11-11T10:33:16.9530504Z 228 | pub fn reading() -> bool {
+2026-11-11T10:33:16.9530794Z     |        ^^^^^^^
+2026-11-11T10:33:16.9530893Z 
+2026-11-11T10:33:16.9530983Z warning: function `method_path` is never used
+2026-11-11T10:33:16.9531206Z    --> src/def.rs:279:8
+2026-11-11T10:33:16.9531373Z     |
+2026-11-11T10:33:16.9531669Z 279 | pub fn method_path(impl_hash: DefPathHash, impl_text: &str, name: &str) -> (DefPathHash, String) {
+2026-11-11T10:33:16.9532021Z     |        ^^^^^^^^^^^
+2026-11-11T10:33:16.9532124Z 
+2026-11-11T10:33:16.9532212Z warning: function `impl_hash` is never used
+2026-11-11T10:33:16.9532427Z    --> src/def.rs:289:8
+2026-11-11T10:33:16.9532589Z     |
+2026-11-11T10:33:16.9532892Z 289 | pub fn impl_hash(krate: StableCrateHash, module: &[&str], header: &str, ordinal: u32) -> DefPathHash {
+2026-11-11T10:33:16.9533264Z     |        ^^^^^^^^^
+2026-11-11T10:33:16.9542164Z 
+2026-11-11T10:33:16.9542290Z warning: function `method_hash` is never used
+2026-11-11T10:33:16.9542536Z    --> src/def.rs:294:8
+2026-11-11T10:33:16.9542715Z     |
+2026-11-11T10:33:16.9542957Z 294 | pub fn method_hash(impl_hash: DefPathHash, name: &str) -> DefPathHash {
+2026-11-11T10:33:16.9543253Z     |        ^^^^^^^^^^^
+2026-11-11T10:33:16.9543485Z 
+2026-11-11T10:33:16.9543576Z warning: function `scan_ast` is never used
+2026-11-11T10:33:16.9543806Z    --> src/driver/ast_hash.rs:178:15
+2026-11-11T10:33:16.9544008Z     |
+2026-11-11T10:33:16.9544192Z 178 | pub(crate) fn scan_ast(ast: &Ast) -> AstScans {
+2026-11-11T10:33:16.9544426Z     |               ^^^^^^^^
+2026-11-11T10:33:16.9544539Z 
+2026-11-11T10:33:16.9544616Z warning: field `0` is never read
+2026-11-11T10:33:16.9544818Z    --> src/driver/ir_cache.rs:473:11
+2026-11-11T10:33:16.9544991Z     |
+2026-11-11T10:33:16.9545086Z 473 |     Infer(bool),
+2026-11-11T10:33:16.9545221Z     |     ----- ^^^^
+2026-11-11T10:33:16.9545329Z     |     |
+2026-11-11T10:33:16.9545433Z     |     field in this variant
+2026-11-11T10:33:16.9545556Z     |
+2026-11-11T10:33:16.9545793Z     = note: `TyTree` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+2026-11-11T10:33:16.9546221Z help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+2026-11-11T10:33:16.9546767Z     |
+2026-11-11T10:33:16.9546864Z 473 -     Infer(bool),
+2026-11-11T10:33:16.9546976Z 473 +     Infer(()),
+2026-11-11T10:33:16.9547080Z     |
+2026-11-11T10:33:16.9547133Z 
+2026-11-11T10:33:16.9547190Z warning: field `user_macros` is never read
+2026-11-11T10:33:16.9547341Z    --> src/driver/patch.rs:148:5
+2026-11-11T10:33:16.9547465Z     |
+2026-11-11T10:33:16.9547568Z 130 | pub(crate) struct PatchBase {
+2026-11-11T10:33:16.9547717Z     |                   --------- field in this struct
+2026-11-11T10:33:16.9547856Z ...
+2026-11-11T10:33:16.9547953Z 148 |     user_macros: bool,
+2026-11-11T10:33:16.9548071Z     |     ^^^^^^^^^^^
+2026-11-11T10:33:16.9548140Z 
+2026-11-11T10:33:16.9548190Z warning: method `len` is never used
+2026-11-11T10:33:16.9548334Z    --> src/driver/read_cover.rs:286:12
+2026-11-11T10:33:16.9548464Z     |
+2026-11-11T10:33:16.9548563Z 263 | impl<V> NameMap<V> {
+2026-11-11T10:33:16.9548706Z     | ------------------ method in this implementation
+2026-11-11T10:33:16.9548858Z ...
+2026-11-11T10:33:16.9548958Z 286 |     pub fn len(&self) -> usize {
+2026-11-11T10:33:16.9549107Z     |            ^^^
+2026-11-11T10:33:16.9549172Z 
+2026-11-11T10:33:16.9549227Z warning: multiple fields are never read
+2026-11-11T10:33:16.9549369Z    --> src/intern.rs:450:5
+2026-11-11T10:33:16.9549483Z     |
+2026-11-11T10:33:16.9549581Z 222 |         pub struct Known {
+2026-11-11T10:33:16.9549719Z     |                    ----- fields in this struct
+2026-11-11T10:33:16.9549857Z ...
+2026-11-11T10:33:16.9549949Z 450 |     is_some,
+2026-11-11T10:33:16.9550050Z     |     ^^^^^^^
+2026-11-11T10:33:16.9550173Z 451 |     is_none,
+2026-11-11T10:33:16.9550273Z     |     ^^^^^^^
+2026-11-11T10:33:16.9550372Z 452 |     unwrap,
+2026-11-11T10:33:16.9550471Z     |     ^^^^^^
+2026-11-11T10:33:16.9550663Z 453 |     expect,
+2026-11-11T10:33:16.9550765Z 454 |     unwrap_or,
+2026-11-11T10:33:16.9550870Z     |     ^^^^^^^^^
+2026-11-11T10:33:16.9550971Z ...
+2026-11-11T10:33:16.9551062Z 496 |     is_ok,
+2026-11-11T10:33:16.9551167Z     |     ^^^^^
+2026-11-11T10:33:16.9551268Z 497 |     is_err,
+2026-11-11T10:33:16.9551365Z     |     ^^^^^^
+2026-11-11T10:33:16.9551463Z ...
+2026-11-11T10:33:16.9551554Z 529 |     from_utf8,
+2026-11-11T10:33:16.9551658Z     |     ^^^^^^^^^
+2026-11-11T10:33:16.9551758Z ...
+2026-11-11T10:33:16.9551855Z 536 |     unwrap_or_default,
+2026-11-11T10:33:16.9551979Z     |     ^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:16.9552090Z     |
+2026-11-11T10:33:16.9552328Z     = note: this warning originates in the macro `known_syms` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-11-11T10:33:16.9552553Z 
+2026-11-11T10:33:16.9552615Z warning: method `at_literal_start` is never used
+2026-11-11T10:33:16.9552772Z     --> src/parser.rs:4003:8
+2026-11-11T10:33:16.9552893Z      |
+2026-11-11T10:33:16.9552998Z 1005 | impl<'a> Parser<'a> {
+2026-11-11T10:33:16.9553144Z      | ------------------- method in this implementation
+2026-11-11T10:33:16.9553411Z ...
+2026-11-11T10:33:16.9553584Z 4003 |     fn at_literal_start(&self) -> bool {
+2026-11-11T10:33:16.9553740Z      |        ^^^^^^^^^^^^^^^^
+2026-11-11T10:33:16.9553816Z 
+2026-11-11T10:33:16.9553869Z warning: method `max` is never used
+2026-11-11T10:33:16.9554004Z    --> src/ty/mod.rs:250:12
+2026-11-11T10:33:16.9554119Z     |
+2026-11-11T10:33:16.9554211Z 171 | impl IntTy {
+2026-11-11T10:33:16.9554331Z     | ---------- method in this implementation
+2026-11-11T10:33:16.9554469Z ...
+2026-11-11T10:33:16.9554571Z 250 |     pub fn max(self) -> u64 {
+2026-11-11T10:33:16.9554698Z     |            ^^^
+2026-11-11T10:33:16.9554761Z 
+2026-11-11T10:33:16.9554826Z warning: function `needs_std_load` is never used
+2026-11-11T10:33:16.9554980Z     --> src/ty/lang.rs:1677:8
+2026-11-11T10:33:16.9555098Z      |
+2026-11-11T10:33:16.9555211Z 1677 | pub fn needs_std_load(src: &str) -> bool {
+2026-11-11T10:33:16.9555362Z      |        ^^^^^^^^^^^^^^
+2026-11-11T10:33:16.9555438Z 
+2026-11-11T10:33:17.0676648Z warning: suspicious definition of the runtime `write` symbol used by the standard library
+2026-11-11T10:33:17.0677340Z   --> src/daemon.rs:64:5
+2026-11-11T10:33:17.0677524Z    |
+2026-11-11T10:33:17.0677737Z 64 |     fn write(fd: i32, buf: *const u8, count: usize) -> isize;
+2026-11-11T10:33:17.0678024Z    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:17.0678291Z    |
+2026-11-11T10:33:17.0678591Z    = note: expected `unsafe extern "C" fn(i32, *const c_void, usize) -> isize` (for the current target)
+2026-11-11T10:33:17.0679011Z            found    `unsafe extern "C" fn(i32, *const u8, usize) -> isize`
+2026-11-11T10:33:17.0679557Z    = help: either fix the signature or remove any attributes like `#[unsafe(no_mangle)]`, `#[unsafe(export_name = "write")]`, or `#[link_name = "write"]`
+2026-11-11T10:33:17.0680077Z    = help: allow this lint if the signature is compatible
+2026-11-11T10:33:17.0680405Z    = note: `#[warn(suspicious_runtime_symbol_definitions)]` on by default
+2026-11-11T10:33:17.0680627Z 
+2026-11-11T10:33:17.0680823Z warning: suspicious definition of the runtime `read` symbol used by the standard library
+2026-11-11T10:33:17.0681175Z   --> src/daemon.rs:74:5
+2026-11-11T10:33:17.0681346Z    |
+2026-11-11T10:33:17.0681533Z 74 |     fn read(fd: i32, buf: *mut u8, count: usize) -> isize;
+2026-11-11T10:33:17.0681801Z    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-11-11T10:33:17.0682018Z    |
+2026-11-11T10:33:17.0682302Z    = note: expected `unsafe extern "C" fn(i32, *mut c_void, usize) -> isize` (for the current target)
+2026-11-11T10:33:17.0682709Z            found    `unsafe extern "C" fn(i32, *mut u8, usize) -> isize`
+2026-11-11T10:33:17.0683231Z    = help: either fix the signature or remove any attributes like `#[unsafe(no_mangle)]`, `#[unsafe(export_name = "read")]`, or `#[link_name = "read"]`
+2026-11-11T10:33:17.0684129Z    = help: allow this lint if the signature is compatible
+2026-11-11T10:33:17.0684307Z 
+2026-11-11T10:33:17.0686839Z warning: direct cast of function item into an integer
+2026-11-11T10:33:17.0687108Z     --> src/daemon.rs:1051:43
+2026-11-11T10:33:17.0687297Z      |
+2026-11-11T10:33:17.0687495Z 1051 |         signal(SIGINT, on_shutdown_signal as usize);
+2026-11-11T10:33:17.0687754Z      |                                           ^^^^^^^^
+2026-11-11T10:33:17.0687963Z      |
+2026-11-11T10:33:17.0688152Z      = note: `#[warn(function_casts_as_integer)]` on by default
+2026-11-11T10:33:17.0688431Z help: first cast to a pointer `as *const ()`
+2026-11-11T10:33:17.0688643Z      |
+2026-11-11T10:33:17.0688853Z 1051 |         signal(SIGINT, on_shutdown_signal as *const () as usize);
+2026-11-11T10:33:17.0689145Z      |                                           ++++++++++++
+2026-11-11T10:33:17.0689301Z 
+2026-11-11T10:33:17.0689411Z warning: direct cast of function item into an integer
+2026-11-11T10:33:17.0689666Z     --> src/daemon.rs:1052:44
+2026-11-11T10:33:17.0689848Z      |
+2026-11-11T10:33:17.0690033Z 1052 |         signal(SIGTERM, on_shutdown_signal as usize);
+2026-11-11T10:33:17.0690298Z      |                                            ^^^^^^^^
+2026-11-11T10:33:17.0690508Z      |
+2026-11-11T10:33:17.0690673Z help: first cast to a pointer `as *const ()`
+2026-11-11T10:33:17.0690885Z      |
+2026-11-11T10:33:17.0691098Z 1052 |         signal(SIGTERM, on_shutdown_signal as *const () as usize);
+2026-11-11T10:33:17.0691393Z      |                                            ++++++++++++
+2026-11-11T10:33:17.0691547Z 
+2026-11-11T10:37:39.8882333Z warning: `lust` (bin "lust-core") generated 78 warnings (run `cargo fix --bin "lust-core" -p lust` to apply 36 suggestions)
+2026-11-11T10:37:39.8882907Z     Finished `release` profile [optimized + debuginfo] target(s) in 4m 42s
+2026-11-11T10:37:40.2579687Z    Compiling find-msvc-tools v0.1.14
+2026-11-11T10:37:40.3247747Z    Compiling shlex v2.0.1
+2026-11-11T10:37:40.3729315Z    Compiling cc v1.8.0
+2026-11-11T10:37:41.0236231Z    Compiling libmimalloc-sys v0.1.49
+2026-11-11T10:37:43.2447081Z    Compiling lustr-native v0.1.0 (/home/runner/work/lustr/lustr/crates/lustr-native)
+2026-11-11T10:37:43.5303493Z    Compiling mimalloc v0.1.52
+2026-11-11T10:41:36.0420147Z     Finished `gate` profile [optimized] target(s) in 3m 55s
+2026-11-11T10:41:36.1529415Z {"binary": "/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native", "receipt": "/home/runner/work/_temp/native-cargo-build.json", "sha256": "250fa86e59b9d6e9a611146514fbc71de1e3419b0d3d089c32610b08c1ddb0c2"}
+2026-11-11T10:41:36.1609624Z ##[group]Run rustc --edition=2024 --test crates/lustr-native/src/native_artifact.rs -o "$RUNNER_TEMP/native-artifact-tests"
+2026-11-11T10:41:36.1610249Z [36;1mrustc --edition=2024 --test crates/lustr-native/src/native_artifact.rs -o "$RUNNER_TEMP/native-artifact-tests"[0m
+2026-11-11T10:41:36.1618995Z [36;1m"$RUNNER_TEMP/native-artifact-tests"[0m
+2026-11-11T10:41:36.1634068Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:41:36.1634198Z env:
+2026-11-11T10:41:36.1634307Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:41:36.1634440Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:41:36.1634567Z ##[endgroup]
+2026-11-11T10:41:36.3331176Z 
+2026-11-11T10:41:36.3331708Z running 3 tests
+2026-11-11T10:41:36.3439934Z test tests::wrong_targets_duplicate_paths_and_nonobjects_are_rejected ... ok
+2026-11-11T10:41:36.3454905Z test tests::corrupt_and_truncated_artifacts_are_rejected_without_panicking ... ok
+2026-11-11T10:41:36.3464692Z test tests::real_object_and_typed_metadata_round_trip ... ok
+2026-11-11T10:41:36.3464964Z 
+2026-11-11T10:41:36.3465106Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-11-11T10:41:36.3465291Z 
+2026-11-11T10:41:36.3521921Z ##[group]Run cargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"
+2026-11-11T10:41:36.3522650Z [36;1mcargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"[0m
+2026-11-11T10:41:36.3538377Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:41:36.3538510Z env:
+2026-11-11T10:41:36.3538625Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:41:36.3538761Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:41:36.3538892Z ##[endgroup]
+2026-11-11T10:41:36.3723931Z    Vendoring cc v1.8.0 (/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cc-1.8.0) to /home/runner/work/_temp/native-vendor/cc
+2026-11-11T10:41:36.3755812Z    Vendoring find-msvc-tools v0.1.14 (/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.14) to /home/runner/work/_temp/native-vendor/find-msvc-tools
+2026-11-11T10:41:36.3769121Z    Vendoring libmimalloc-sys v0.1.49 (/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libmimalloc-sys-0.1.49) to /home/runner/work/_temp/native-vendor/libmimalloc-sys
+2026-11-11T10:41:36.3894518Z    Vendoring mimalloc v0.1.52 (/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mimalloc-0.1.52) to /home/runner/work/_temp/native-vendor/mimalloc
+2026-11-11T10:41:36.3901814Z    Vendoring shlex v2.0.1 (/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/shlex-2.0.1) to /home/runner/work/_temp/native-vendor/shlex
+2026-11-11T10:41:36.3911516Z To use vendored sources, add this to your .cargo/config.toml for this project:
+2026-11-11T10:41:36.3911785Z 
+2026-11-11T10:41:36.3951806Z ##[group]Run python3 tools/diagnose-native-library-safe.py \
+2026-11-11T10:41:36.3952227Z [36;1mpython3 tools/diagnose-native-library-safe.py \[0m
+2026-11-11T10:41:36.3952680Z [36;1m  --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \[0m
+2026-11-11T10:41:36.3953101Z [36;1m  --cargo "$(rustup which cargo)" \[0m
+2026-11-11T10:41:36.3953544Z [36;1m  --oracle "$(rustup which rustc)" \[0m
+2026-11-11T10:41:36.3953831Z [36;1m  --output dist/native-library-safe-evidence[0m
+2026-11-11T10:41:36.3973757Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:41:36.3973971Z env:
+2026-11-11T10:41:36.3974147Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:41:36.3974361Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:41:36.3974571Z ##[endgroup]
+2026-11-11T10:41:41.7535192Z ##[group]Run python3 tools/package-toolchain.py \
+2026-11-11T10:41:41.7535431Z [36;1mpython3 tools/package-toolchain.py \[0m
+2026-11-11T10:41:41.7535647Z [36;1m  --output dist/lustr-native-preview-x86_64-unknown-linux-gnu \[0m
+2026-11-11T10:41:41.7535871Z [36;1m  --native-bin compiler/native/target/release \[0m
+2026-11-11T10:41:41.7536156Z [36;1m  --native-cargo-bin "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \[0m
+2026-11-11T10:41:41.7536474Z [36;1m  --native-cargo-receipt "$RUNNER_TEMP/native-cargo-build.json" \[0m
+2026-11-11T10:41:41.7536690Z [36;1m  --cargo-bin "$(rustup which cargo)" \[0m
+2026-11-11T10:41:41.7536890Z [36;1m  --cargo-notices "$(rustc --print sysroot)/share/doc/cargo" \[0m
+2026-11-11T10:41:41.7537115Z [36;1m  --vendor-dir "$RUNNER_TEMP/native-vendor" \[0m
+2026-11-11T10:41:41.7537287Z [36;1m  --compatibility-origin none[0m
+2026-11-11T10:41:41.7552334Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:41:41.7552463Z env:
+2026-11-11T10:41:41.7552596Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:41:41.7552729Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:41:41.7552855Z ##[endgroup]
+2026-11-11T10:41:41.8821348Z Traceback (most recent call last):
+2026-11-11T10:41:41.8821836Z   File "/home/runner/work/lustr/lustr/tools/package-toolchain.py", line 349, in <module>
+2026-11-11T10:41:41.8822193Z     main()
+2026-11-11T10:41:41.8822486Z   File "/home/runner/work/lustr/lustr/tools/package-toolchain.py", line 165, in main
+2026-11-11T10:41:41.8823024Z     raise ValueError("commit implementation and packaging inputs before binding the package to HEAD")
+2026-11-11T10:41:41.8823686Z ValueError: commit implementation and packaging inputs before binding the package to HEAD
+2026-11-11T10:41:41.8954242Z ##[error]Process completed with exit code 1.
+2026-11-11T10:41:41.8995233Z ##[group]Run "$RUNNER_TEMP/lust-upstream-check"
+2026-11-11T10:41:41.8995460Z [36;1m"$RUNNER_TEMP/lust-upstream-check"[0m
+2026-11-11T10:41:41.9010928Z shell: /usr/bin/bash -e {0}
+2026-11-11T10:41:41.9011060Z env:
+2026-11-11T10:41:41.9011173Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:41:41.9011312Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:41:41.9011448Z ##[endgroup]
+2026-11-11T10:41:41.9415039Z Lust tracked source matches upstream 240e08d91d4aed0299639f6f11fd522912b248f9; no divergences admitted
+2026-11-11T10:41:41.9476772Z ##[group]Run actions/upload-artifact@v4
+2026-11-11T10:41:41.9476930Z with:
+2026-11-11T10:41:41.9477109Z   name: lustr-package-evidence-9fd796650b935db4a25de58263a7035e946d14d7
+2026-11-11T10:41:41.9477893Z   path: dist/package-qualification.json
+dist/package-qualification-native-library
+dist/native-library-safe-evidence
+dist/native-qualification
+dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
+/home/runner/work/_temp/native-cargo-build.json
+/home/runner/work/_temp/native-cargo-build.cargo.log
+
+2026-11-11T10:41:41.9478600Z   if-no-files-found: warn
+2026-11-11T10:41:41.9478734Z   compression-level: 6
+2026-11-11T10:41:41.9478858Z   overwrite: false
+2026-11-11T10:41:41.9478981Z   include-hidden-files: false
+2026-11-11T10:41:41.9479113Z env:
+2026-11-11T10:41:41.9479221Z   RUSTUP_TOOLCHAIN: 1.99.1
+2026-11-11T10:41:41.9479355Z   PYTHONDONTWRITEBYTECODE: 1
+2026-11-11T10:41:41.9479487Z ##[endgroup]
+2026-11-11T10:41:42.0607221Z (node:4358) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-11T10:41:42.0607830Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-11T10:41:42.1258900Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-11T10:41:42.1261151Z The least common ancestor is /home/runner/work. This will be the root directory of the artifact
+2026-11-11T10:41:42.1261707Z With the provided path, there will be 250 files uploaded
+2026-11-11T10:41:42.1262297Z Artifact name is valid!
+2026-11-11T10:41:42.1262597Z Root directory input is valid!
+2026-11-11T10:41:42.4115472Z Beginning upload of artifact content to blob storage
+2026-11-11T10:41:42.6983914Z (node:4358) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-11T10:41:43.0328583Z Uploaded bytes 3008126
+2026-11-11T10:41:43.0678096Z Finished uploading artifact content to blob storage!
+2026-11-11T10:41:43.0678863Z SHA256 digest of uploaded artifact zip is b0611b22b25ba3634b7cb73fb115d201310431ff2bb84849366937caff435308
+2026-11-11T10:41:43.0679963Z Finalizing artifact upload
+2026-11-11T10:41:43.4855011Z Artifact lustr-package-evidence-9fd796650b935db4a25de58263a7035e946d14d7.zip successfully finalized. Artifact ID 13848271581
+2026-11-11T10:41:43.4855715Z Artifact lustr-package-evidence-9fd796650b935db4a25de58263a7035e946d14d7 has been successfully uploaded! Final size is 3008126 bytes. Artifact ID is 13848271581
+2026-11-11T10:41:43.4859714Z Artifact download URL: https://github.com/glopyglerky/lustr/actions/runs/43004480716/artifacts/13848271581
+2026-11-11T10:41:43.5065459Z Post job cleanup.
+2026-11-11T10:41:43.5704093Z [command]/usr/bin/git version
+2026-11-11T10:41:43.5704625Z git version 2.56.0
+2026-11-11T10:41:43.5735621Z Temporarily overriding HOME='/home/runner/work/_temp/d7e8d8b7-4dbd-49f3-bac1-1bf00d23fa18' before making global git config changes
+2026-11-11T10:41:43.5736213Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-11T10:41:43.5736689Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/lustr/lustr
+2026-11-11T10:41:43.5766154Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-11T10:41:43.5821026Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-11T10:41:43.6046499Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-11T10:41:43.6074311Z http.https://github.com/.extraheader
+2026-11-11T10:41:43.6083562Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-11T10:41:43.6118663Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-11T10:41:43.6342442Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-11T10:41:43.6380640Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-11T10:41:43.6692721Z Cleaning up orphan processes
+2026-11-11T10:41:43.6919291Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

@@ -1,0 +1,15 @@
+4185  execve("/usr/bin/python3", ["/usr/bin/python3", "/home/runner/work/blueFe/blueFe/blueFe/x.py", "--config", "/home/runner/work/_temp/bluefe-native/bootstrap.toml", "--build-dir", "/home/runner/work/_temp/bluefe-native/build", "-vv", "build", "--stage", "0", "compiler/rustc"], 0x7ffd7f91fbb8 /* 120 vars */) = 0
+4186  execve("/home/runner/work/_temp/bluefe-native/blocked-bin/git", ["git", "rev-list", "--author", "bors@rust-lang.org", "-n1", "HEAD"], 0x7ffcbdfa5df8 /* 120 vars */) = -1 ENOENT (No such file or directory)
+4186  execve("/usr/bin/git", ["git", "rev-list", "--author", "bors@rust-lang.org", "-n1", "HEAD"], 0x7ffcbdfa5df8 /* 120 vars */) = 0
+4186  +++ exited with 0 +++
+4185  --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4186, si_uid=1001, si_status=0, si_utime=0, si_stime=0} ---
+4187  execve("/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo", ["/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo", "build", "--jobs=2", "--manifest-path", "/home/runner/work/blueFe/blueFe/blueFe/src/bootstrap/Cargo.toml", "-Zroot-dir=/home/runner/work/blueFe/blueFe/blueFe", "--verbose", "--locked"], 0x240a4dc0 /* 128 vars */) = 0
+4188  execve("/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native", ["/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native", "-vV"], 0x5619a46f0060 /* 131 vars */) = 0
+4188  +++ exited with 0 +++
+4187  --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4188, si_uid=1001, si_status=0, si_utime=0, si_stime=0} ---
+4189  execve("/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native", ["/home/runner/work/_temp/lustr-build/x86_64-unknown-linux-gnu/gate/lustr-native", "-", "--crate-name", "___", "--print=file-names", "-Zallow-features=", "-Wrust_2018_idioms", "-Wunused_lifetimes", "--crate-type", "bin", "--crate-type", "rlib", "--crate-type", "dylib", "--crate-type", "cdylib", "--crate-type", "staticlib", "--crate-type", "proc-macro", "--print=sysroot", "--print=split-debuginfo", "--print=crate-name", "--print=cfg", "-Wwarnings"], 0x5619a46f20d0 /* 130 vars */) = 0
+4189  +++ exited with 2 +++
+4187  --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4189, si_uid=1001, si_status=2, si_utime=0, si_stime=0} ---
+4187  +++ exited with 101 +++
+4185  --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4187, si_uid=1001, si_status=101, si_utime=0, si_stime=0} ---
+4185  +++ exited with 1 +++

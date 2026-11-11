@@ -1,0 +1,1 @@
+3599  execve("/home/runner/work/_temp/native-library-safe-evidence/oracle-primitive_abi output/lustr_library_contract-a37c421970c7e546", ["/home/runner/work/_temp/native-library-safe-evidence/oracle-primitive_abi output/lustr_library_contract-a37c421970c7e546"], 0x7ffd769dc778 /* 123 vars */) = 0

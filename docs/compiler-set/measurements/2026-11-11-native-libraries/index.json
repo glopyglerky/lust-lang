@@ -19,7 +19,8 @@
     ],
     "bluefe_runner_verified_against_git": true,
     "scope": "Local diagnostic compiler built before these commits were created; its retained compiler source bytes exactly match the published Lustr commit. BlueFe protected source and actual runner match the published BlueFe commit. This mapping does not upgrade a diagnostic build to a package receipt.",
-    "bluefe_initial_integration": "80112a387803a1e53d757353adb0591513ed105a"
+    "bluefe_initial_integration": "80112a387803a1e53d757353adb0591513ed105a",
+    "lustr_packaging_followup": "105b308824ae9acdff9d4ff9b46a75e74639b5a8"
   },
   "final_compiler_sha256": "704b9c9fa348313229581bb458f028f15861b6368ede24f3600648c8fa5268fd",
   "final_compiler_version": "lustr-native 0.1.0 (Lust 0.2.0, build 774f1df0f45c7d7b)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n",
@@ -221,8 +222,8 @@
   "files": [
     {
       "path": "README.md",
-      "bytes": 9076,
-      "sha256": "bfb0f970b3d9d391f54a8d749793e63bae4d571b3badf4dd7ffb342adda57479"
+      "bytes": 13401,
+      "sha256": "5fc325c6d1a748755c77eafea4ba565f66941ae358de49abb5aa6e314770664f"
     },
     {
       "path": "bluefe-ci-first-attempt/job130468886980.log",
@@ -253,6 +254,1411 @@
       "path": "bluefe-v4/qualification.json",
       "bytes": 2008,
       "sha256": "3fc31b900cbd50f07d49ae3a5d2fcf37fd3f31e5b89ca5cfa82bb4c32b194f81"
+    },
+    {
+      "path": "ci/bluefe-94fd/audit.json",
+      "bytes": 1396,
+      "sha256": "5ca596b9a575ed648cb61991e9590529836c24b435b27cc9e5afb58881f2a0f5"
+    },
+    {
+      "path": "ci/bluefe-94fd/bluefe-native/bootstrap.toml",
+      "bytes": 598,
+      "sha256": "70bf3ee5199907ecde1aa83f6218ddbe7192610900429876859e5c2dcc7039ad"
+    },
+    {
+      "path": "ci/bluefe-94fd/bluefe-native/build.log",
+      "bytes": 1811,
+      "sha256": "0a1974297a12f52424f8cff841ffcc514ede4c9d423f4d41a46d55eaf6cae7ec"
+    },
+    {
+      "path": "ci/bluefe-94fd/bluefe-native/execve.log",
+      "bytes": 2491,
+      "sha256": "43ca4e92c009fee660a533791a3eff853941f9279763f17b015f3381b81e8b79"
+    },
+    {
+      "path": "ci/bluefe-94fd/bluefe-native/qualification.json",
+      "bytes": 2161,
+      "sha256": "aa8aab1bf5d1f69c248cd18a7a756af796629da86a1d6487e2f2930b2326f5d9"
+    },
+    {
+      "path": "ci/bluefe-94fd/job.log",
+      "bytes": 49348,
+      "sha256": "0ccc1b7b821fdc8eddf80adc8d4c3b91e5f469fe1b1889cda4815793a7d56911"
+    },
+    {
+      "path": "ci/bluefe-94fd/lustr-build.cargo.log",
+      "bytes": 133929,
+      "sha256": "15b05db22d8eff8433b3ba9d7e775d17da442f1f444052c329a8d118fa4562ef"
+    },
+    {
+      "path": "ci/bluefe-94fd/lustr-build.json",
+      "bytes": 4857,
+      "sha256": "6594199356f4d08f5b994203da09d1b260e1b8a835673a919598c080b04ed9fb"
+    },
+    {
+      "path": "ci/lustr-105/audit.json",
+      "bytes": 3728,
+      "sha256": "af75bb291132a64456ce61ac9c4484e710125af5160033061213939bdea208ce"
+    },
+    {
+      "path": "ci/lustr-105/job.log",
+      "bytes": 77945,
+      "sha256": "b8c4b9599542d765286d1c715c965b04bb445b562c828cbcc9428b609c1dcce8"
+    },
+    {
+      "path": "ci/lustr-105/lustr-toolchain.json",
+      "bytes": 44706,
+      "sha256": "a1bec8b49aa110b6f6991970643312a01dc6e378f4b477f9581369aacf267f72"
+    },
+    {
+      "path": "ci/lustr-105/native-cargo-build.cargo.log",
+      "bytes": 132822,
+      "sha256": "392eaf2c0c1c6910d25c0e2acc6aac5a9e5608e8887129293185ac5be9489004"
+    },
+    {
+      "path": "ci/lustr-105/native-cargo-build.json",
+      "bytes": 4910,
+      "sha256": "9ae056c6c9b71e41e66d28b8fca145d4e60cc76c349fa1c6314e134af503efec"
+    },
+    {
+      "path": "ci/lustr-105/package-qualification.json",
+      "bytes": 382327,
+      "sha256": "b30d9342d409dfd7f440bbb05a6d7af213ae032213a570430b8a533232a20446"
+    },
+    {
+      "path": "ci/lustr-105/required/000-oracle-identity.exec.log",
+      "bytes": 211,
+      "sha256": "689af094ee12176f01e340db52dd269fe953338c26498e1ddd4ed2e0a5af0782"
+    },
+    {
+      "path": "ci/lustr-105/required/001-native-identity.exec.log",
+      "bytes": 189,
+      "sha256": "42fa73574326f147ffe77e447edef889ae78ef913b57cc998d2a3451e365a304"
+    },
+    {
+      "path": "ci/lustr-105/required/002-oracle-initial.exec.log",
+      "bytes": 39664,
+      "sha256": "7e83e4f62d31905340ba707edcae1171ecde2d4dc73773f8ece0c1e759a16623"
+    },
+    {
+      "path": "ci/lustr-105/required/003-oracle-initial-runtime.exec.log",
+      "bytes": 286,
+      "sha256": "f977069394d9f6a50e19c4571a0811811195f71bdfc189ac7bb4c70deb1a894e"
+    },
+    {
+      "path": "ci/lustr-105/required/004-native-initial.exec.log",
+      "bytes": 3606,
+      "sha256": "6592046508a5ba4a5588bf6ffcef335a7ca564232b4a612dafaa6736a40c8be2"
+    },
+    {
+      "path": "ci/lustr-105/required/commands.json",
+      "bytes": 21157,
+      "sha256": "741d3b546b5c05c5d35c98791b80a62bbc76b6057e3ee69cbe2b4a5527f2e7ee"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/Cargo.lock",
+      "bytes": 341,
+      "sha256": "5c8207ceef2ac1a40e781f2bb5e98ac9ad3620aa4728b4e2c2675c9f3cab31f8"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/Cargo.toml",
+      "bytes": 196,
+      "sha256": "dd5f75b145578007dc9c65868ecc07f0a483869832093ab23fab42e82098fedb"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/README.md",
+      "bytes": 2370,
+      "sha256": "e9897ffd7bf93f1da3383d206590f31be676d043defc679a65fde1268d75849f"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/app/Cargo.toml",
+      "bytes": 221,
+      "sha256": "aeedd7f297d2407e3ece2d0a79f464b07ecb31dd4d8718d5d9968bbab33383d9"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/app/src/main.rs",
+      "bytes": 161,
+      "sha256": "1eecaa5a323ee47706fd01471c63b56eff662b3c6250a9947cd64b6df6d60583"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/arity_mismatch.rs",
+      "bytes": 52,
+      "sha256": "1a82a5f9b7ead480cb0a15aa481a76807e58320fa9cb85fc1c86351444a50097"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/conditional_consumer.rs",
+      "bytes": 204,
+      "sha256": "778536986b686948d36f7564f7a5488f5892d6f867eb995d6292e76629d3d647"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/function_imports.rs",
+      "bytes": 138,
+      "sha256": "a5ee20588441806cdd07b0306b2be8051492983eca5d48e96dcc81462f0edbcf"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/imported_overflow.rs",
+      "bytes": 64,
+      "sha256": "50c60e31063d1f4b0cf76019c7df7e4461d8b89fc09f4ec6c65da595989d3fed"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/primitive_abi.rs",
+      "bytes": 1087,
+      "sha256": "c103919a056d2d52065d531f5595be2b54172fd5794e3a1dd5ff8ad4b93629ac"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/private.rs",
+      "bytes": 51,
+      "sha256": "7b9ec30e2c76af78ddfb5c59fa3cc4d1a5af403d9a8a8e7a35ac1da7616933e9"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/private_module_helper_consumer.rs",
+      "bytes": 66,
+      "sha256": "3bb33a5f131e2a5c4d9e07ab687760e7871b2689b52d57b7e6a625af0b52a856"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/private_module_helper_library.rs",
+      "bytes": 127,
+      "sha256": "6cfff75596d05f708026d8bdd1be0bc5ef0d7025868ede7bf528ba881456de40"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_const.rs",
+      "bytes": 63,
+      "sha256": "97497d5ae6f45aa987c2de4711ad85b660e3292cc9265e8cc6dabff163572d48"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_deprecated.rs",
+      "bytes": 48,
+      "sha256": "8bd300edfbeadf456a489cd7ce9c57304b09751c53eee61bc0d280c465399639"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_deprecated_crate.rs",
+      "bytes": 75,
+      "sha256": "00845d60774244956e6b19fd216908f286bea2c49e4c4eaa85a6dae54707b74c"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_deprecated_module.rs",
+      "bytes": 90,
+      "sha256": "74bde42cae3a06d68ac293fe145d5fa688149f9fd47f9e8b7c8c8183b77382d1"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_deprecated_reexport.rs",
+      "bytes": 129,
+      "sha256": "3ecf8167ea5ba80e0a82973909cea86affbc8dfd6e92de2ac03815eb7dc1292b"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_generic.rs",
+      "bytes": 48,
+      "sha256": "6fafb9193c5a2ad02e021cdbb8d3095bc195e05d1f081dff099e5dfe295ca087"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_macro.rs",
+      "bytes": 114,
+      "sha256": "c5a14fb886ecaed7613febb4a24b98d80755fb998bb71243b99f18dc0bb041c7"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_must_use.rs",
+      "bytes": 46,
+      "sha256": "5e185d4b82953e378106866478d1babac9c2c36c66b7239be315ddd98e40739f"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_no_mangle.rs",
+      "bytes": 55,
+      "sha256": "5dc1e42d701d01508ee571f3a475e6baad9004c9110ee956eea1244a75a1c853"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/public_type.rs",
+      "bytes": 78,
+      "sha256": "a8e95f821b81d2c7bfb6b83a3e6d976abde08d4ab60816b24dee86459fc26cd2"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/result_mismatch.rs",
+      "bytes": 85,
+      "sha256": "a90128a37c797abcf851ec720d31ec846c9450618c4e897662bc15370528d42c"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/type_mismatch.rs",
+      "bytes": 58,
+      "sha256": "5598feabd99c38393ff98097e3839c81a099853ef6f01ad340679b2bc83accbd"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/unsafe_allowed.rs",
+      "bytes": 77,
+      "sha256": "2f64eb28e5106d2d18ca78493907bbb24cce86f5b3731e8a8421807076200bfe"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/cases/unsafe_forbidden.rs",
+      "bytes": 66,
+      "sha256": "1381f89f42fc8e18eb5c0986d3bb808e67de42114aea4cd8807912cdc3b6ccab"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/left/Cargo.toml",
+      "bytes": 97,
+      "sha256": "bb68f402fb1d3470cb7b33813bfa88bb2806bd36e21f8a86fdb7f25074676b06"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/left/src/lib.rs",
+      "bytes": 632,
+      "sha256": "45f65e286bc134e70937ecd5559928ec315d5ab646a9a625d1bd34f397894aff"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/right/Cargo.toml",
+      "bytes": 97,
+      "sha256": "9896d28321756a9bddfeebab4f1e7a275da802cae1d0a5726c443721462e2522"
+    },
+    {
+      "path": "ci/lustr-105/required/initial-fixture/right/src/lib.rs",
+      "bytes": 128,
+      "sha256": "cc8d30f8d566a163e38ba4887d4f0b10aa85c8d73b2d5bd543970a2bd9b0a7bd"
+    },
+    {
+      "path": "ci/lustr-105/required/report.json",
+      "bytes": 45090,
+      "sha256": "e81df6b4c5d6c16084ca002b5d835b4c7e07d8c5ccd9fee5db3143be1bdd1e3a"
+    },
+    {
+      "path": "ci/lustr-105/required/runner-source.py",
+      "bytes": 33676,
+      "sha256": "49cda5ad835edba3f20df7800a5a8e93527c497115366b564ee5b12e894c4549"
+    },
+    {
+      "path": "ci/lustr-105/safe/000-oracle-identity.exec.log",
+      "bytes": 211,
+      "sha256": "483a58897b883aa269c78049b586beec47c585218095f6718c01144326d0f812"
+    },
+    {
+      "path": "ci/lustr-105/safe/001-native-identity.exec.log",
+      "bytes": 235,
+      "sha256": "f7fc8e83c235dd64a0939eec4004ae085628991b304eb25ef7c96b4819a1c2d8"
+    },
+    {
+      "path": "ci/lustr-105/safe/002-oracle-initial.exec.log",
+      "bytes": 38591,
+      "sha256": "5888049d8063dd9091329a29ada9c537b7872feb3110732048caaad9ffe37b8e"
+    },
+    {
+      "path": "ci/lustr-105/safe/003-oracle-initial-runtime.exec.log",
+      "bytes": 248,
+      "sha256": "aa21be04ad3a7ca170be296253392696d12edf559a88688034c4907bedf64390"
+    },
+    {
+      "path": "ci/lustr-105/safe/004-native-initial.exec.log",
+      "bytes": 8165,
+      "sha256": "36e686b41e4a651c4a4ea01dca49891de522ea3f85cdd65c485ee5b5b30186bc"
+    },
+    {
+      "path": "ci/lustr-105/safe/005-native-initial-runtime.exec.log",
+      "bytes": 248,
+      "sha256": "5843624d40f669f6a6c7c819e56110c78dab7215dbd01bd23148820ba71db897"
+    },
+    {
+      "path": "ci/lustr-105/safe/008-oracle-source-hidden.exec.log",
+      "bytes": 34802,
+      "sha256": "3683d347e489c0118dd14913bbb662687b4fd9df115d551c31a76ba5fec39727"
+    },
+    {
+      "path": "ci/lustr-105/safe/009-oracle-source-hidden-runtime.exec.log",
+      "bytes": 298,
+      "sha256": "4b873d633e58377328bc6b97dd8e7985c051e71db1a59bca79eb859ef59bc078"
+    },
+    {
+      "path": "ci/lustr-105/safe/010-oracle-primitive_abi.exec.log",
+      "bytes": 33956,
+      "sha256": "3ed86d6cf0f097fc7dbee8716879b305ccd0e1539647ded2d31b111abe6fccb4"
+    },
+    {
+      "path": "ci/lustr-105/safe/011-oracle-primitive_abi-runtime.exec.log",
+      "bytes": 298,
+      "sha256": "3b84091b0ff111891bb83cf1c2dbae597452b0023a125df2723d113511ee9bee"
+    },
+    {
+      "path": "ci/lustr-105/safe/012-oracle-conditional_consumer.exec.log",
+      "bytes": 34203,
+      "sha256": "0b6aec906b3d2b45b1cae51583c08d318012eb68c37c0d33694b2675c516d36a"
+    },
+    {
+      "path": "ci/lustr-105/safe/013-oracle-conditional_consumer-runtime.exec.log",
+      "bytes": 312,
+      "sha256": "10b28167f49d92a06361557607f26da0f2d7837e02591643fa932f40fe49c9cb"
+    },
+    {
+      "path": "ci/lustr-105/safe/014-oracle-function_imports.exec.log",
+      "bytes": 34908,
+      "sha256": "fedf36dc2282f86cf3aef125d985e9521b1cf662c50c2cf9c7b0b03b64b28630"
+    },
+    {
+      "path": "ci/lustr-105/safe/015-oracle-function_imports-runtime.exec.log",
+      "bytes": 304,
+      "sha256": "ad91d40582aebe6b4d26be0fe01e1ba92619ebb0db2838ddcddb5cc03142b8a8"
+    },
+    {
+      "path": "ci/lustr-105/safe/016-oracle-reject-private.exec.log",
+      "bytes": 1170,
+      "sha256": "5c843966caecfd0381339644889665e43ca6f75c2f7d2b6416ba64bd94af0ec1"
+    },
+    {
+      "path": "ci/lustr-105/safe/017-oracle-reject-type_mismatch.exec.log",
+      "bytes": 1182,
+      "sha256": "e6f952cbe1cb4d489f9a2ef3b0285f3dcb9558edfed8ae646ce70fe4e1bad567"
+    },
+    {
+      "path": "ci/lustr-105/safe/018-oracle-reject-arity_mismatch.exec.log",
+      "bytes": 1184,
+      "sha256": "92da33bd9058be9119ef556ae5df6a0efaff3d088831f50c448aa6601355d757"
+    },
+    {
+      "path": "ci/lustr-105/safe/019-oracle-reject-result_mismatch.exec.log",
+      "bytes": 1186,
+      "sha256": "244bb552883d73b0e3b1474eeee6a9bca712788fc2bc014bb669a924916f0b2a"
+    },
+    {
+      "path": "ci/lustr-105/safe/020-oracle-imported-overflow.exec.log",
+      "bytes": 34104,
+      "sha256": "cb98d118639fa26f0813d7be2f8d49d58367f44e1801b90665e84abebc9a0594"
+    },
+    {
+      "path": "ci/lustr-105/safe/021-oracle-imported-overflow-runtime.exec.log",
+      "bytes": 306,
+      "sha256": "a2170b9984793c5d7d31194de2b9d4fecaf34ac95e691bf39bd14ea995c43774"
+    },
+    {
+      "path": "ci/lustr-105/safe/022-native-source-hidden.exec.log",
+      "bytes": 4308,
+      "sha256": "919668643833fd9978074d3a2aac6c04081919e8af4825e87ad6cc51718597de"
+    },
+    {
+      "path": "ci/lustr-105/safe/023-native-source-hidden-runtime.exec.log",
+      "bytes": 298,
+      "sha256": "8eaa732290ae30816a9200b649c297771c78a747cea2527737a3b4a1a95cc697"
+    },
+    {
+      "path": "ci/lustr-105/safe/024-native-primitive_abi.exec.log",
+      "bytes": 4191,
+      "sha256": "8adfd84c415abb1e8666d241e7f7dff174894ff2afa0aaa84baa6d7cca4b446b"
+    },
+    {
+      "path": "ci/lustr-105/safe/025-native-primitive_abi-runtime.exec.log",
+      "bytes": 298,
+      "sha256": "41f65ef1d767d2fa30daa86e2f79dd0e1483ae63da8eaeb578b5402110b1984b"
+    },
+    {
+      "path": "ci/lustr-105/safe/026-native-conditional_consumer.exec.log",
+      "bytes": 4329,
+      "sha256": "107079014b8a781b9f9bb8cbdf986793971c3a3c7e88a3e6533ad831903d1a5f"
+    },
+    {
+      "path": "ci/lustr-105/safe/027-native-conditional_consumer-runtime.exec.log",
+      "bytes": 312,
+      "sha256": "04fd99101b0b7cac51a63c69b0141442e64f4274c24210a646501074a5e01d34"
+    },
+    {
+      "path": "ci/lustr-105/safe/028-native-function_imports.exec.log",
+      "bytes": 4321,
+      "sha256": "5d389a78ab238e4a1c94cfa0130e1de0a5fae6b4ed7fe729bb6dca7ba6cbc3c1"
+    },
+    {
+      "path": "ci/lustr-105/safe/029-native-function_imports-runtime.exec.log",
+      "bytes": 304,
+      "sha256": "13898cbe3b3c40f41fb7bbc8e1aeae18485ba2f4e5d46113da9c3dc259add304"
+    },
+    {
+      "path": "ci/lustr-105/safe/030-native-reject-private.exec.log",
+      "bytes": 1194,
+      "sha256": "43ab45b99e9c207a461ecbfe855d27492e68bca8d5350349a9fc80f4cfe69cb3"
+    },
+    {
+      "path": "ci/lustr-105/safe/031-native-reject-type_mismatch.exec.log",
+      "bytes": 1206,
+      "sha256": "46650913978d1fef8658436a8909c5e4507fc4f56c257a2b0198577063fb1bb0"
+    },
+    {
+      "path": "ci/lustr-105/safe/032-native-reject-arity_mismatch.exec.log",
+      "bytes": 1208,
+      "sha256": "49c02a6117529bfdfbbd88f5e09cedc94be412944d77abaaac2e80c58bde0372"
+    },
+    {
+      "path": "ci/lustr-105/safe/033-native-reject-result_mismatch.exec.log",
+      "bytes": 1210,
+      "sha256": "98b570a61517eda995c5827541a71b5d4351a9643f47ef552688f0de0dca999d"
+    },
+    {
+      "path": "ci/lustr-105/safe/034-native-imported-overflow.exec.log",
+      "bytes": 4311,
+      "sha256": "cc814c0304d1bf4e0410ae342b47a2c5a582b5427767f80d87a557cfee0e29cc"
+    },
+    {
+      "path": "ci/lustr-105/safe/035-native-imported-overflow-runtime.exec.log",
+      "bytes": 306,
+      "sha256": "b6853c56ba51a34361e68a177ce4d4b800fd15a2aaac58f24a3bbfe920dd76fe"
+    },
+    {
+      "path": "ci/lustr-105/safe/036-oracle-private-module-producer.exec.log",
+      "bytes": 610,
+      "sha256": "bcad76b3232805f7e5d6ed1197e96d6c04e7e00bcfd0e5fda61f3117b2a134cb"
+    },
+    {
+      "path": "ci/lustr-105/safe/037-oracle-private-module-consumer.exec.log",
+      "bytes": 34113,
+      "sha256": "c663394bfc824289dbf37cfea9de2740074cc20c36788035a8e4764fbafcd5bc"
+    },
+    {
+      "path": "ci/lustr-105/safe/038-oracle-private-module-consumer-runtime.exec.log",
+      "bytes": 318,
+      "sha256": "f2cd3a2b5cd90f79e4e38b29586a2207068105ab82f4d9d9b7993ded507ef124"
+    },
+    {
+      "path": "ci/lustr-105/safe/039-native-private-module-producer.exec.log",
+      "bytes": 549,
+      "sha256": "e2cd811b5e14dc964aa4b7ec5fbc39b7fb0e43dafff6e12a5f322eb52ef96c46"
+    },
+    {
+      "path": "ci/lustr-105/safe/040-native-private-module-consumer.exec.log",
+      "bytes": 4316,
+      "sha256": "46af78ca9b0b8de57b25a6bd7e916e4b0c4872d4823df04974b7b9ab31566a77"
+    },
+    {
+      "path": "ci/lustr-105/safe/041-native-private-module-consumer-runtime.exec.log",
+      "bytes": 318,
+      "sha256": "e20371ec921b5cb9f662bc51158909deffc5a4fe72593c38da51cf79549a29bf"
+    },
+    {
+      "path": "ci/lustr-105/safe/042-oracle-export-public_generic.exec.log",
+      "bytes": 585,
+      "sha256": "07a6acfb33360b737356dfadc2b4bb7bee2c035e4adfe54739f3d074d72246f1"
+    },
+    {
+      "path": "ci/lustr-105/safe/043-native-export-public_generic.exec.log",
+      "bytes": 524,
+      "sha256": "d2ffb54b4f5127853e4a8a49ed53c6e40161d89e930d4cba118f168aa5d46cd6"
+    },
+    {
+      "path": "ci/lustr-105/safe/044-oracle-export-public_type.exec.log",
+      "bytes": 579,
+      "sha256": "09c210344700fc605de6ca3f3168836791f1dd96e1cc1b8a03e390e60b62aa47"
+    },
+    {
+      "path": "ci/lustr-105/safe/045-native-export-public_type.exec.log",
+      "bytes": 518,
+      "sha256": "cccfccd4f06e3b33f456a1f979c01776048ad782cfa13ea747ef4e975d618492"
+    },
+    {
+      "path": "ci/lustr-105/safe/046-oracle-export-public_const.exec.log",
+      "bytes": 581,
+      "sha256": "af1d9fd747a6f34b694345bbc6116d8e505a506e8b6d9d89e0307744eecfe1c6"
+    },
+    {
+      "path": "ci/lustr-105/safe/047-native-export-public_const.exec.log",
+      "bytes": 520,
+      "sha256": "db7b0f22dd8205e9fa9888b58f982eb08fee1c71c1c848cba774d54ce5d5f735"
+    },
+    {
+      "path": "ci/lustr-105/safe/048-oracle-export-public_macro.exec.log",
+      "bytes": 581,
+      "sha256": "16b636ba4b518f4d6312bd6d484ab24cbbb2f97c2ec7f95b75466a874af71209"
+    },
+    {
+      "path": "ci/lustr-105/safe/049-native-export-public_macro.exec.log",
+      "bytes": 520,
+      "sha256": "96b44682e8358b706e48af6e2d7bedac7707e2943e23dddb36b78298036bb51c"
+    },
+    {
+      "path": "ci/lustr-105/safe/050-oracle-export-public_must_use.exec.log",
+      "bytes": 587,
+      "sha256": "eb066fad6bc755b668b6fce3b27a45f08a4a55384ca33de8031f11deb4f95fa4"
+    },
+    {
+      "path": "ci/lustr-105/safe/051-native-export-public_must_use.exec.log",
+      "bytes": 526,
+      "sha256": "5b25e68dbf66300917da0df776895ba92a071b9eff71034f8adc0399302c5fbe"
+    },
+    {
+      "path": "ci/lustr-105/safe/052-oracle-export-public_deprecated.exec.log",
+      "bytes": 591,
+      "sha256": "c0ed452aa6e7732f8e4680b4fd4d2467db8b5e0b368c1f8c316ce594d6b0389f"
+    },
+    {
+      "path": "ci/lustr-105/safe/053-native-export-public_deprecated.exec.log",
+      "bytes": 530,
+      "sha256": "aa1181f8b032ad42f059e4b3ff24ac4b3dffbdb446ca50ef1c554fc922aeaec3"
+    },
+    {
+      "path": "ci/lustr-105/safe/054-oracle-export-public_no_mangle.exec.log",
+      "bytes": 589,
+      "sha256": "196cf13a59d3c606af0c7c39c0ab4310da067d3c488eee99f9874872f23eaf04"
+    },
+    {
+      "path": "ci/lustr-105/safe/055-native-export-public_no_mangle.exec.log",
+      "bytes": 528,
+      "sha256": "092e095cc6df73e047ef0c74faa2a50ca1da2ceb915ae09d6990aa5154dbe1f0"
+    },
+    {
+      "path": "ci/lustr-105/safe/056-oracle-export-public_deprecated_module.exec.log",
+      "bytes": 605,
+      "sha256": "7df6cb63493790e0aee697a016ca000736f279ec09a0c67720c15f1382af913a"
+    },
+    {
+      "path": "ci/lustr-105/safe/057-native-export-public_deprecated_module.exec.log",
+      "bytes": 544,
+      "sha256": "e85d7dc6ab3a596c365bb8fba88fc545c59fb494a0f837ba289925b3fb0e1b1a"
+    },
+    {
+      "path": "ci/lustr-105/safe/058-oracle-export-public_deprecated_reexport.exec.log",
+      "bytes": 609,
+      "sha256": "470b84ac995813b20d55174fd9c060a5f0500bbbd04fc877063fdc5399dbb86b"
+    },
+    {
+      "path": "ci/lustr-105/safe/059-native-export-public_deprecated_reexport.exec.log",
+      "bytes": 548,
+      "sha256": "93eb07f1abb433d17de984249d76379b0d97de3a9ea8f8ae9c350c599208268c"
+    },
+    {
+      "path": "ci/lustr-105/safe/060-oracle-export-public_deprecated_crate.exec.log",
+      "bytes": 603,
+      "sha256": "f8e1b39ddf3be20ff89f7a9af1937b7fe701fb0c0b99df4b7c798aa2551fccea"
+    },
+    {
+      "path": "ci/lustr-105/safe/061-native-export-public_deprecated_crate.exec.log",
+      "bytes": 542,
+      "sha256": "8a68c0af74180668fe15205625afbebbb4ae3805f38e4018c451920fb67c6baa"
+    },
+    {
+      "path": "ci/lustr-105/safe/062-native-archive-roundtrip.exec.log",
+      "bytes": 4344,
+      "sha256": "51e5610334cff05fbee5223df4c08627ae62934e8530de8be5a63ebb08a5f4cd"
+    },
+    {
+      "path": "ci/lustr-105/safe/063-native-archive-roundtrip-runtime.exec.log",
+      "bytes": 306,
+      "sha256": "6dce56fb32a92f89509d0356680b504a61d70e2db13aa8d372329eaf7f686846"
+    },
+    {
+      "path": "ci/lustr-105/safe/064-native-reject-missing-metadata.exec.log",
+      "bytes": 1185,
+      "sha256": "4cbdeba358e32767b203d9f447dd74dfe4497f181e3a9656eb66fe032bfaf1e3"
+    },
+    {
+      "path": "ci/lustr-105/safe/065-native-reject-missing-object.exec.log",
+      "bytes": 1181,
+      "sha256": "a606aab07c00479920634395794d063520fc31111708830b4af18174c719f94c"
+    },
+    {
+      "path": "ci/lustr-105/safe/066-native-reject-corrupt-metadata.exec.log",
+      "bytes": 1185,
+      "sha256": "13085fb668628e337025aa6bcfadf13b9552382c8c68d9467df6cb573c4d3ae5"
+    },
+    {
+      "path": "ci/lustr-105/safe/067-native-reject-truncated-object.exec.log",
+      "bytes": 1185,
+      "sha256": "8ef2ebbd75ee5c689cf639193ac93225c54a0f712d1aedee63f4b1ca82a7d0d0"
+    },
+    {
+      "path": "ci/lustr-105/safe/068-native-reject-foreign-rust-library.exec.log",
+      "bytes": 1206,
+      "sha256": "5f72b9dcd630b0b01b1cbba53466d1579dcbf8df0dc1859d37bc2f1113f2a351"
+    },
+    {
+      "path": "ci/lustr-105/safe/069-oracle-no-change.exec.log",
+      "bytes": 1788,
+      "sha256": "481ff8f30341d82290a5c290ac9bb32d4856861da6c326007d7cc6b8f9c58622"
+    },
+    {
+      "path": "ci/lustr-105/safe/070-oracle-private-body-edit.exec.log",
+      "bytes": 37559,
+      "sha256": "4a29a7e0b639900972235f3b5228141cc63cada783ea6310026d0ce5d377d65d"
+    },
+    {
+      "path": "ci/lustr-105/safe/071-oracle-private-body-edit-runtime.exec.log",
+      "bytes": 248,
+      "sha256": "2537ab9a01f4e9c6c36d7472bfc8e99ecb59bb0e5c2b52b828552f140eee7caf"
+    },
+    {
+      "path": "ci/lustr-105/safe/072-oracle-signature-invalidates-consumer.exec.log",
+      "bytes": 4055,
+      "sha256": "7c88f4dadcce3daa2ea28f4a924e18f54cd2a08bbb806bdfe77cbd1ba361b360"
+    },
+    {
+      "path": "ci/lustr-105/safe/073-oracle-signature-recovery.exec.log",
+      "bytes": 36540,
+      "sha256": "dba9cc8b3d5fc09afad7edcd6588e4c12508d4b5d76e29874cf426970d66ca47"
+    },
+    {
+      "path": "ci/lustr-105/safe/074-oracle-signature-recovery-runtime.exec.log",
+      "bytes": 248,
+      "sha256": "016e957141e4ba8d3c5fdbe073a0034a1861c2da4c957af969ba133b7c77b958"
+    },
+    {
+      "path": "ci/lustr-105/safe/075-native-no-change.exec.log",
+      "bytes": 1847,
+      "sha256": "de847f1d948a9d75980135c9da50f7f113e3fd9d28b17e39b892317c8c92b13d"
+    },
+    {
+      "path": "ci/lustr-105/safe/076-native-private-body-edit.exec.log",
+      "bytes": 7236,
+      "sha256": "70cb777d6fc3491439700126d2aaec7201b3c416a6441998fb4d433cc754eb9c"
+    },
+    {
+      "path": "ci/lustr-105/safe/077-native-private-body-edit-runtime.exec.log",
+      "bytes": 248,
+      "sha256": "5446870e7fe014fa53b022d987bc1ca20c5e3d694902be69f75b04113eaf343a"
+    },
+    {
+      "path": "ci/lustr-105/safe/078-native-signature-invalidates-consumer.exec.log",
+      "bytes": 4051,
+      "sha256": "c6c1d76cb46a4ae4942ca5f3294dda60cc5682710f5da91cb3879070f8078acb"
+    },
+    {
+      "path": "ci/lustr-105/safe/079-native-signature-recovery.exec.log",
+      "bytes": 6278,
+      "sha256": "00135ce1eb67fd280d8f6a3cbf21c26b3d5f1d2b002b459c910f503638c15364"
+    },
+    {
+      "path": "ci/lustr-105/safe/080-native-signature-recovery-runtime.exec.log",
+      "bytes": 248,
+      "sha256": "2fac9374a441f47cb2683fadb34f4c76364cd689bc24e907437025f8931c9953"
+    },
+    {
+      "path": "ci/lustr-105/safe/commands.json",
+      "bytes": 196063,
+      "sha256": "a26cded0c2d417a0f29ee5090b658acda0e64762b569a75bf18a65af8d75dab1"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/Cargo.lock",
+      "bytes": 341,
+      "sha256": "5c8207ceef2ac1a40e781f2bb5e98ac9ad3620aa4728b4e2c2675c9f3cab31f8"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/Cargo.toml",
+      "bytes": 196,
+      "sha256": "dd5f75b145578007dc9c65868ecc07f0a483869832093ab23fab42e82098fedb"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/README.md",
+      "bytes": 757,
+      "sha256": "01007000a2414200b97fba4b2f0cfab943b66d4297fce4f14ba06f2444ff81a9"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/app/Cargo.toml",
+      "bytes": 221,
+      "sha256": "aeedd7f297d2407e3ece2d0a79f464b07ecb31dd4d8718d5d9968bbab33383d9"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/app/src/main.rs",
+      "bytes": 161,
+      "sha256": "1eecaa5a323ee47706fd01471c63b56eff662b3c6250a9947cd64b6df6d60583"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/arity_mismatch.rs",
+      "bytes": 52,
+      "sha256": "1a82a5f9b7ead480cb0a15aa481a76807e58320fa9cb85fc1c86351444a50097"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/conditional_consumer.rs",
+      "bytes": 204,
+      "sha256": "778536986b686948d36f7564f7a5488f5892d6f867eb995d6292e76629d3d647"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/function_imports.rs",
+      "bytes": 138,
+      "sha256": "a5ee20588441806cdd07b0306b2be8051492983eca5d48e96dcc81462f0edbcf"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/imported_overflow.rs",
+      "bytes": 64,
+      "sha256": "50c60e31063d1f4b0cf76019c7df7e4461d8b89fc09f4ec6c65da595989d3fed"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/primitive_abi.rs",
+      "bytes": 1087,
+      "sha256": "c103919a056d2d52065d531f5595be2b54172fd5794e3a1dd5ff8ad4b93629ac"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/private.rs",
+      "bytes": 51,
+      "sha256": "7b9ec30e2c76af78ddfb5c59fa3cc4d1a5af403d9a8a8e7a35ac1da7616933e9"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/private_module_helper_consumer.rs",
+      "bytes": 66,
+      "sha256": "3bb33a5f131e2a5c4d9e07ab687760e7871b2689b52d57b7e6a625af0b52a856"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/private_module_helper_library.rs",
+      "bytes": 127,
+      "sha256": "6cfff75596d05f708026d8bdd1be0bc5ef0d7025868ede7bf528ba881456de40"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_const.rs",
+      "bytes": 63,
+      "sha256": "97497d5ae6f45aa987c2de4711ad85b660e3292cc9265e8cc6dabff163572d48"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_deprecated.rs",
+      "bytes": 48,
+      "sha256": "8bd300edfbeadf456a489cd7ce9c57304b09751c53eee61bc0d280c465399639"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_deprecated_crate.rs",
+      "bytes": 75,
+      "sha256": "00845d60774244956e6b19fd216908f286bea2c49e4c4eaa85a6dae54707b74c"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_deprecated_module.rs",
+      "bytes": 90,
+      "sha256": "74bde42cae3a06d68ac293fe145d5fa688149f9fd47f9e8b7c8c8183b77382d1"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_deprecated_reexport.rs",
+      "bytes": 129,
+      "sha256": "3ecf8167ea5ba80e0a82973909cea86affbc8dfd6e92de2ac03815eb7dc1292b"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_generic.rs",
+      "bytes": 48,
+      "sha256": "6fafb9193c5a2ad02e021cdbb8d3095bc195e05d1f081dff099e5dfe295ca087"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_macro.rs",
+      "bytes": 114,
+      "sha256": "c5a14fb886ecaed7613febb4a24b98d80755fb998bb71243b99f18dc0bb041c7"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_must_use.rs",
+      "bytes": 46,
+      "sha256": "5e185d4b82953e378106866478d1babac9c2c36c66b7239be315ddd98e40739f"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_no_mangle.rs",
+      "bytes": 55,
+      "sha256": "5dc1e42d701d01508ee571f3a475e6baad9004c9110ee956eea1244a75a1c853"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/public_type.rs",
+      "bytes": 78,
+      "sha256": "a8e95f821b81d2c7bfb6b83a3e6d976abde08d4ab60816b24dee86459fc26cd2"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/result_mismatch.rs",
+      "bytes": 85,
+      "sha256": "a90128a37c797abcf851ec720d31ec846c9450618c4e897662bc15370528d42c"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/cases/type_mismatch.rs",
+      "bytes": 58,
+      "sha256": "5598feabd99c38393ff98097e3839c81a099853ef6f01ad340679b2bc83accbd"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/left/Cargo.toml",
+      "bytes": 97,
+      "sha256": "bb68f402fb1d3470cb7b33813bfa88bb2806bd36e21f8a86fdb7f25074676b06"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/left/src/lib.rs",
+      "bytes": 565,
+      "sha256": "c01f3926d7bf0d5f4174fec1f766d772bb2f0f1a4cf5ad8cc86f61645b86c41e"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/right/Cargo.toml",
+      "bytes": 97,
+      "sha256": "9896d28321756a9bddfeebab4f1e7a275da802cae1d0a5726c443721462e2522"
+    },
+    {
+      "path": "ci/lustr-105/safe/initial-fixture/right/src/lib.rs",
+      "bytes": 128,
+      "sha256": "cc8d30f8d566a163e38ba4887d4f0b10aa85c8d73b2d5bd543970a2bd9b0a7bd"
+    },
+    {
+      "path": "ci/lustr-105/safe/report.json",
+      "bytes": 292871,
+      "sha256": "6658826b3fa927dd80ce08119e1e545a418edbfd0b92eff2647ade416e77577f"
+    },
+    {
+      "path": "ci/lustr-105/safe/runner-source.py",
+      "bytes": 33676,
+      "sha256": "49cda5ad835edba3f20df7800a5a8e93527c497115366b564ee5b12e894c4549"
+    },
+    {
+      "path": "ci/lustr-105/safe/safe-runner-source.py",
+      "bytes": 1821,
+      "sha256": "58cf349a00afadd8e491f798844e17283da386af7ff4798ed3ac764c161ffcf6"
+    },
+    {
+      "path": "ci/lustr-9fd/audit.json",
+      "bytes": 2356,
+      "sha256": "d9d01bf2fe93340457b88abcbee0e6063d01355789fdcac9b7c3d93124532932"
+    },
+    {
+      "path": "ci/lustr-9fd/job.log",
+      "bytes": 71019,
+      "sha256": "72e2d4d99e9e674e96dc965f3d0872c3b13d881a6bfc067bf88f736d2838cebb"
+    },
+    {
+      "path": "ci/lustr-9fd/native-cargo-build.cargo.log",
+      "bytes": 132822,
+      "sha256": "f0e403c0581a489f070ff4f40107f7b9e2ff6b1f03200075ef16d2ae069436bd"
+    },
+    {
+      "path": "ci/lustr-9fd/native-cargo-build.json",
+      "bytes": 4910,
+      "sha256": "fabf12358fd97653dd13d3a7ed3f490eaf855ac2cf478fa652e6c9f51397eb18"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/000-oracle-identity.exec.log",
+      "bytes": 211,
+      "sha256": "636c96adb123f9aff7f50bb6a289b2f75e5bd7092f80373940de500154b3e672"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/001-native-identity.exec.log",
+      "bytes": 235,
+      "sha256": "3a98111bbdd9c713375b91dbe18c0de65c1a0e2899e5cc733cd14c935fc1aca3"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/002-oracle-initial.exec.log",
+      "bytes": 39168,
+      "sha256": "25a2ef5c73e0b7160a34212ccd1350cb7f7dc5298dbd834e1a339a9d95492dc2"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/003-oracle-initial-runtime.exec.log",
+      "bytes": 270,
+      "sha256": "6de7ce8d72830163f425b052f522c841069be276df3e0d1292379b32e477b5eb"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/004-native-initial.exec.log",
+      "bytes": 8320,
+      "sha256": "f9d69ac5cdd650b83bc6fa9a2e031bdf44851442b9ae7b72f0fb6fae00b91ad9"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/005-native-initial-runtime.exec.log",
+      "bytes": 270,
+      "sha256": "6e2cefa5c0cdc2d9b0e9d40ed79c9949d007bd19682c3b6a1d8eddf8724bd0fd"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/008-oracle-source-hidden.exec.log",
+      "bytes": 35382,
+      "sha256": "652d995cf9e0e001d45925015d858e0abc8b176812ced1bec99945e6bffea0e1"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/009-oracle-source-hidden-runtime.exec.log",
+      "bytes": 320,
+      "sha256": "4151d15c5763cfc3a7f1b936f4dcd9ddd9d368ee7efbb03c58cd0aacb7f7ab1c"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/010-oracle-primitive_abi.exec.log",
+      "bytes": 34471,
+      "sha256": "2d4bf7b8240fba9fe8eb9763f0a9a9fcc3e46e1689f2c1f647ea3e017744ab9f"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/011-oracle-primitive_abi-runtime.exec.log",
+      "bytes": 320,
+      "sha256": "d9f5c9318a5b9bac5240651ba1b87f41b4c5dd2e6c97a04deb845522e864e099"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/012-oracle-conditional_consumer.exec.log",
+      "bytes": 34731,
+      "sha256": "813ad0bb40a7f02849d8ab98c6359305d3a4c6376344f54d365bb254a34db214"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/013-oracle-conditional_consumer-runtime.exec.log",
+      "bytes": 334,
+      "sha256": "1317b1322e202fca83f869976d580aa5f802cdf1c27d3cd324cafcf507c80a57"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/014-oracle-function_imports.exec.log",
+      "bytes": 35500,
+      "sha256": "c5f3ac066d19f7d481cc480b0f768f6605ad0ba6a38bfe43b19b7761bfe3fe9c"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/015-oracle-function_imports-runtime.exec.log",
+      "bytes": 326,
+      "sha256": "fd26001996f8fa329d65d3787777c5d13a6977feadf18b3dd0066c807fe11ca2"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/016-oracle-reject-private.exec.log",
+      "bytes": 1225,
+      "sha256": "a5069b92f792278822bb609d79e590e92fdeff2eb07e47562962a884d0eb7f9d"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/017-oracle-reject-type_mismatch.exec.log",
+      "bytes": 1237,
+      "sha256": "18b3079c2e46c1bbd5010d43851dd79b3d4ea4c3635c903a9f9e2c651fd08b54"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/018-oracle-reject-arity_mismatch.exec.log",
+      "bytes": 1239,
+      "sha256": "b54ce26a65d40d35226f35a12d62975180ba896297a2f3d5893690b2f329d3c7"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/019-oracle-reject-result_mismatch.exec.log",
+      "bytes": 1241,
+      "sha256": "b5445f93ccc5f1c6ff7746c9e438977a87ba0e4668e1069c81df8f3631618f68"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/020-oracle-imported-overflow.exec.log",
+      "bytes": 34619,
+      "sha256": "5be50a1743110a490623b357fb2a306b22b19ebdcf7d00ca36a1d6b42c1eda6f"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/021-oracle-imported-overflow-runtime.exec.log",
+      "bytes": 328,
+      "sha256": "73bc6b0e8dace2df61690c0d4c4d8a2e5db4b257462e05d5b7a01626b6f4881f"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/022-native-source-hidden.exec.log",
+      "bytes": 4475,
+      "sha256": "2748590671bc60217ced6c166c02a0f035b64af6f6dc5258fc62d8f74da09583"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/023-native-source-hidden-runtime.exec.log",
+      "bytes": 320,
+      "sha256": "ed7414cdee33787e98673983f9b7e27583bbd31fa6c72fb42930cf2615853a28"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/024-native-primitive_abi.exec.log",
+      "bytes": 4314,
+      "sha256": "51f7400cc477f71a977f6f83e5935fb05faa293d8f2974f5d5a60a1db941d4e8"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/025-native-primitive_abi-runtime.exec.log",
+      "bytes": 320,
+      "sha256": "c86bf912583a06398af48bfeb732b712125966586721a1d7d1fb82b34626d3e6"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/026-native-conditional_consumer.exec.log",
+      "bytes": 4552,
+      "sha256": "2de504d9ccc7c5a8353b30a40f0bc14b9f5e425ca4c3f51c92614e3524e21a86"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/027-native-conditional_consumer-runtime.exec.log",
+      "bytes": 334,
+      "sha256": "d34e206e2a8788de5eebec7e3e1a8c3c5de34969c4628d441b345ee9b87ed942"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/028-native-function_imports.exec.log",
+      "bytes": 4420,
+      "sha256": "3f7e464c7c3c4cf739b8ae9dced2e617227b0fcfff7ea8df5b2561a3ba5af971"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/029-native-function_imports-runtime.exec.log",
+      "bytes": 326,
+      "sha256": "586e5d7d4dcef2c4272c4d28f4f644fcb93f989bd153fb5a38193b7faff3fab8"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/030-native-reject-private.exec.log",
+      "bytes": 1275,
+      "sha256": "97c4c0378ff29878874112333cd29194c8299f086b2cec485dc1d36b06498f5c"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/031-native-reject-type_mismatch.exec.log",
+      "bytes": 1261,
+      "sha256": "f8b035a8f454693a2408e50afc9131796bba4d82b18b2bc91f641d3baf059b13"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/032-native-reject-arity_mismatch.exec.log",
+      "bytes": 1263,
+      "sha256": "5cbec912c1f51ea6468719ea5a9fb8e8c2593304d3bd36792dce8cc11482dce9"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/033-native-reject-result_mismatch.exec.log",
+      "bytes": 1265,
+      "sha256": "2886c960ae296d58376d21ed4dda8797b05b663804cd6c064f9a982deb8fb3b6"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/034-native-imported-overflow.exec.log",
+      "bytes": 4366,
+      "sha256": "a22266d45c3a2bc354d9a36709c0aee3eb9228acad1a5f65c9153201e03e6f8b"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/035-native-imported-overflow-runtime.exec.log",
+      "bytes": 328,
+      "sha256": "e941e6f72018cb6e3ff7923e925d02f4975a9135fb81712d28e433fc56800fd0"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/036-oracle-private-module-producer.exec.log",
+      "bytes": 632,
+      "sha256": "c911c7ee6ca5b587c69dead967a0d32507a1badc217c72139790f3a1f4d887e3"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/037-oracle-private-module-consumer.exec.log",
+      "bytes": 34641,
+      "sha256": "f7cc7e1995051f0f2391cb6b915c60a8686c66a85f137310e9090b7ce52fddc7"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/038-oracle-private-module-consumer-runtime.exec.log",
+      "bytes": 340,
+      "sha256": "5b2335e7af8780260cbb85db2bf473e09dc628907f5facfd88da339a1bc26379"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/039-native-private-module-producer.exec.log",
+      "bytes": 571,
+      "sha256": "e9108feba000f7844677869090e0e8d3eb7c25c6b831f09a1fc23808debe1888"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/040-native-private-module-consumer.exec.log",
+      "bytes": 4427,
+      "sha256": "5d3dd30d2caf01e3bc8676374f087532fc929750435fbc508af07afb69184be9"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/041-native-private-module-consumer-runtime.exec.log",
+      "bytes": 340,
+      "sha256": "45c89a95027e0b61ebdd4f96700deffc60e275d3ceb44c74d5aec6e6c128b489"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/042-oracle-export-public_generic.exec.log",
+      "bytes": 607,
+      "sha256": "da97d93e64dcf14c5df316f4ba8b7129b9be59391d7119e8d9215e766f672008"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/043-native-export-public_generic.exec.log",
+      "bytes": 546,
+      "sha256": "8a1f10a30cc0445c2c3d42b1d398a016eab33f2d6c3f5234e69ebe537aa3b870"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/044-oracle-export-public_type.exec.log",
+      "bytes": 601,
+      "sha256": "746c5674234f183783972f89a095acfed6f389f94544736f2dbe560eee85de68"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/045-native-export-public_type.exec.log",
+      "bytes": 540,
+      "sha256": "ea942908a9bf8e1ce2e47ba598a7a72ed9f856b3c16d135a048e981a6c01012a"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/046-oracle-export-public_const.exec.log",
+      "bytes": 603,
+      "sha256": "b04bad007e8d690ee1bbe79253d72d677019038e5ab39ff7e9d765f58a4e8553"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/047-native-export-public_const.exec.log",
+      "bytes": 542,
+      "sha256": "56d3d12c04ff38052c862c713903e9e12b267c7c519fe3020c68b16e09e6407c"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/048-oracle-export-public_macro.exec.log",
+      "bytes": 603,
+      "sha256": "5552ad80af90a5cae418939cb89b439342288a5f52a7482eceff2c17802fa333"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/049-native-export-public_macro.exec.log",
+      "bytes": 542,
+      "sha256": "91786aa09449f977935f3ff72cf607aa4076410995d26f6a1553d5b79527c225"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/050-oracle-export-public_must_use.exec.log",
+      "bytes": 609,
+      "sha256": "2d5f82fc97a5c6e4168dec5dd8a47a6875e0a763e7d4b0798bf4296ee536428f"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/051-native-export-public_must_use.exec.log",
+      "bytes": 548,
+      "sha256": "1295bac29fa58e340a9a9679685ceaf939cd800829f3a608dba667638476d3b5"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/052-oracle-export-public_deprecated.exec.log",
+      "bytes": 613,
+      "sha256": "653cac3831fe02fba471002a31f5081c41ed8967e9f6b57aeab1c6ff1d838a13"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/053-native-export-public_deprecated.exec.log",
+      "bytes": 552,
+      "sha256": "9fe6845e386ee1c157e2d501ac5f0f46000f268f5a7ddd65752b2e392d807e8b"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/054-oracle-export-public_no_mangle.exec.log",
+      "bytes": 611,
+      "sha256": "382035244a7581bcf8efdfc942594ed76095bbb030a9196ae2915bf57e23c0b1"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/055-native-export-public_no_mangle.exec.log",
+      "bytes": 550,
+      "sha256": "d1563e07ee6b71a45e92d4083cb0e2bd14251d025a465e69640b5b8aba1b057c"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/056-oracle-export-public_deprecated_module.exec.log",
+      "bytes": 627,
+      "sha256": "95e39756030a860dd6fb229837babccdffa2aa813244cfa73277c39441548316"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/057-native-export-public_deprecated_module.exec.log",
+      "bytes": 566,
+      "sha256": "408639a6886806b972adb48d87f71bb08299cae35e2f3d7c63f169f8beb068d5"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/058-oracle-export-public_deprecated_reexport.exec.log",
+      "bytes": 631,
+      "sha256": "d33c682781f4cf5d03d8ef89b11b268951ee1fe08dccdec36f6d71d490007a82"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/059-native-export-public_deprecated_reexport.exec.log",
+      "bytes": 570,
+      "sha256": "bab78ad8da278829c9db8bdeb68f244d52d1341169704c8337508a4e1ce342c8"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/060-oracle-export-public_deprecated_crate.exec.log",
+      "bytes": 625,
+      "sha256": "4f77dc5a6870e4af803f946f470afb0fbcbb059d5b299c1a852b5062d011d484"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/061-native-export-public_deprecated_crate.exec.log",
+      "bytes": 564,
+      "sha256": "fe7ef5804006d73a7c67b68c0eceb51a9b7d31c306cb193defa898c4f0b4c2f8"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/062-native-archive-roundtrip.exec.log",
+      "bytes": 4399,
+      "sha256": "9a32299ae81800925aaf24105830322ff268ec9e30be4025c7e88ab564a71dac"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/063-native-archive-roundtrip-runtime.exec.log",
+      "bytes": 328,
+      "sha256": "cf8eca955e5b682249013754c1da49841fbdb2d4ddae51a29c81edc8cd0b62f1"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/064-native-reject-missing-metadata.exec.log",
+      "bytes": 1240,
+      "sha256": "b611016c6f0bb9ee6581e0539bbc0c4965c7f3af8765b57dd74eee7d9f11fb1d"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/065-native-reject-missing-object.exec.log",
+      "bytes": 1236,
+      "sha256": "97daf749f8e0f2e30d41d4d244db02fdfe45c5582e04fa91a91d65003da5ae73"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/066-native-reject-corrupt-metadata.exec.log",
+      "bytes": 1240,
+      "sha256": "3a79eaef1c83f8866989e9278057f4d8960cda2608d6eae3f1056b10b6011771"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/067-native-reject-truncated-object.exec.log",
+      "bytes": 1240,
+      "sha256": "cf7f9dd322115021d1f7bf67121f9eae6035ac5eb17f7bd38a13c0c6a80985fd"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/068-native-reject-foreign-rust-library.exec.log",
+      "bytes": 1261,
+      "sha256": "dc84bea4f4fa236cc95712c278f4f6852d31f8e011c783d37053e7adc01ccfe6"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/069-oracle-no-change.exec.log",
+      "bytes": 1799,
+      "sha256": "86b51bddbfd6bb8cc51b85153112d07904a691543e85ae8acec3308a849a46c9"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/070-oracle-private-body-edit.exec.log",
+      "bytes": 38198,
+      "sha256": "3fdb91f1555c9110691d7c3c012334247312300bcfda464824ad2358f3523dff"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/071-oracle-private-body-edit-runtime.exec.log",
+      "bytes": 270,
+      "sha256": "dbdf40458d3bedec7e172e99a819630dca8560d7fa5b96e82d7eb54f713dfac6"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/072-oracle-signature-invalidates-consumer.exec.log",
+      "bytes": 4106,
+      "sha256": "98516bd268a520ab41fe8689f85540776ea51643ba33d1fce3508d414e751de2"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/073-oracle-signature-recovery.exec.log",
+      "bytes": 37106,
+      "sha256": "8dc4f924854622ce0ab274af0654de41efed0b919b14e761c0c11db0c2029d83"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/074-oracle-signature-recovery-runtime.exec.log",
+      "bytes": 270,
+      "sha256": "a4fd4cc41e531a522001c00e7ac2d7c0423f5de8cb7e1ff5159ecd2e541b2f66"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/075-native-no-change.exec.log",
+      "bytes": 1858,
+      "sha256": "04468e930ad20cdacee035d8ac254a290cec79ca7efe6eb344a5f09b291188e7"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/076-native-private-body-edit.exec.log",
+      "bytes": 7451,
+      "sha256": "0063e18a86e87e5e19a2d3e52f7264c8844e31c6c7f37650387be06d7de066ca"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/077-native-private-body-edit-runtime.exec.log",
+      "bytes": 270,
+      "sha256": "e5526b9af698d3d964f1f41b467ff77abae289a2471950e600519a497e68d9d3"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/078-native-signature-invalidates-consumer.exec.log",
+      "bytes": 4128,
+      "sha256": "12e30e82968b10e798a7e0676b18a8e379224ec991030c898e48f9c27cc5302a"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/079-native-signature-recovery.exec.log",
+      "bytes": 6432,
+      "sha256": "d6d4459935380dfa058b24e515ae449f9243c35a94bba08547803846786ddcb5"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/080-native-signature-recovery-runtime.exec.log",
+      "bytes": 270,
+      "sha256": "4b9009d3c3d89a049e8f8886b0065f2bfca8da04c0b84e19d48b175518cb702d"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/commands.json",
+      "bytes": 203369,
+      "sha256": "9c28c99dc643baa89e64f2c69c342db6caefeffcd171b45ee1629eb7dccc5620"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/Cargo.lock",
+      "bytes": 341,
+      "sha256": "5c8207ceef2ac1a40e781f2bb5e98ac9ad3620aa4728b4e2c2675c9f3cab31f8"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/Cargo.toml",
+      "bytes": 196,
+      "sha256": "dd5f75b145578007dc9c65868ecc07f0a483869832093ab23fab42e82098fedb"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/README.md",
+      "bytes": 757,
+      "sha256": "01007000a2414200b97fba4b2f0cfab943b66d4297fce4f14ba06f2444ff81a9"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/app/Cargo.toml",
+      "bytes": 221,
+      "sha256": "aeedd7f297d2407e3ece2d0a79f464b07ecb31dd4d8718d5d9968bbab33383d9"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/app/src/main.rs",
+      "bytes": 161,
+      "sha256": "1eecaa5a323ee47706fd01471c63b56eff662b3c6250a9947cd64b6df6d60583"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/arity_mismatch.rs",
+      "bytes": 52,
+      "sha256": "1a82a5f9b7ead480cb0a15aa481a76807e58320fa9cb85fc1c86351444a50097"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/conditional_consumer.rs",
+      "bytes": 204,
+      "sha256": "778536986b686948d36f7564f7a5488f5892d6f867eb995d6292e76629d3d647"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/function_imports.rs",
+      "bytes": 138,
+      "sha256": "a5ee20588441806cdd07b0306b2be8051492983eca5d48e96dcc81462f0edbcf"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/imported_overflow.rs",
+      "bytes": 64,
+      "sha256": "50c60e31063d1f4b0cf76019c7df7e4461d8b89fc09f4ec6c65da595989d3fed"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/primitive_abi.rs",
+      "bytes": 1087,
+      "sha256": "c103919a056d2d52065d531f5595be2b54172fd5794e3a1dd5ff8ad4b93629ac"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/private.rs",
+      "bytes": 51,
+      "sha256": "7b9ec30e2c76af78ddfb5c59fa3cc4d1a5af403d9a8a8e7a35ac1da7616933e9"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/private_module_helper_consumer.rs",
+      "bytes": 66,
+      "sha256": "3bb33a5f131e2a5c4d9e07ab687760e7871b2689b52d57b7e6a625af0b52a856"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/private_module_helper_library.rs",
+      "bytes": 127,
+      "sha256": "6cfff75596d05f708026d8bdd1be0bc5ef0d7025868ede7bf528ba881456de40"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_const.rs",
+      "bytes": 63,
+      "sha256": "97497d5ae6f45aa987c2de4711ad85b660e3292cc9265e8cc6dabff163572d48"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_deprecated.rs",
+      "bytes": 48,
+      "sha256": "8bd300edfbeadf456a489cd7ce9c57304b09751c53eee61bc0d280c465399639"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_deprecated_crate.rs",
+      "bytes": 75,
+      "sha256": "00845d60774244956e6b19fd216908f286bea2c49e4c4eaa85a6dae54707b74c"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_deprecated_module.rs",
+      "bytes": 90,
+      "sha256": "74bde42cae3a06d68ac293fe145d5fa688149f9fd47f9e8b7c8c8183b77382d1"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_deprecated_reexport.rs",
+      "bytes": 129,
+      "sha256": "3ecf8167ea5ba80e0a82973909cea86affbc8dfd6e92de2ac03815eb7dc1292b"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_generic.rs",
+      "bytes": 48,
+      "sha256": "6fafb9193c5a2ad02e021cdbb8d3095bc195e05d1f081dff099e5dfe295ca087"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_macro.rs",
+      "bytes": 114,
+      "sha256": "c5a14fb886ecaed7613febb4a24b98d80755fb998bb71243b99f18dc0bb041c7"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_must_use.rs",
+      "bytes": 46,
+      "sha256": "5e185d4b82953e378106866478d1babac9c2c36c66b7239be315ddd98e40739f"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_no_mangle.rs",
+      "bytes": 55,
+      "sha256": "5dc1e42d701d01508ee571f3a475e6baad9004c9110ee956eea1244a75a1c853"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/public_type.rs",
+      "bytes": 78,
+      "sha256": "a8e95f821b81d2c7bfb6b83a3e6d976abde08d4ab60816b24dee86459fc26cd2"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/result_mismatch.rs",
+      "bytes": 85,
+      "sha256": "a90128a37c797abcf851ec720d31ec846c9450618c4e897662bc15370528d42c"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/cases/type_mismatch.rs",
+      "bytes": 58,
+      "sha256": "5598feabd99c38393ff98097e3839c81a099853ef6f01ad340679b2bc83accbd"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/left/Cargo.toml",
+      "bytes": 97,
+      "sha256": "bb68f402fb1d3470cb7b33813bfa88bb2806bd36e21f8a86fdb7f25074676b06"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/left/src/lib.rs",
+      "bytes": 565,
+      "sha256": "c01f3926d7bf0d5f4174fec1f766d772bb2f0f1a4cf5ad8cc86f61645b86c41e"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/right/Cargo.toml",
+      "bytes": 97,
+      "sha256": "9896d28321756a9bddfeebab4f1e7a275da802cae1d0a5726c443721462e2522"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/initial-fixture/right/src/lib.rs",
+      "bytes": 128,
+      "sha256": "cc8d30f8d566a163e38ba4887d4f0b10aa85c8d73b2d5bd543970a2bd9b0a7bd"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/report.json",
+      "bytes": 302818,
+      "sha256": "50f37009e09aa7f66e36bf54dff05ae197759d46670ed3711a7725206c319593"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/runner-source.py",
+      "bytes": 33676,
+      "sha256": "49cda5ad835edba3f20df7800a5a8e93527c497115366b564ee5b12e894c4549"
+    },
+    {
+      "path": "ci/lustr-9fd/safe/safe-runner-source.py",
+      "bytes": 1821,
+      "sha256": "58cf349a00afadd8e491f798844e17283da386af7ff4798ed3ac764c161ffcf6"
     },
     {
       "path": "compiler-builds/build-v2.log",
@@ -1983,5 +3389,38 @@
     "artifact_zip_sha256": "19a67558d471c00081381bfd558ef31bd2f1de3a2593d3513af6040e517586d8",
     "fix": "94fd9940bf37268ca6d7fce95841eb1fff3c0c78",
     "rerun": 43005192822
+  },
+  "ci_runs": {
+    "lustr_first": {
+      "run": 43004480716,
+      "head": "9fd796650b935db4a25de58263a7035e946d14d7",
+      "audit": "ci/lustr-9fd/audit.json",
+      "safe_commands_passed": 81,
+      "strict_process_trace": true,
+      "package_failure": "Pre-package evidence made the source checkout dirty; assembly stopped before required unsafe qualification. Fixed in105b308.",
+      "archive_uploaded": false
+    },
+    "lustr_corrected": {
+      "run": 43006000374,
+      "head": "105b308824ae9acdff9d4ff9b46a75e74639b5a8",
+      "audit": "ci/lustr-105/audit.json",
+      "safe_commands_passed": 81,
+      "strict_process_trace": true,
+      "ordinary_native_cargo_commands_passed": 207,
+      "native_only_assembly_passed": true,
+      "required_library_failure": "L0404 at left/src/lib.rs:9 pub unsafe fn unchecked_add; original full fixture still fails",
+      "source_guard_before_after_passed": true,
+      "archive_uploaded": false,
+      "artifact": 13848667662,
+      "artifact_sha256": "59e811cfb615a6b08c10fa2faa32498be72ca612b7611278e9d2daa77c8dc235"
+    },
+    "bluefe_corrected": {
+      "run": 43005192822,
+      "head": "94fd9940bf37268ca6d7fce95841eb1fff3c0c78",
+      "audit": "ci/bluefe-94fd/audit.json",
+      "strict_process_trace": true,
+      "native_compiler_executions": 2,
+      "failure": "Native compiler rejects -Zallow-features= during target-information query; Rust source compilation has not succeeded."
+    }
   }
 }

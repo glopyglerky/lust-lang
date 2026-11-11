@@ -1,0 +1,1 @@
+4036  execve("/home/runner/work/_temp/native-library-safe-evidence/native-archive-roundtrip output/lustr_library_contract-68129d507d5e866b", ["/home/runner/work/_temp/native-library-safe-evidence/native-archive-roundtrip output/lustr_library_contract-68129d507d5e866b"], 0x7ffd26fcb808 /* 123 vars */) = 0

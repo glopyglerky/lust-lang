@@ -1,0 +1,63 @@
+{
+  "source_commit": "9fd796650b935db4a25de58263a7035e946d14d7",
+  "source_tree": "5660bb2b8261a66df0e068a05c44ea50aea11d0f",
+  "native_tree": "0ab1b09815802894e6078de0af59273cbdf46cb0",
+  "compiler_sha256": "250fa86e59b9d6e9a611146514fbc71de1e3419b0d3d089c32610b08c1ddb0c2",
+  "compiler_version": "lustr-native 0.1.0 (Lust 0.2.0, build 2420cbb782054fc7)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false",
+  "actual_build_settings": {
+    "opt_level": 3,
+    "codegen_units": 16,
+    "lto": "thin",
+    "debug": false,
+    "incremental": true
+  },
+  "receipt_sha256": "fabf12358fd97653dd13d3a7ed3f490eaf855ac2cf478fa652e6c9f51397eb18",
+  "log_sha256": "f0e403c0581a489f070ff4f40107f7b9e2ff6b1f03200075ef16d2ae069436bd",
+  "safe_report_sha256": "50f37009e09aa7f66e36bf54dff05ae197759d46670ed3711a7725206c319593",
+  "safe_commands": 81,
+  "safe_success": true,
+  "safe_full_qualification": false,
+  "tracing_required": true,
+  "lanes": {
+    "native": {
+      "commands": 45,
+      "traced_commands": 43,
+      "successful_execs": 116,
+      "executables": {
+        "lustr-native": 51,
+        "cargo": 5,
+        "tcc": 50,
+        "lustr_library_contract": 3,
+        "lustr_library_contract-68129d507d5e866b": 7
+      }
+    },
+    "oracle": {
+      "commands": 36,
+      "traced_commands": 36,
+      "successful_execs": 95,
+      "executables": {
+        "rustc": 45,
+        "cargo": 5,
+        "cc": 9,
+        "collect2": 9,
+        "ld.lld": 9,
+        "rust-lld": 9,
+        "lustr_library_contract": 3,
+        "lustr_library_contract-a37c421970c7e546": 6
+      }
+    }
+  },
+  "exit_counts": {
+    "0": 54,
+    "1": 9,
+    "101": 4,
+    "2": 14
+  },
+  "timeouts": 0,
+  "artifact_id": 13848271581,
+  "artifact_sha256": "b0611b22b25ba3634b7cb73fb115d201310431ff2bb84849366937caff435308",
+  "archive_published": false,
+  "required_unsafe_gate": "not reached; package assembly failed clean-checkout check",
+  "assembly_failure": "pre-package safe diagnostic wrote untracked dist/native-library-safe-evidence inside checkout",
+  "limits": "Compiler binary is not in this evidence archive; its digest agrees across independently recorded build receipt and traced test report. Safe result does not qualify complete Rust or the required unsafe suite."
+}

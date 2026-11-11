@@ -1,0 +1,1 @@
+3741  execve("/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/native-source-hidden output/lustr_library_contract-68129d507d5e866b", ["/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/native-source-hidden output/lustr_library_contract-68129d507d5e866b"], 0x7ffe15223008 /* 123 vars */) = 0

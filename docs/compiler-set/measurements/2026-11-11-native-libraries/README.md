@@ -3,12 +3,12 @@
 Date: 2026-11-11. The native compiler now independently compiles and links the
 bounded safe-library cases below. **Full native Rust support is incomplete, the
 required unsafe library gate fails, and BlueFe has not been built by Lustr.**
-These local results do not qualify an installable full-replacement package or
+These results do not qualify an installable full-replacement package or
 establish preservation of Lust's compilation speed.
 
 ## Published implementation
 
-- Lustr: [`9fd796650b935db4a25de58263a7035e946d14d7`](https://github.com/glopyglerky/lustr/commit/9fd796650b935db4a25de58263a7035e946d14d7), [draft PR 4](https://github.com/glopyglerky/lustr/pull/4).
+- Lustr compiler implementation: [`9fd796650b935db4a25de58263a7035e946d14d7`](https://github.com/glopyglerky/lustr/commit/9fd796650b935db4a25de58263a7035e946d14d7), with [workflow-only correction `105b308`](https://github.com/glopyglerky/lustr/commit/105b308824ae9acdff9d4ff9b46a75e74639b5a8), [draft PR 4](https://github.com/glopyglerky/lustr/pull/4). The compiler files are identical in those commits.
 - BlueFe: [`94fd9940bf37268ca6d7fce95841eb1fff3c0c78`](https://github.com/glopyglerky/blueFe/commit/94fd9940bf37268ca6d7fce95841eb1fff3c0c78), [draft PR 1](https://github.com/glopyglerky/blueFe/pull/1). The initial integration is commit `80112a3`; `94fd994` adds the missing locked dependency fetch before the offline compiler build.
 
 The retained final compiler source files and Lust pin were compared byte for
@@ -23,7 +23,7 @@ upstream `240e08d91d4aed0299639f6f11fd522912b248f9`. BlueFe's protected Rust sou
 remains pinned to `5b7b37aefcb5b2fba3c2392bc9065b9e4602d494`. Compiler extensions
 and build integration live outside those protected scopes.
 
-## Final observed results
+## Final local diagnostic results
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
@@ -89,9 +89,74 @@ The index distinguishes complete retained runner/input snapshots from earlier
 records recovered by matching their originally recorded fixture hashes. It does
 not claim unavailable original runners were retained.
 
+## Observed CI results
+
+The [first native CI run](https://github.com/glopyglerky/lustr/actions/runs/43004480716)
+built the actual compiler with optimization level 3, 16 code-generation units,
+ThinLTO, no debug information and incremental compilation. Its separate
+[build receipt](ci/lustr-9fd/native-cargo-build.json) and
+[observed compiler log](ci/lustr-9fd/native-cargo-build.cargo.log) bind that build
+to source `9fd7966`. The CI binary hash is
+`250fa86e59b9d6e9a611146514fbc71de1e3419b0d3d089c32610b08c1ddb0c2`, distinct from
+the local diagnostic compiler.
+
+All 81 [safe-library commands](ci/lustr-9fd/safe/report.json) passed with strict
+process tracing enabled. The 79 raw traces cover both lanes; the two untraced
+commands inspect object symbols with `nm`. The native lane records 51 actual
+Lustr executions, 50 TinyCC executions, 5 Cargo executions and 10 application
+executions, with no rustc or coordinator execution. The
+[audit record](ci/lustr-9fd/audit.json) binds source/helper/fixture hashes,
+receipt and log hashes, compiler identity, original object hashes and the raw
+trace contents. The compiler executable is absent from the evidence ZIP, so
+its digest is corroborated across records rather than independently recomputed
+from retained compiler bytes.
+
+That first run stopped at package assembly because the new pre-package test
+reports were untracked files inside the checkout. Commit `105b308` moves those
+reports to `RUNNER_TEMP`, preserves the clean-source check and retains the same
+always-run evidence upload. The first run did not reach the required unsafe
+gate and published no package archive.
+
+The [corrected package run](https://github.com/glopyglerky/lustr/actions/runs/43006000374)
+at `105b308` rebuilt the optimized compiler, passed the same strict 81-command
+safe suite, assembled the native-only payload and exercised relocation. Its
+[package qualification report](ci/lustr-105/package-qualification.json) records
+207 successful ordinary native Cargo checks, including expected error outcomes
+and existing timing samples. The manifest contains 204 payload entries and
+excludes stock rustc, rustdoc, a Rust sysroot and coordinator executables.
+
+The corrected run then reached the actual required independent-library gate.
+The [required report](ci/lustr-105/required/report.json) records `L0404` at
+`left/src/lib.rs:9`, on `pub unsafe fn unchecked_add`. The full required suite
+stopped after five commands. Source preservation passed again afterward, and
+archive creation and package upload were skipped. The later pristine-Lust
+timing checks were not reached, so this run provides no full speed qualification.
+
+The corrected run's separate compiler digest is
+`545818158e9235140d99b5616fbbe52ae47f76c1c1a93df9df6305027f87a679`.
+It agrees across the [optimized receipt](ci/lustr-105/native-cargo-build.json),
+[safe report](ci/lustr-105/safe/report.json), relocated ordinary Cargo report,
+required report and [package manifest](ci/lustr-105/lustr-toolchain.json).
+The [audit](ci/lustr-105/audit.json) records those bindings and the raw traces.
+This is a successfully assembled candidate with failed required qualification;
+no installable replacement archive was published.
+
+BlueFe's [corrected native-only CI run](https://github.com/glopyglerky/blueFe/actions/runs/43005192822)
+also built its pinned Lustr with the optimized profile. Its
+[receipt](ci/bluefe-94fd/lustr-build.json) identifies a separate CI binary,
+`6121837e304eb3cd7a22392d8074f07655153dc8ef0581f3b9f266eab329bf44`.
+The [actual trace](ci/bluefe-94fd/bluefe-native/execve.log) shows two native Lustr
+invocations and no stock compiler invocation in the BlueFe build attempt.
+Its target-information probe rejects `-Zallow-features=`, as recorded in the
+[build log](ci/bluefe-94fd/bluefe-native/build.log). The
+[qualification report](ci/bluefe-94fd/bluefe-native/qualification.json) remains
+unsuccessful. Protected source checks pass before and after the attempt. This
+is observed native execution and a retained compiler gap; BlueFe's Rust
+compiler source has not compiled successfully.
+
 ## Required CI and unresolved compiler work
 
-The source commits launched [Lustr package CI](https://github.com/glopyglerky/lustr/actions/runs/43004480716)
+The corrected workflow launched [Lustr package CI](https://github.com/glopyglerky/lustr/actions/runs/43006000374)
 and [BlueFe's corrected Lustr-only build](https://github.com/glopyglerky/blueFe/actions/runs/43005192822).
 Their own artifacts bind the exact optimized binaries and process observations.
 Local diagnostic success is not substituted for those results. The native
@@ -107,7 +172,8 @@ failed before compiling Lustr because its fresh Cargo cache lacked
 `libmimalloc-sys`. Its [build log](bluefe-ci-first-attempt/lustr-build.cargo.log)
 is retained. The workflow now fetches the locked native dependencies first and
 keeps the actual recorded compiler build offline. This initial CI setup failure
-is separate from the native `-Zallow-features=` failure observed locally.
+is separate from the native `-Zallow-features=` failure observed both locally
+and in the corrected CI run.
 
 Native unsafe semantics, general public types/traits/generics, references and
 ownership/drop metadata, transitive libraries, cross-crate macros, procedural

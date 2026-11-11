@@ -1,0 +1,1315 @@
+{
+  "schema": "lustr.toolchain-package",
+  "schema_version": 1,
+  "host": "x86_64-unknown-linux-gnu",
+  "source_revision": "105b308824ae9acdff9d4ff9b46a75e74639b5a8",
+  "native_lust": true,
+  "native_full_rust": false,
+  "runtime_coordinator": false,
+  "runtime_rustc_fallback": false,
+  "package_role": "native-only",
+  "rust_compatibility": "none",
+  "rust_compatibility_provenance": {
+    "origin": "none",
+    "runtime_rustc_fallback": false
+  },
+  "rustc_verbose_version": null,
+  "cargo_verbose_version": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]",
+  "cargo_sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af",
+  "lust_revision": "240e08d91d4aed0299639f6f11fd522912b248f9",
+  "lust_tree": "0ab1b09815802894e6078de0af59273cbdf46cb0",
+  "tinycc_revision": "43c7708b85681a2fd4451c8a541af4494a8919b2",
+  "native_version": "lust 0.2.0 (build 861bd8ad)",
+  "native_profile": "release",
+  "native_cargo": {
+    "status": "experimental-native-crates",
+    "executable": "bin/lustr-native",
+    "implementation": "same-process compilation from pinned upstream Lust modules",
+    "verbose_version": "lustr-native 0.1.0 (Lust 0.2.0, build 2420cbb782054fc7)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false",
+    "build_profile": "gate",
+    "build_settings": {
+      "opt_level": 3,
+      "codegen_units": 16,
+      "lto": "thin",
+      "debug": false,
+      "incremental": true
+    },
+    "build_provenance": {
+      "receipt": "share/lustr/build/native-cargo/native-cargo-build.json",
+      "receipt_sha256": "9ae056c6c9b71e41e66d28b8fca145d4e60cc76c349fa1c6314e134af503efec",
+      "log": "share/lustr/build/native-cargo/native-cargo-build.cargo.log",
+      "log_sha256": "392eaf2c0c1c6910d25c0e2acc6aac5a9e5608e8887129293185ac5be9489004",
+      "bootstrap": {
+        "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+        "verbose_version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1"
+      }
+    },
+    "native_full_rust": false,
+    "native_rlib": true,
+    "native_rlib_format": "lustr-scalar-v1",
+    "rustc_rlib_compatible": false,
+    "proc_macros": false,
+    "test_harness": false,
+    "daemon_reuse": false,
+    "qualification": "separate native Cargo and independent-library qualification reports"
+  },
+  "qualification": "separate package-qualification.json and native-qualification evidence",
+  "system_requirements": [
+    "Linux x86_64; qualified on Ubuntu 24.04",
+    "C development headers and linker",
+    "glibc compatible with Ubuntu 24.04"
+  ],
+  "known_limitations": [
+    {
+      "id": "native-external-input-cache-invalidation",
+      "status": "unfixed-in-pinned-upstream",
+      "lust_revision": "240e08d91d4aed0299639f6f11fd522912b248f9",
+      "affected_macros": [
+        "env",
+        "option_env",
+        "include",
+        "include_str",
+        "include_bytes"
+      ],
+      "trigger": "whitespace or comments between the macro name and ! can evade the whole-request cache guard",
+      "impact": "a native invocation can reuse stale results after an environment variable or included file changes",
+      "source": "compiler/native/src/driver/cache.rs::src_reads_outside",
+      "regression_test": "actual_lust_invalidates_external_reads_with_comments_before_macro_bang",
+      "workaround": {
+        "scope": "only the affected native invocation; package defaults remain unchanged",
+        "environment": {
+          "LUST_NO_DAEMON": "1",
+          "LUST_NO_CACHE": "1"
+        },
+        "performance_cost": "disables daemon reuse and disk cache reuse; warm native latency is not preserved"
+      }
+    }
+  ],
+  "payload": [
+    {
+      "path": "LUSTR-README.md",
+      "sha256": "2237354ea42e133b92441addd61ee5c10004e2d50d5541c43b194fe8de269504",
+      "size": 7041,
+      "mode": "0o644"
+    },
+    {
+      "path": "bin/cargo",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af",
+      "size": 36148320,
+      "mode": "0o755"
+    },
+    {
+      "path": "bin/lust",
+      "sha256": "df41ae4636c4eac79a44efeb595866f259124b0652d1bdfd8c2e9a5e982f7316",
+      "size": 3472984,
+      "mode": "0o755"
+    },
+    {
+      "path": "bin/lust-core",
+      "sha256": "1fd9f8d84358ca45ad84f8135c14c2a57f4f866bad41dc9cd43ecbe97b98fe12",
+      "size": 119247224,
+      "mode": "0o755"
+    },
+    {
+      "path": "bin/lustr-native",
+      "sha256": "545818158e9235140d99b5616fbbe52ae47f76c1c1a93df9df6305027f87a679",
+      "size": 27213488,
+      "mode": "0o755"
+    },
+    {
+      "path": "lib/lust/library/README.md",
+      "sha256": "c643b91d3a22f3a7b4133ef79d88ab1c22443690b6605589596f87abb4c5abe7",
+      "size": 20541,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/alloc/Cargo.toml",
+      "sha256": "50dd639d50e226a6bd46a55e2f79fc3d8db7b54102df32cf8d8ca4fe4dfdff25",
+      "size": 138,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/alloc/src/collections.rs",
+      "sha256": "4edf046d1c8bffe42278e25a022a3687b751ca2ea589408f4ea1eaba18086eec",
+      "size": 63411,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/alloc/src/lib.rs",
+      "sha256": "ddc189044791f4befdd6a9aa1e1f059e30ed163fc152ab58337b2d50de0500c3",
+      "size": 356,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/Cargo.toml",
+      "sha256": "77bdc33eb4c0dfd746b0b437cac6874dd873ad490ca1ef123bfbced8cb97e69d",
+      "size": 332,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/cell.rs",
+      "sha256": "531c828a1fd89423c65afe294848b36ddb01d76b620518b10cf8c791f48cf27e",
+      "size": 6370,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/char.rs",
+      "sha256": "94c00afc14cd862139c689311815b2170c69d2313c197947b0bb414afc523d2f",
+      "size": 8716,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/cmp.rs",
+      "sha256": "167452fafdb8dbfb9d1053f4fd7ad964d65c01be172ce13df48c98ab3871a6b5",
+      "size": 1565,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/error.rs",
+      "sha256": "62b10df0132f20a4ec786a48118a5fa090d5b7a50d2ad1920273f7247a1d3350",
+      "size": 4373,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/intrinsics.rs",
+      "sha256": "279e26d872ba9191e4f0706afa7161db066d9abbecc3f3d2066b362fe777a04a",
+      "size": 5628,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/iter.rs",
+      "sha256": "12be611873d586c454c21dd13e32299246fda86c0098c44d3f3c302a91907afe",
+      "size": 5447,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/lib.rs",
+      "sha256": "82b29ba1a422843ba2215ea238f31b0549dcb4777ee2c066af0322a694ccfdfc",
+      "size": 481,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/marker.rs",
+      "sha256": "4f918fca5dbc7c78e3363bd39ed0f5bbb39388904af92617d53f1668ca7d613a",
+      "size": 1298,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/mem.rs",
+      "sha256": "b0245e3392f47fd9d4529ec5d6da7f251274792dc09589b9294f398e4b67313f",
+      "size": 5536,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/ops.rs",
+      "sha256": "387218f77fdfd13526469191985d8872184a6be6cf4fd5fcb7ab18a133680445",
+      "size": 2127,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/option.rs",
+      "sha256": "05fface6c94d035201f333f223d8a7cf41fb50ec21dc0dd5c7f8ce133b452c5e",
+      "size": 8832,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/result.rs",
+      "sha256": "071adb713d19f7fe48964a8d2f7d149d1c4b988125f2900ddf1bc8a1363b4805",
+      "size": 6985,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/core/src/time.rs",
+      "sha256": "13ee7e239ba56b966bbb63e2a157bf750dc138e32a66bf417a8d42659832a37f",
+      "size": 20576,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/bumpalo/Cargo.toml",
+      "sha256": "88a73d7ea96fd1f149dfec93c0fb34b9131bb6f00eb600554c9195d32ff7189b",
+      "size": 473,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/bumpalo/README.md",
+      "sha256": "d5ba5b2f680c4a08a899292fc56fc785a7c289aa8d0314a3a1f877cfe7f54727",
+      "size": 1573,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/bumpalo/src/lib.rs",
+      "sha256": "40df70a46cb1677518f4857bb8aa68da186de17f40cbcfceb7ad486d9fc66bd4",
+      "size": 11019,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/Cargo.toml",
+      "sha256": "69ee39ee710504ba6b547893cedd124c08858318c7e85b6fda1633828f0bc13b",
+      "size": 773,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/README.md",
+      "sha256": "7e583a856ae2ca3e4522aba30c0159485e18fd8bcf7a69e14eee242611926547",
+      "size": 2968,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/inflate.rs",
+      "sha256": "c4908cedbeaa587d241aa3bccc15702a751c949c0295d890e441a2861d10dbc0",
+      "size": 10100,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/lib.rs",
+      "sha256": "f773eb9d9b40ff6c9bf6e2d0b566025bbe332f5791f9d8d6e16b1694a4420f4f",
+      "size": 3429,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/miniz/deflate/buffer.rs",
+      "sha256": "0a95a6a262168bc5e122f94e5b7e63de1c1d979a860dfcb86dd4024ac49b691c",
+      "size": 2028,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/miniz/deflate/core.rs",
+      "sha256": "5b334303448d5d4f7a2e92d02f4a242251f93520a899d8df1c9814244673e578",
+      "size": 95902,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/miniz/deflate/mod.rs",
+      "sha256": "2f8ab87ea7fb805fc57060c707682d7b056fa27d74646e9beef63a78ca51a0e9",
+      "size": 5235,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/miniz/deflate/stored.rs",
+      "sha256": "ae21e08f004c3cea18b93916a546b204a6581b47bb163f12140f5f639cf35db2",
+      "size": 12120,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/miniz/deflate/stream.rs",
+      "sha256": "c7b96fccd0357677f5fbc9fa398dde1a6e1890dbe94bbf7a6289880b27aaa33c",
+      "size": 3228,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/miniz/deflate/zlib.rs",
+      "sha256": "96a53f2e7b758eb74c85840d7edbfadb2f2fbe5bf5c563072766abd8ed97968a",
+      "size": 2251,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/miniz/mod.rs",
+      "sha256": "5f212f514a57df2979a7d9a7c4d1503be8e1ea338bdef36b5426bd29c0ae9b44",
+      "size": 2537,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/miniz/shared.rs",
+      "sha256": "1e38351a9bf6816b768a4c5c3d1598de94a82a2c4fec8d5bc2267439f9e51832",
+      "size": 455,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/read.rs",
+      "sha256": "78a3abc9d2dce91bd8574ef9c9db35c5fc647c83cc117bbb3fd395b8287f5cf1",
+      "size": 9522,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/flate2/src/write.rs",
+      "sha256": "3b3e81094be60b07418ea281a475cabf8abfe76dd5355263d57e30948ccb2a33",
+      "size": 15788,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/indexmap/Cargo.toml",
+      "sha256": "963b84dc4983dfe71ef46ec34ff872932b0e9c111b0ceac1a03697b605f5b69b",
+      "size": 438,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/indexmap/README.md",
+      "sha256": "cefed5680fcd61cf7452cc4b9675fcd882d26da35ea577ad1fb6a8264adf9752",
+      "size": 2675,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/indexmap/src/indices.rs",
+      "sha256": "c6257882618e91b04c066fc86a777bf22c251c583d86c69b59a3128ae4c83cb5",
+      "size": 14751,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/indexmap/src/inner.rs",
+      "sha256": "0ca5f2fb3ebf1dd68cccb77755a834f8f629cbafa7c611352c6ab61780c0d161",
+      "size": 14376,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/indexmap/src/lib.rs",
+      "sha256": "0d207aee6320e2f29f33a38a4218d8ed69528a63ff1e3fc4720759b31c10b4fc",
+      "size": 725,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/indexmap/src/map.rs",
+      "sha256": "bc82af5f776eafdf43a0de7d9e7a1259b882cf235f9a336e7ad28371c3f1167a",
+      "size": 28065,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/indexmap/src/set.rs",
+      "sha256": "8aa8004398c5c01e5b1b8ee4a207de3842dc774cee5a49e7f0d926c0ebc60d2e",
+      "size": 9898,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/Cargo.toml",
+      "sha256": "a25b7a604069bf4f81d22d1d72079d1d2ea3029aabd43e0a43ed688ffaeff9da",
+      "size": 141,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/README.md",
+      "sha256": "76c0830a4afac5d1704187c6658fceaf321f4243c755d88f3f6439bc61232ca0",
+      "size": 2093,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/civil.rs",
+      "sha256": "52216759faa1a2e8a1adf6ff13b31e028e49fa2d6e0d14f1da6fb4dbb9189344",
+      "size": 1088,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/error.rs",
+      "sha256": "5b56f321a0ff4f6bc3784b7fa5bb6d1f393d759ed090c4862d8c88b0bf227a3b",
+      "size": 6355,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/bounds.rs",
+      "sha256": "f153620b5ce1c8855fff02ede826f1739b541b94660b81bb0874c0be55ae83ec",
+      "size": 46793,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/civil/date.rs",
+      "sha256": "19c85fc56c984e6a661f8a85ca8d8a1d3dea99a8f0cd212b89533f7edbd24a90",
+      "size": 75571,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/civil/datetime.rs",
+      "sha256": "d92d734a94d7942e24824bb79ae329dd7a2c4e71b83768bf3c5126650cd8b81a",
+      "size": 8940,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/civil/mod.rs",
+      "sha256": "0068cacf6afeebbcbd223b258accc56ba0d4eeee7c2d7d3deb61a88fae4e255b",
+      "size": 8381,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/civil/time.rs",
+      "sha256": "5589be853b58f5f6f5bc42229db7d4f415725206a6dc5ae36a403ea4d49b272b",
+      "size": 23242,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/civil/weekday.rs",
+      "sha256": "7a7ed313839138b3c2c5fa1627ce63f3c9c92163f1ef77e04615f92ba3bbf466",
+      "size": 18389,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/constants.rs",
+      "sha256": "95a93060d6c1530c9262de9696590e619c5c60927a83df8d03aa4212c9b1deac",
+      "size": 1799,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/logging.rs",
+      "sha256": "8bbba4860a26d229a342aa84fb442d872bc76c5273d7c480d2a5cf0f7c4cc180",
+      "size": 1602,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/macros.rs",
+      "sha256": "96ecea0dffa7a031d9b7211b9c7ba40a5071eac56991ab44a3657cef6cf9f974",
+      "size": 1900,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/mod.rs",
+      "sha256": "737f2969db1d19693922cb109f4286f72d1a312a6a180c94d71e22b28eaff565",
+      "size": 4762,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/timestamp.rs",
+      "sha256": "ae7df354511c628318e838e2fb05d0eed6783db325aa7f8cd72d79e92f776920",
+      "size": 33833,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/tz/mod.rs",
+      "sha256": "45b9809f5cc6811e6e719b6754df31974d8378fb6ce0ceb82fce16a83917367e",
+      "size": 9882,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/tz/offset.rs",
+      "sha256": "6c41279c89187e7b7bdaf992453562745759233d13e5788d2fe893ab2070f1ad",
+      "size": 27749,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/tz/posix.rs",
+      "sha256": "e4f247316b8dd132227610f1371262badd5bc5c33b8c24da9aa78d0207d1677f",
+      "size": 137109,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/tz/tzif/mod.rs",
+      "sha256": "59c598908e6bc0ecfb1ac9d5129ea6eb87f0af91df0f3f2eb015125ef94a7ad1",
+      "size": 24211,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/tz/tzif/parser.rs",
+      "sha256": "a6a1d50ac533708a2379a4289a99ac3ebdef217d5e86d0f8b60c258e0bccb533",
+      "size": 48324,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/tz/tzif/query.rs",
+      "sha256": "fde35705978594d413185568d2054946b2ef05759c27314c76a6852a407223b7",
+      "size": 16243,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/util/crc32/mod.rs",
+      "sha256": "398b03985ae57a2ede9f173ee3b8f0538b4c715dae98b4b5f043a0b77b86140d",
+      "size": 1738,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/util/crc32/table.rs",
+      "sha256": "a8552e6af79d33cb5b59ccc078cd1139d0f981f3d27851af3918c87fd1c4df61",
+      "size": 57219,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/jcore/util/mod.rs",
+      "sha256": "5c42e69104c5a27143142b8f63f0f36f412eafe73f1db1a2919af5335f1d08c6",
+      "size": 18333,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/lib.rs",
+      "sha256": "6e9d3106105265ff9d6e3e500bef991e0dba103ea385385f01035877e20bc338",
+      "size": 1245,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/timestamp.rs",
+      "sha256": "79cb0fd3960806bf7f065b6a7001b5efaa4376eaff62b742d226f125c07fdac0",
+      "size": 3053,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/src/tz.rs",
+      "sha256": "cab9d8da32b0503032fb2a299ef08c182e96654ce0cd33927fb53dc28ebeb9a2",
+      "size": 1752,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/jiff/tools/prep_jcore.py",
+      "sha256": "b26b7db49a82de46b009086b9a97a35ced37c4786cf92bc2a25141d0e740b09f",
+      "size": 12522,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/memchr/Cargo.toml",
+      "sha256": "6a1d294a3b35d938bbdc38b17d72b1fbbc8e64cfa5984b62ee73373a4fa6c72a",
+      "size": 533,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/memchr/README.md",
+      "sha256": "f667b97d13ddc984f05476b86899302d7bc29a048761589fa996da39c2967c43",
+      "size": 1696,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/memchr/src/lib.rs",
+      "sha256": "0462adb9d9f040ff7eff6ed41f46b12e1114e72780bd747b1e2b8726958e8e37",
+      "size": 805,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/memchr/src/memchr.rs",
+      "sha256": "7459d837121179a10d332b9814f6cc92dfcdd2c325fa2bc0368acd9c52971e25",
+      "size": 6357,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/memchr/src/memmem.rs",
+      "sha256": "c296e8e1eb08e288cecf9df41924c94b4d7154ccc64d6bd5e0176f74da12c47e",
+      "size": 6831,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/name-to-handle-at/Cargo.toml",
+      "sha256": "51a41f1119856c6fd580e88162e8f7ec5a4ee671c490da77a425ff111a2d1af5",
+      "size": 507,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/name-to-handle-at/README.md",
+      "sha256": "01768a276bca558ec1436e874dced3cf3a13e61ec306cacdbc66c0cc22d74ec2",
+      "size": 943,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/name-to-handle-at/src/lib.rs",
+      "sha256": "f20d7d49a01452c3567a2d72dc7ad8c03bbbd265b6b388cfe89a4c1b22491d93",
+      "size": 3347,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/Cargo.toml",
+      "sha256": "4e408a48b1302efbce835254f5efc35f20be25c2f5bdcac8f47fc3ee9f2a1a77",
+      "size": 668,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/README.md",
+      "sha256": "196c372b97aaad06af028f3acfcf00e1d5eae4f3acc3734ceb79c9221c925bb3",
+      "size": 3053,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/src/errno.rs",
+      "sha256": "cf49e9399898d58fb9277861ca7352bdcb322d2d64831187ffac767360482700",
+      "size": 31437,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/src/lib.rs",
+      "sha256": "41bb94bdb6c4ec40080ad00e319861b554666066a7160b68ae0dad0313d8477a",
+      "size": 3613,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/src/sys/event.rs",
+      "sha256": "c5944e93424c48247f2eb27838f84a69d47c9382908ed575639c667a1727c528",
+      "size": 12478,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/src/sys/fanotify.rs",
+      "sha256": "8401e993b78fb4a52acb203890bfb4d7248016492da1ba489edfac5870ba104b",
+      "size": 12188,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/src/sys/mod.rs",
+      "sha256": "ef5e5a4faa115c27f435fe55ce84d8d7354f951791baa61695616313bf7fa400",
+      "size": 671,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/src/sys/prctl.rs",
+      "sha256": "027a95e5621d8c655d53dcdbb7e03a030e65e0bf978b514e72a05d35ac7ddbdd",
+      "size": 625,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/src/sys/signal.rs",
+      "sha256": "943ec20a7dc31f8a81056bc4a53ea788f4ef6f3284d5fb696f594af739ae6ec3",
+      "size": 4572,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/nix/src/sys/time.rs",
+      "sha256": "7ea362fb2bc63ee63dcfa99b1a94625e78e97e455dcff1ad0d549e4b8e84197c",
+      "size": 2393,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/num-bigint/Cargo.toml",
+      "sha256": "e83c5d6797b4f54ab7eb20a77104d2a53338a16a4b3764592dfa0782ecedd492",
+      "size": 556,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/num-bigint/README.md",
+      "sha256": "7652ee2d518ef9e6c87c204c7e101468465b067caeb113e7a53bdd090b79b5d7",
+      "size": 1165,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/num-bigint/src/bigint.rs",
+      "sha256": "ebc96cd3ace365e222e4edfe50780a4dda01be9a8e6487ca8fa574226635ebf2",
+      "size": 13254,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/num-bigint/src/lib.rs",
+      "sha256": "d026d5ee15c381a1573d2f6005016e52a39ee26343dd86191771e27ebcf87cbb",
+      "size": 525,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/num-traits/Cargo.toml",
+      "sha256": "03290adf9f6ac776c55a641284c2b3c7302fd659a3e453427d23a11fa9329418",
+      "size": 523,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/num-traits/README.md",
+      "sha256": "5ac1f2c0e579d59032e23bb2e396c142e7b493c5d3cf7ba0d0fc0386353cdd6e",
+      "size": 982,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/num-traits/src/cast.rs",
+      "sha256": "a7f468b5f883d11333dc84f0a356c62681c9c7d43a44cb4d2d1755ded2168f69",
+      "size": 4254,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/num-traits/src/lib.rs",
+      "sha256": "e6dd2a8db345c6dc37d4038343eaf0e6f6d6e52bb460e62e79be5f09b04fcebd",
+      "size": 362,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustc-hash/Cargo.toml",
+      "sha256": "07a05f24dbc2ec24a846d26a4426e39566c96d32558d485d1956c2a2d81c94ab",
+      "size": 616,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustc-hash/README.md",
+      "sha256": "871a1f87598f0b945297978d110e84227febe91126986edb5aec7d6cd58e8b7b",
+      "size": 1502,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustc-hash/src/lib.rs",
+      "sha256": "25bd9266fa325793723c41d2fbd09f64b73feeef1d935fb526046aa0ffcfa802",
+      "size": 4649,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustc-hash/src/seeded_state.rs",
+      "sha256": "4100f47bba75c0f5a097d9625c48ef5fb8e5240acaeab09510bb2691c95f690d",
+      "size": 787,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/Cargo.toml",
+      "sha256": "7fcf5aa19af739b40bfe8847aa1fac381f59b38e5592148365e661d58e47caa6",
+      "size": 630,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/README.md",
+      "sha256": "5b34a8c2d41ba5da2f2be5bc2d8ee0fefdc701e09e2ecec36891ad8675bc29dd",
+      "size": 3654,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/buffer.rs",
+      "sha256": "0011042481e2840a44541663dd7a5833430f5ca55a3b761a51ff31672ba645dc",
+      "size": 1267,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/event.rs",
+      "sha256": "c306f5075d8531c06ba868a312944080539b2e1b50577bd04843fad2d24b17cb",
+      "size": 3861,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/fd.rs",
+      "sha256": "0996a43bc2f44a061465be186fe652ba74b9df7af0bf32f7615317a86762c12e",
+      "size": 497,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/fs.rs",
+      "sha256": "05dccd2dd068bca890da73f011ef1c27c08264cafaf04be78533431a51b9c8f9",
+      "size": 40627,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/io.rs",
+      "sha256": "2988a0e9f6858d91cc24a0cb88c6c4d967b13ed3125932f97d1f41d21969638a",
+      "size": 5357,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/lib.rs",
+      "sha256": "b15bc5c74fc9359f6e8cbef8a713f15e45119c10d2f3ba1a6c6f1f53d5a2557a",
+      "size": 2266,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/path.rs",
+      "sha256": "60a623a8e6d7ce0e887c8f17bdf5614b340a77e06e44dd9aaae0c18707c1a3f8",
+      "size": 2092,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/pipe.rs",
+      "sha256": "b4292e7cdbf84407dd4b3d2ba221b5ac7a87f45e59ab36925aa7a8cdc1f4186f",
+      "size": 1641,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/process.rs",
+      "sha256": "28cc778ca79e7b0f4931371fa24a930266cc9b7c8c654279e0582a712660e5c5",
+      "size": 11560,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/stdio.rs",
+      "sha256": "0f2055e800662d1c78ac4132fa371f3def0eff00072aea838c44c5cc8cb6960f",
+      "size": 1123,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/rustix/src/termios.rs",
+      "sha256": "b58c6b8880d6a2657b63f2d2626993254c66f76a97f849d270f8d6703049d5a6",
+      "size": 991,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/ryu-js/Cargo.toml",
+      "sha256": "73b178d5e96318ed7f0a958200b72fd010f5754b042b44ca5e44e70f26ef386b",
+      "size": 488,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/ryu-js/README.md",
+      "sha256": "0bcfc73875842e0d6dd96246dd5cf84727238671af7fa52c30c4861d96f00167",
+      "size": 953,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/ryu-js/src/buffer.rs",
+      "sha256": "799a00c5ad62be65342dee21319c1db8b556f4e044aa51fb242b02f962abf80e",
+      "size": 1202,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/ryu-js/src/lib.rs",
+      "sha256": "57c72e401d9ae9c0e824eac18b53df117e9fbcb8b220831b886a9905f2985af2",
+      "size": 474,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/same-file/Cargo.toml",
+      "sha256": "800bcc29f58416a9c69cacdf74cc7ba39a6154e4cb1079909b4201dc69dfe2d1",
+      "size": 561,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/same-file/README.md",
+      "sha256": "edaed361e4e3293e0faf4db2800a2b86309c03cf3b61f0b25650f0a32cbee313",
+      "size": 1682,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/same-file/src/lib.rs",
+      "sha256": "6af00fdea503543a86852de04d7db151dbf4f049281bb566bc4c424fcfbf8e67",
+      "size": 4174,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/signal-hook/Cargo.toml",
+      "sha256": "ddc1ab57031f583f34e8e72a8a97f7c5a665f59d1c2c293592060da9ba54af14",
+      "size": 530,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/signal-hook/README.md",
+      "sha256": "46865fd216d01ac4e9039129b5cde27be0365e897c668827f61563f253986750",
+      "size": 2290,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/signal-hook/src/flag.rs",
+      "sha256": "6f973300a4c04b36a1b325161288c2aaece25bfdca3e2a9578b067e0d32f82dc",
+      "size": 2216,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/signal-hook/src/iterator/exfiltrator.rs",
+      "sha256": "2228009aa6d5d655ca66d94a8433ae7c5844f44b7e0a21db3e87d8676c059056",
+      "size": 816,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/signal-hook/src/iterator/mod.rs",
+      "sha256": "71a25693282c1d34d7a65bf423dbb24196a098910e20758b8161814f16bf440a",
+      "size": 6681,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/signal-hook/src/lib.rs",
+      "sha256": "4f1c8da6fd6592c56f1bfc60e5d2b3752dc599b8de8fe0b545f9b6fbbf3f2aad",
+      "size": 2981,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/signal-hook/src/low_level.rs",
+      "sha256": "61d97d9df4015249116783e3eb3a8c33e6087c173f5e044004fcbc0d81c296a1",
+      "size": 2717,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/smallvec/Cargo.toml",
+      "sha256": "cb299955610eb8f5412e0832d3a7157e29aa2bd69e82d6766fba69496548f7fe",
+      "size": 431,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/smallvec/README.md",
+      "sha256": "d2a99e1ec2ff700b44435c26e2e5e866d0e1ebaa47b497a27a2ad101a844add0",
+      "size": 1853,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/smallvec/src/lib.rs",
+      "sha256": "e9de40ac503b48e7cd91047e96a1c8bd3dbaf1d72ca8ebcf446c79ff5ca13e28",
+      "size": 20856,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/tikv-jemalloc-ctl/Cargo.toml",
+      "sha256": "57874de5aadc78a099dac6c24d0e66ce67a67a2e0f02809254205130ed7402bd",
+      "size": 625,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/tikv-jemalloc-ctl/README.md",
+      "sha256": "d338cac0b3a18cb27bbcb7bde657113e4f8a5cf681315693a4d283510a280432",
+      "size": 3880,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/tikv-jemalloc-ctl/src/lib.rs",
+      "sha256": "2fcb16a30320c58a382e3157ac3b6ddfe55fb2e8a408c835ef7a5b41319009a1",
+      "size": 8735,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/tikv-jemallocator/Cargo.toml",
+      "sha256": "10a44a6f20ae8e0bc354e1101ccfe1002652fd2da6be51b1b1681190dc43d372",
+      "size": 729,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/tikv-jemallocator/README.md",
+      "sha256": "7c64bcaa4914bcde8b4cf24d29a2e182ebdb0ba1876fad36cfa66ac30e9379d9",
+      "size": 1073,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/tikv-jemallocator/src/lib.rs",
+      "sha256": "0ba25902f021ade579852999a5a5ff364bea2d4b6b169b66e4f2660e532dfcfa",
+      "size": 633,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/xxhash-rust/Cargo.toml",
+      "sha256": "a0f4a35cdd524359f59afed182d59242e7b8499013724ab9448172f0a737cba0",
+      "size": 436,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/xxhash-rust/README.md",
+      "sha256": "fc4f8c12376a0d800d78f95a0d2dc60e568f118b925ae9fcf2118a99c687774b",
+      "size": 1120,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/xxhash-rust/src/lib.rs",
+      "sha256": "db75729a5d3c9b3f05bd40b8c192c05a6e59b5ca99aff677c86ff536fa43f29e",
+      "size": 385,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/deps/xxhash-rust/src/xxh3.rs",
+      "sha256": "ac2b6765d4974a727e5742f73021709493017379a1f141ece8060cdb4587dac7",
+      "size": 1831,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/Cargo.toml",
+      "sha256": "0fbc02354f60cfbc68b312674a0c5620c2b7fc0d4e5f6249e3d7c80461e82ebe",
+      "size": 206,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/alloc.rs",
+      "sha256": "faf9607d2b548b1bc3b52085008db18020447d7abe42eef5088fc56570c3a311",
+      "size": 4049,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/backtrace.rs",
+      "sha256": "e30d4990ac8c6c7bd1b8e49c0341703229387933dbefc855c8e31efbb7b3d62e",
+      "size": 2226,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/env.rs",
+      "sha256": "a782eca80085fac56356faecfe9d649f67a575436853ebd09860163552a56370",
+      "size": 7278,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/ffi.rs",
+      "sha256": "898642de038c2c6e1d8d6d0b82a9c5420c9466d59ed22948bc3ae32c681573cb",
+      "size": 14627,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/fs.rs",
+      "sha256": "8e5bd861a4d68d8c1c6c62ea458d18493908f887b808778c9828e44e6644eac9",
+      "size": 27558,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/fs_time.rs",
+      "sha256": "bf66b211bcb38654b5954935b2b8c342d0ff130b94fbd41882cc2ba1dfc88b23",
+      "size": 2819,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/io.rs",
+      "sha256": "5dec0669ca6f01b66a6dddc4c8a172ec125f0c558fa919f30cced6cf3ab9c775",
+      "size": 55368,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/lib.rs",
+      "sha256": "dc3666f6dead39d7fd66ebfce234991f5c466305384e54859d245d78442295dd",
+      "size": 380,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/net.rs",
+      "sha256": "3042c01fb962c71ca8389a45a73725ab182591e466bef3337409182064109a09",
+      "size": 57656,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/os.rs",
+      "sha256": "188b6a11c352185c156eca626eb1c2f8ac8f74a829dbcadc12dc7cd1b3a861fa",
+      "size": 20003,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/panic.rs",
+      "sha256": "4b92b642479489e5d57b168498356dc5bf41e62013b7500f4dd148ef8ac59554",
+      "size": 4608,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/path.rs",
+      "sha256": "e69e494f7b1c14c54d9a77669b55e80d4e292a8a24d3ed7e80de5498234141c7",
+      "size": 34403,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/platform.rs",
+      "sha256": "ff4a2da96f339cf58faf2114be313382e87062d618ce33aff588690547b77186",
+      "size": 1136,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/prelude.rs",
+      "sha256": "101f63ce06f3d4377771f1bdca85b8967652a1dada5d1913c161ae1bd1cc5eb0",
+      "size": 240,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/process.rs",
+      "sha256": "71d5c32f22d935a1f9a84ffa66592aa9a69d27096308b2f66ec850fb128a4c2f",
+      "size": 847,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/process_os.rs",
+      "sha256": "66e369c8e859784be0102fe1f65ef77118180332d39d410bf98def5f13439534",
+      "size": 30590,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/sync.rs",
+      "sha256": "875b710d587de4b1e5a261dcfdb14ce165234a195855ab787b0a373086ff9b9e",
+      "size": 4592,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/time.rs",
+      "sha256": "e55152a5ed28b26c1f115776b239e17ea83b0d49069ef1b4166cc32f7125e069",
+      "size": 8113,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/library/std/src/unix_net.rs",
+      "sha256": "2f9841499d9a023fa2474d792b890d46bebf8f5b25aaa0d3830072d2876c7149",
+      "size": 13964,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/bin/tcc",
+      "sha256": "d6a8172120ff550aa340a42d2a76599c23e67c62ec465061dab5ff3f93aaab81",
+      "size": 376888,
+      "mode": "0o755"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/bcheck.o",
+      "sha256": "17e270d8950ec1873fcfa1c43e4063eef19b3c786f1ae39192a5bc6553108b6d",
+      "size": 147170,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/bcheck_run.o",
+      "sha256": "ca7cad27ef107c0baa4e234cfdf4f438de5eaf548b24a88aa150012760aabba5",
+      "size": 156987,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/bt-exe.o",
+      "sha256": "47e46747626cefb03ddd819951d1b2f18c0b71c20aca698736a65efe8b446ddb",
+      "size": 19433,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/bt-log.o",
+      "sha256": "72e1ac001c9b996f03f6de4b8caadf3e0df8933f597f48d6ccb760230103a6c1",
+      "size": 2297,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/float.h",
+      "sha256": "484ffee95fcdbc00cdc154b9dc2fe03fed65610bf1a73b610871cc39698e6f8e",
+      "size": 1930,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/stdalign.h",
+      "sha256": "7612d46571099ccaa7616a510f78f180cb1e91671e6e5e9223a2e297b84b789d",
+      "size": 354,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/stdarg.h",
+      "sha256": "a38f8d34f5e09658cc3a8892b3a7e80ff566eaeedc194e5a85ece0b675993137",
+      "size": 335,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/stdatomic.h",
+      "sha256": "4fbd9d6ec9add338d41c06f44115121925f087dd91f445b56cca1aacb84360e1",
+      "size": 7890,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/stdbool.h",
+      "sha256": "5252824225ddc486b0460677f765e4157af5d3ed7acd65b310a4045eafb56af7",
+      "size": 176,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/stddef.h",
+      "sha256": "c42eaa62f574527b8d0d64f802b20c27ebeb66feb2c3608e9b9659225ad6ed45",
+      "size": 1072,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/stdnoreturn.h",
+      "sha256": "ec64d8fbf7fb2e800df9784b2efca0a99fc25a3eb5e8da56e4df098937f787f2",
+      "size": 125,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/tccdefs.h",
+      "sha256": "d1016b6170c45f1b8e7f8d83bf1f00f21e288eb2e446d9f141457f6f821acf7b",
+      "size": 11685,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/tcclib.h",
+      "sha256": "2cfbd6b9c5e039721fbfb8e6f95a0a9fc30597bbcb2aefa3dda572c278009429",
+      "size": 2658,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/tgmath.h",
+      "sha256": "e60c66ff9017f13ab18ee38824792ca771b9235bcb4df57688fec582739524a5",
+      "size": 3954,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/include/varargs.h",
+      "sha256": "07858857f4eed0a61df94beb1a9d678b53fc3d67a0b0e8936155f85ddbcd1dcc",
+      "size": 355,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/libtcc1.a",
+      "sha256": "7fac7e6c3717e8e82e7b424a69f5ff47f61eea49ea5448e791ebecc208800215",
+      "size": 49362,
+      "mode": "0o644"
+    },
+    {
+      "path": "lib/lust/tcc/lib/tcc/runmain.o",
+      "sha256": "c4d28fa3699c6c5f752f25f4a24bb66db73dcaa8a1b8a7496e9b9deecf7d210d",
+      "size": 3353,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/Lust-LICENSE",
+      "sha256": "8095f9a9f97d074131f6a2ce09b952d12c18b36f09f4e5df0517c4e64e82c851",
+      "size": 1068,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/Lustr-LICENSE",
+      "sha256": "8095f9a9f97d074131f6a2ce09b952d12c18b36f09f4e5df0517c4e64e82c851",
+      "size": 1068,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/TinyCC-COPYING",
+      "sha256": "512d2d21b6b3384ba64781abb0208a1b87740bc31e2df48e2b206ddb7e4d5779",
+      "size": 26428,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/cargo/LICENSE-APACHE",
+      "sha256": "8ada45cd9f843acf64e4722ae262c622a2b3b3007c7310ef36ac1061a30f6adb",
+      "size": 10860,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/cargo/LICENSE-MIT",
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "size": 1023,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/cargo/LICENSE-THIRD-PARTY",
+      "sha256": "cbc759b1f17a2ac38fe3eb9e9563b1a08ba0f900611c49faaf68b46907b6d898",
+      "size": 68430,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/cc/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "size": 10847,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/cc/LICENSE-MIT",
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+      "size": 1057,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/find-msvc-tools/LICENSE-APACHE",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "size": 10847,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/find-msvc-tools/LICENSE-MIT",
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+      "size": 1057,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/libmimalloc-sys/LICENSE.txt",
+      "sha256": "a08554fab028af3af047e8588d32d019662c1b1bf07959a195a2f75fe340726b",
+      "size": 1055,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/libmimalloc-sys/c_src/mimalloc/v2/LICENSE",
+      "sha256": "82ade5d7d9b029044b5fbbc326207fc47c2d44ee4dd71e8a559c36d728217de9",
+      "size": 1096,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/libmimalloc-sys/c_src/mimalloc/v3/LICENSE",
+      "sha256": "82ade5d7d9b029044b5fbbc326207fc47c2d44ee4dd71e8a559c36d728217de9",
+      "size": 1096,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/mimalloc/LICENSE.txt",
+      "sha256": "a08554fab028af3af047e8588d32d019662c1b1bf07959a195a2f75fe340726b",
+      "size": 1055,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/shlex/LICENSE-APACHE",
+      "sha256": "553fffcd9b1cb158bc3e9edc35da85ca5c3b3d7d2e61c883ebcfa8a65814b583",
+      "size": 566,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/licenses/lustr/dependencies/shlex/LICENSE-MIT",
+      "sha256": "4455bf75a91154108304cb283e0fea9948c14f13e20d60887cf2552449dea3b1",
+      "size": 1092,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/lustr/build/native-cargo/native-cargo-build.cargo.log",
+      "sha256": "392eaf2c0c1c6910d25c0e2acc6aac5a9e5608e8887129293185ac5be9489004",
+      "size": 132822,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/lustr/build/native-cargo/native-cargo-build.json",
+      "sha256": "9ae056c6c9b71e41e66d28b8fca145d4e60cc76c349fa1c6314e134af503efec",
+      "size": 4910,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/lustr/source/lustr.tar.gz",
+      "sha256": "712aaa791e4f4564573bb55226df155a22117e801415fe71e5634b4326600ff0",
+      "size": 20108857,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/lustr/source/tinycc.tar.gz",
+      "sha256": "411ee625ab67fdcf3e382b9d2cc0cc62b87f605c7810596f10879b22f3806d41",
+      "size": 1033166,
+      "mode": "0o644"
+    },
+    {
+      "path": "share/lustr/source/vendor.tar.gz",
+      "sha256": "b12b992b39aa7cf66419d3b7088fa2ec260d181378ea269e5cd99fd75a7a9a08",
+      "size": 692952,
+      "mode": "0o644"
+    }
+  ]
+}

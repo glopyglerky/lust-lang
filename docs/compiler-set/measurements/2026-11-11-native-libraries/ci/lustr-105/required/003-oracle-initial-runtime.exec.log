@@ -1,0 +1,1 @@
+6611  execve("/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/lustr_library_contract", ["/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/lustr_library_contract"], 0x7ffdf9e03398 /* 123 vars */) = 0

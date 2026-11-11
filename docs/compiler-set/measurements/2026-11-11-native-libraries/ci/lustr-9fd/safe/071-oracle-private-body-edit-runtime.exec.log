@@ -1,0 +1,1 @@
+4147  execve("/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/oracle target/debug/lustr_library_contract", ["/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/oracle target/debug/lustr_library_contract"], 0x7ffeccf5dec8 /* 123 vars */) = 0

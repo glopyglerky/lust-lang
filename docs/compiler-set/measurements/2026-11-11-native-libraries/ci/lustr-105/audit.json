@@ -1,0 +1,91 @@
+{
+  "source_commit": "105b308824ae9acdff9d4ff9b46a75e74639b5a8",
+  "source_tree": "780b27abce516ffd6150db18dca1ef6381212cb5",
+  "native_tree": "0ab1b09815802894e6078de0af59273cbdf46cb0",
+  "compiler_sha256": "545818158e9235140d99b5616fbbe52ae47f76c1c1a93df9df6305027f87a679",
+  "compiler_version": "lustr-native 0.1.0 (Lust 0.2.0, build 2420cbb782054fc7)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false",
+  "actual_build_settings": {
+    "opt_level": 3,
+    "codegen_units": 16,
+    "lto": "thin",
+    "debug": false,
+    "incremental": true
+  },
+  "receipt_sha256": "9ae056c6c9b71e41e66d28b8fca145d4e60cc76c349fa1c6314e134af503efec",
+  "log_sha256": "392eaf2c0c1c6910d25c0e2acc6aac5a9e5608e8887129293185ac5be9489004",
+  "safe_report_sha256": "6658826b3fa927dd80ce08119e1e545a418edbfd0b92eff2647ade416e77577f",
+  "safe_commands": 81,
+  "safe_success": true,
+  "safe_full_qualification": false,
+  "tracing_required": true,
+  "lanes": {
+    "native": {
+      "commands": 45,
+      "traced_commands": 43,
+      "successful_execs": 116,
+      "executables": {
+        "lustr-native": 51,
+        "cargo": 5,
+        "tcc": 50,
+        "lustr_library_contract": 3,
+        "lustr_library_contract-68129d507d5e866b": 7
+      }
+    },
+    "oracle": {
+      "commands": 36,
+      "traced_commands": 36,
+      "successful_execs": 95,
+      "executables": {
+        "rustc": 45,
+        "cargo": 5,
+        "cc": 9,
+        "collect2": 9,
+        "ld.lld": 9,
+        "rust-lld": 9,
+        "lustr_library_contract": 3,
+        "lustr_library_contract-a37c421970c7e546": 6
+      }
+    }
+  },
+  "exit_counts": {
+    "0": 54,
+    "1": 9,
+    "101": 4,
+    "2": 14
+  },
+  "timeouts": 0,
+  "artifact_id": 13848667662,
+  "artifact_sha256": "59e811cfb615a6b08c10fa2faa32498be72ca612b7611278e9d2daa77c8dc235",
+  "archive_published": false,
+  "required_unsafe_gate": "reached and failed with L0404 for the unsafe library producer",
+  "assembly_failure": null,
+  "limits": "Compiler binary is not in this evidence archive; its digest agrees across independently recorded build receipt and traced test report. Safe result does not qualify complete Rust or the required unsafe suite.",
+  "required_commands": 5,
+  "required_report_sha256": "e81df6b4c5d6c16084ca002b5d835b4c7e07d8c5ccd9fee5db3143be1bdd1e3a",
+  "required_native_processes": {
+    "lustr-native": 6,
+    "cargo": 1
+  },
+  "ordinary_native_cargo_commands": 207,
+  "ordinary_native_cargo_success": true,
+  "ordinary_native_cargo_timing_samples": 60,
+  "package_outer_commands": 9,
+  "package_checks": [
+    "native-only payload has no stock rustc, rustdoc or Rust sysroot; oracle is external",
+    "no coordinator executable in the package",
+    "complete payload hashes after relocation",
+    "native Cargo build receipt binds the measured executable, source and build settings",
+    "packaged native executables identical to pristine release build",
+    "installed native compile and actual executable output",
+    "native filesystem operation through relocated library assets",
+    "native unsupported and invalid input remain failures",
+    "relocated in-process native Cargo binary compiler, real dep-info, external-input invalidation and explicit unsupported-artifact rejection"
+  ],
+  "native_only_payload_entries": 204,
+  "source_changes_since_first_run": [
+    ".github/workflows/native-package.yml"
+  ],
+  "package_manifest_sha256": "a1bec8b49aa110b6f6991970643312a01dc6e378f4b477f9581369aacf267f72",
+  "outer_report_sha256": "b30d9342d409dfd7f440bbb05a6d7af213ae032213a570430b8a533232a20446",
+  "direct_pristine_speed_checks": "not reached after required unsafe failure"
+}

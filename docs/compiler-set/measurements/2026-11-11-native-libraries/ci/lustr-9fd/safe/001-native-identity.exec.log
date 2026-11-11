@@ -1,0 +1,1 @@
+3513  execve("/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native", ["/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native", "-vV"], 0x7ffd3b6b64a0 /* 123 vars */) = 0

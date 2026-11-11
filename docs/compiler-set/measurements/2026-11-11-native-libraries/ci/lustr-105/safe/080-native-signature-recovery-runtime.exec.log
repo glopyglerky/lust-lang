@@ -1,0 +1,1 @@
+4250  execve("/home/runner/work/_temp/native-library-safe-evidence/native target/debug/lustr_library_contract", ["/home/runner/work/_temp/native-library-safe-evidence/native target/debug/lustr_library_contract"], 0x7ffd4f191588 /* 123 vars */) = 0

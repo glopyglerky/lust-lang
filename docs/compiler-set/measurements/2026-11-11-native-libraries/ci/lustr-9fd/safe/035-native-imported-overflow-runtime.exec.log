@@ -1,0 +1,1 @@
+3849  execve("/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/native-imported-overflow output/lustr_library_contract-68129d507d5e866b", ["/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/native-imported-overflow output/lustr_library_contract-68129d507d5e866b"], 0x7ffeb29a00c8 /* 123 vars */) = 0

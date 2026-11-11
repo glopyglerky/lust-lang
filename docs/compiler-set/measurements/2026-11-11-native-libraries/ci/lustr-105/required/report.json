@@ -1,0 +1,510 @@
+{
+  "schema": "lustr.native-library-qualification.v1",
+  "success": false,
+  "qualified": false,
+  "no_trace_qualification": false,
+  "qualification_scope": "required",
+  "full_required_suite_passed": false,
+  "scope": "Two independently compiled native libraries with typed scalar free-function exports, private helpers, unsafe-call checks and distinct crate disambiguators, consumed through real Cargo --extern arguments.",
+  "full_native_rust": false,
+  "complete_library_metadata": false,
+  "runtime_rustc_fallback": false,
+  "unimplemented_followups": [
+    "public structs/enums and layout",
+    "references/ownership and cross-crate drops",
+    "generic/type/trait metadata and downstream monomorphization",
+    "transitive dependencies and re-exports",
+    "macros and procedural macros",
+    "metadata-only cargo check and pipelining",
+    "profile/target permutations"
+  ],
+  "timing_scope": "Elapsed times are diagnostic only; no performance claim.",
+  "process_evidence": "strace execve and execveat for functional compilation commands",
+  "runner_sha256": "49cda5ad835edba3f20df7800a5a8e93527c497115366b564ee5b12e894c4549",
+  "retained_runner": "runner-source.py",
+  "retained_initial_fixture": "initial-fixture",
+  "fixture_sha256": {
+    "Cargo.lock": "5c8207ceef2ac1a40e781f2bb5e98ac9ad3620aa4728b4e2c2675c9f3cab31f8",
+    "Cargo.toml": "dd5f75b145578007dc9c65868ecc07f0a483869832093ab23fab42e82098fedb",
+    "README.md": "e9897ffd7bf93f1da3383d206590f31be676d043defc679a65fde1268d75849f",
+    "app/Cargo.toml": "aeedd7f297d2407e3ece2d0a79f464b07ecb31dd4d8718d5d9968bbab33383d9",
+    "app/src/main.rs": "1eecaa5a323ee47706fd01471c63b56eff662b3c6250a9947cd64b6df6d60583",
+    "cases/arity_mismatch.rs": "1a82a5f9b7ead480cb0a15aa481a76807e58320fa9cb85fc1c86351444a50097",
+    "cases/conditional_consumer.rs": "778536986b686948d36f7564f7a5488f5892d6f867eb995d6292e76629d3d647",
+    "cases/function_imports.rs": "a5ee20588441806cdd07b0306b2be8051492983eca5d48e96dcc81462f0edbcf",
+    "cases/imported_overflow.rs": "50c60e31063d1f4b0cf76019c7df7e4461d8b89fc09f4ec6c65da595989d3fed",
+    "cases/primitive_abi.rs": "c103919a056d2d52065d531f5595be2b54172fd5794e3a1dd5ff8ad4b93629ac",
+    "cases/private.rs": "7b9ec30e2c76af78ddfb5c59fa3cc4d1a5af403d9a8a8e7a35ac1da7616933e9",
+    "cases/private_module_helper_consumer.rs": "3bb33a5f131e2a5c4d9e07ab687760e7871b2689b52d57b7e6a625af0b52a856",
+    "cases/private_module_helper_library.rs": "6cfff75596d05f708026d8bdd1be0bc5ef0d7025868ede7bf528ba881456de40",
+    "cases/public_const.rs": "97497d5ae6f45aa987c2de4711ad85b660e3292cc9265e8cc6dabff163572d48",
+    "cases/public_deprecated.rs": "8bd300edfbeadf456a489cd7ce9c57304b09751c53eee61bc0d280c465399639",
+    "cases/public_deprecated_crate.rs": "00845d60774244956e6b19fd216908f286bea2c49e4c4eaa85a6dae54707b74c",
+    "cases/public_deprecated_module.rs": "74bde42cae3a06d68ac293fe145d5fa688149f9fd47f9e8b7c8c8183b77382d1",
+    "cases/public_deprecated_reexport.rs": "3ecf8167ea5ba80e0a82973909cea86affbc8dfd6e92de2ac03815eb7dc1292b",
+    "cases/public_generic.rs": "6fafb9193c5a2ad02e021cdbb8d3095bc195e05d1f081dff099e5dfe295ca087",
+    "cases/public_macro.rs": "c5a14fb886ecaed7613febb4a24b98d80755fb998bb71243b99f18dc0bb041c7",
+    "cases/public_must_use.rs": "5e185d4b82953e378106866478d1babac9c2c36c66b7239be315ddd98e40739f",
+    "cases/public_no_mangle.rs": "5dc1e42d701d01508ee571f3a475e6baad9004c9110ee956eea1244a75a1c853",
+    "cases/public_type.rs": "a8e95f821b81d2c7bfb6b83a3e6d976abde08d4ab60816b24dee86459fc26cd2",
+    "cases/result_mismatch.rs": "a90128a37c797abcf851ec720d31ec846c9450618c4e897662bc15370528d42c",
+    "cases/type_mismatch.rs": "5598feabd99c38393ff98097e3839c81a099853ef6f01ad340679b2bc83accbd",
+    "cases/unsafe_allowed.rs": "2f64eb28e5106d2d18ca78493907bbb24cce86f5b3731e8a8421807076200bfe",
+    "cases/unsafe_forbidden.rs": "1381f89f42fc8e18eb5c0986d3bb808e67de42114aea4cd8807912cdc3b6ccab",
+    "left/Cargo.toml": "bb68f402fb1d3470cb7b33813bfa88bb2806bd36e21f8a86fdb7f25074676b06",
+    "left/src/lib.rs": "45f65e286bc134e70937ecd5559928ec315d5ab646a9a625d1bd34f397894aff",
+    "right/Cargo.toml": "9896d28321756a9bddfeebab4f1e7a275da802cae1d0a5726c443721462e2522",
+    "right/src/lib.rs": "cc8d30f8d566a163e38ba4887d4f0b10aa85c8d73b2d5bd543970a2bd9b0a7bd"
+  },
+  "tools": {
+    "native": {
+      "path": "/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native",
+      "sha256": "545818158e9235140d99b5616fbbe52ae47f76c1c1a93df9df6305027f87a679",
+      "version": "lustr-native 0.1.0 (Lust 0.2.0, build 2420cbb782054fc7)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n"
+    },
+    "cargo": {
+      "path": "/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af"
+    },
+    "oracle": {
+      "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    }
+  },
+  "commands": [
+    {
+      "label": "oracle-identity",
+      "lane": "oracle",
+      "argv": [
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "-vV"
+      ],
+      "cwd": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces",
+      "exit_code": 0,
+      "elapsed_ns": 17848762,
+      "timed_out": false,
+      "stdout": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "stderr": "",
+      "trace": "000-oracle-identity.exec.log",
+      "executed_processes": [
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc"
+      ]
+    },
+    {
+      "label": "native-identity",
+      "lane": "native",
+      "argv": [
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native",
+        "-vV"
+      ],
+      "cwd": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces",
+      "exit_code": 0,
+      "elapsed_ns": 7556339,
+      "timed_out": false,
+      "stdout": "lustr-native 0.1.0 (Lust 0.2.0, build 2420cbb782054fc7)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n",
+      "stderr": "",
+      "trace": "001-native-identity.exec.log",
+      "executed_processes": [
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native"
+      ]
+    },
+    {
+      "label": "oracle-initial",
+      "lane": "oracle",
+      "argv": [
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo",
+        "build",
+        "--offline",
+        "--locked",
+        "-vv",
+        "--message-format=json",
+        "--target-dir",
+        "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target",
+        "-p",
+        "lustr_library_contract"
+      ],
+      "cwd": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces",
+      "exit_code": 0,
+      "elapsed_ns": 414214130,
+      "timed_out": false,
+      "stdout": "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle%20project%20with%20spaces/right#shared_symbol@0.2.0\",\"manifest_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"shared_symbol\",\"src_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rlib\",\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rmeta\"],\"executable\":null,\"fresh\":false}\n{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle%20project%20with%20spaces/left#shared_symbol@0.1.0\",\"manifest_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"shared_symbol\",\"src_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rlib\",\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rmeta\"],\"executable\":null,\"fresh\":false}\n{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle%20project%20with%20spaces/app#lustr_library_contract@0.0.0\",\"manifest_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app/Cargo.toml\",\"target\":{\"kind\":[\"bin\"],\"crate_types\":[\"bin\"],\"name\":\"lustr_library_contract\",\"src_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app/src/main.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":false,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/lustr_library_contract\"],\"executable\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/lustr_library_contract\",\"fresh\":false}\n{\"reason\":\"build-finished\",\"success\":true}\n",
+      "stderr": "   Compiling shared_symbol v0.2.0 (/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right)\n   Compiling shared_symbol v0.1.0 (/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left)\n     Running `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.2.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=2 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps' /home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name shared_symbol --edition=2024 right/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=8bc3e5188ff97615 -C extra-filename=-92bb0eb317c82557 --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps'`\n     Running `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps' /home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=4bbf73fb57afd463 -C extra-filename=-d388c68fb6e01570 --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps'`\n   Compiling lustr_library_contract v0.0.0 (/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app)\n     Running `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_BIN_NAME=lustr_library_contract CARGO_CRATE_NAME=lustr_library_contract CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=lustr_library_contract CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.0.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=0 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' CARGO_PRIMARY_PACKAGE=1 LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps' /home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name lustr_library_contract --edition=2024 app/src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=2e49147f9037b6f6 -C extra-filename=-a37c421970c7e546 --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps' --extern 'left=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rlib' --extern 'right=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rlib'`\n    Finished `dev` profile [unoptimized] target(s) in 0.40s\n",
+      "trace": "002-oracle-initial.exec.log",
+      "executed_processes": [
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo",
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "/usr/bin/cc",
+        "/usr/libexec/gcc/x86_64-linux-gnu/13/collect2",
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld/ld.lld",
+        "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin/rust-lld"
+      ]
+    },
+    {
+      "label": "oracle-initial-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/lustr_library_contract"
+      ],
+      "cwd": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces",
+      "exit_code": 0,
+      "elapsed_ns": 5708768,
+      "timed_out": false,
+      "stdout": "left=31 right=109 local=21\n",
+      "stderr": "",
+      "trace": "003-oracle-initial-runtime.exec.log",
+      "executed_processes": [
+        "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/lustr_library_contract"
+      ]
+    },
+    {
+      "label": "native-initial",
+      "lane": "native",
+      "argv": [
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo",
+        "build",
+        "--offline",
+        "--locked",
+        "-vv",
+        "--message-format=json",
+        "--target-dir",
+        "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target",
+        "-p",
+        "lustr_library_contract"
+      ],
+      "cwd": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces",
+      "exit_code": 101,
+      "elapsed_ns": 128551028,
+      "timed_out": false,
+      "stdout": "{\"reason\":\"compiler-message\",\"package_id\":\"path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/native%20project%20with%20spaces/left#shared_symbol@0.1.0\",\"manifest_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"shared_symbol\",\"src_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"message\":{\"rendered\":\"error[L0404]: `unsafe` is not supported\\n  --> /home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/src/lib.rs:9:1\\n   | pub unsafe fn unchecked_add(value: i32) -> i32 {\\n   | ^^^\\n   = fix: Remove the unsafe code.\\n\\nerror: could not compile `/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/src/lib.rs` due to 1 previous error(s)\\n\",\"$message_type\":\"diagnostic\",\"children\":[],\"level\":\"error\",\"message\":\"error[L0404]: `unsafe` is not supported\\n  --> /home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/src/lib.rs:9:1\\n   | pub unsafe fn unchecked_add(value: i32) -> i32 {\\n   | ^^^\\n   = fix: Remove the unsafe code.\\n\\nerror: could not compile `/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/src/lib.rs` due to 1 previous error(s)\\n\",\"spans\":[],\"code\":null}}\n{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/native%20project%20with%20spaces/right#shared_symbol@0.2.0\",\"manifest_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"shared_symbol\",\"src_path\":\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps/libshared_symbol-4365b94d99e8634d.rlib\",\"/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps/libshared_symbol-4365b94d99e8634d.rmeta\"],\"executable\":null,\"fresh\":false}\n{\"reason\":\"build-finished\",\"success\":false}\n",
+      "stderr": "   Compiling shared_symbol v0.1.0 (/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left)\n   Compiling shared_symbol v0.2.0 (/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right)\n     Running `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' /tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=e7593bf0e1a14e9e -C extra-filename=-0022a28955bb587c --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps'`\n     Running `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.2.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=2 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' /tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native --crate-name shared_symbol --edition=2024 right/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=584f9d5251a9eefb -C extra-filename=-4365b94d99e8634d --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps'`\nerror: could not compile `shared_symbol` (lib) due to 1 previous error\n\nCaused by:\n  process didn't exit successfully: `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' /tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=e7593bf0e1a14e9e -C extra-filename=-0022a28955bb587c --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps'` (exit status: 1)\nwarning: build failed, waiting for other jobs to finish...\n",
+      "trace": "004-native-initial.exec.log",
+      "executed_processes": [
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo",
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native",
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native",
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native",
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native",
+        "/tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native"
+      ]
+    }
+  ],
+  "checks": [],
+  "artifacts": {},
+  "blocked": [
+    "Unreached library gates remain unqualified; failure is not a native completion result."
+  ],
+  "cargo_builds": [
+    {
+      "label": "oracle-initial",
+      "lane": "oracle",
+      "artifacts": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle%20project%20with%20spaces/right#shared_symbol@0.2.0",
+          "manifest_path": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right/Cargo.toml",
+          "target": {
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "name": "shared_symbol",
+            "src_path": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right/src/lib.rs",
+            "edition": "2024",
+            "doc": true,
+            "doctest": true,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "features": [],
+          "filenames": [
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rlib",
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rmeta"
+          ],
+          "executable": null,
+          "fresh": false
+        },
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle%20project%20with%20spaces/left#shared_symbol@0.1.0",
+          "manifest_path": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left/Cargo.toml",
+          "target": {
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "name": "shared_symbol",
+            "src_path": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left/src/lib.rs",
+            "edition": "2024",
+            "doc": true,
+            "doctest": true,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "features": [],
+          "filenames": [
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rlib",
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rmeta"
+          ],
+          "executable": null,
+          "fresh": false
+        },
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle%20project%20with%20spaces/app#lustr_library_contract@0.0.0",
+          "manifest_path": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "lustr_library_contract",
+            "src_path": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app/src/main.rs",
+            "edition": "2024",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "features": [],
+          "filenames": [
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/lustr_library_contract"
+          ],
+          "executable": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/lustr_library_contract",
+          "fresh": false
+        }
+      ],
+      "compiler_invocations": [
+        {
+          "argv": [
+            "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+            "--crate-name",
+            "shared_symbol",
+            "--edition=2024",
+            "right/src/lib.rs",
+            "--error-format=json",
+            "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+            "--crate-type",
+            "lib",
+            "--emit=dep-info,metadata,link",
+            "-C",
+            "embed-bitcode=no",
+            "--check-cfg",
+            "cfg(docsrs,test)",
+            "--check-cfg",
+            "cfg(feature, values())",
+            "-C",
+            "metadata=8bc3e5188ff97615",
+            "-C",
+            "extra-filename=-92bb0eb317c82557",
+            "--out-dir",
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps",
+            "-C",
+            "strip=debuginfo",
+            "-L",
+            "dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps"
+          ],
+          "environment": {
+            "CARGO": "/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo",
+            "CARGO_CRATE_NAME": "shared_symbol",
+            "CARGO_MANIFEST_DIR": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right",
+            "CARGO_MANIFEST_PATH": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/right/Cargo.toml",
+            "CARGO_PKG_AUTHORS": "",
+            "CARGO_PKG_DESCRIPTION": "",
+            "CARGO_PKG_HOMEPAGE": "",
+            "CARGO_PKG_LICENSE": "",
+            "CARGO_PKG_LICENSE_FILE": "",
+            "CARGO_PKG_NAME": "shared_symbol",
+            "CARGO_PKG_README": "",
+            "CARGO_PKG_REPOSITORY": "",
+            "CARGO_PKG_RUST_VERSION": "",
+            "CARGO_PKG_VERSION": "0.2.0",
+            "CARGO_PKG_VERSION_MAJOR": "0",
+            "CARGO_PKG_VERSION_MINOR": "2",
+            "CARGO_PKG_VERSION_PATCH": "0",
+            "CARGO_PKG_VERSION_PRE": "",
+            "LD_LIBRARY_PATH": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps"
+          }
+        },
+        {
+          "argv": [
+            "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+            "--crate-name",
+            "shared_symbol",
+            "--edition=2024",
+            "left/src/lib.rs",
+            "--error-format=json",
+            "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+            "--crate-type",
+            "lib",
+            "--emit=dep-info,metadata,link",
+            "-C",
+            "embed-bitcode=no",
+            "--check-cfg",
+            "cfg(docsrs,test)",
+            "--check-cfg",
+            "cfg(feature, values())",
+            "-C",
+            "metadata=4bbf73fb57afd463",
+            "-C",
+            "extra-filename=-d388c68fb6e01570",
+            "--out-dir",
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps",
+            "-C",
+            "strip=debuginfo",
+            "-L",
+            "dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps"
+          ],
+          "environment": {
+            "CARGO": "/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo",
+            "CARGO_CRATE_NAME": "shared_symbol",
+            "CARGO_MANIFEST_DIR": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left",
+            "CARGO_MANIFEST_PATH": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/left/Cargo.toml",
+            "CARGO_PKG_AUTHORS": "",
+            "CARGO_PKG_DESCRIPTION": "",
+            "CARGO_PKG_HOMEPAGE": "",
+            "CARGO_PKG_LICENSE": "",
+            "CARGO_PKG_LICENSE_FILE": "",
+            "CARGO_PKG_NAME": "shared_symbol",
+            "CARGO_PKG_README": "",
+            "CARGO_PKG_REPOSITORY": "",
+            "CARGO_PKG_RUST_VERSION": "",
+            "CARGO_PKG_VERSION": "0.1.0",
+            "CARGO_PKG_VERSION_MAJOR": "0",
+            "CARGO_PKG_VERSION_MINOR": "1",
+            "CARGO_PKG_VERSION_PATCH": "0",
+            "CARGO_PKG_VERSION_PRE": "",
+            "LD_LIBRARY_PATH": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps"
+          }
+        },
+        {
+          "argv": [
+            "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+            "--crate-name",
+            "lustr_library_contract",
+            "--edition=2024",
+            "app/src/main.rs",
+            "--error-format=json",
+            "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+            "--crate-type",
+            "bin",
+            "--emit=dep-info,link",
+            "-C",
+            "embed-bitcode=no",
+            "--check-cfg",
+            "cfg(docsrs,test)",
+            "--check-cfg",
+            "cfg(feature, values())",
+            "-C",
+            "metadata=2e49147f9037b6f6",
+            "-C",
+            "extra-filename=-a37c421970c7e546",
+            "--out-dir",
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps",
+            "-C",
+            "strip=debuginfo",
+            "-L",
+            "dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps",
+            "--extern",
+            "left=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rlib",
+            "--extern",
+            "right=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rlib"
+          ],
+          "environment": {
+            "CARGO": "/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo",
+            "CARGO_BIN_NAME": "lustr_library_contract",
+            "CARGO_CRATE_NAME": "lustr_library_contract",
+            "CARGO_MANIFEST_DIR": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app",
+            "CARGO_MANIFEST_PATH": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle project with spaces/app/Cargo.toml",
+            "CARGO_PKG_AUTHORS": "",
+            "CARGO_PKG_DESCRIPTION": "",
+            "CARGO_PKG_HOMEPAGE": "",
+            "CARGO_PKG_LICENSE": "",
+            "CARGO_PKG_LICENSE_FILE": "",
+            "CARGO_PKG_NAME": "lustr_library_contract",
+            "CARGO_PKG_README": "",
+            "CARGO_PKG_REPOSITORY": "",
+            "CARGO_PKG_RUST_VERSION": "",
+            "CARGO_PKG_VERSION": "0.0.0",
+            "CARGO_PKG_VERSION_MAJOR": "0",
+            "CARGO_PKG_VERSION_MINOR": "0",
+            "CARGO_PKG_VERSION_PATCH": "0",
+            "CARGO_PKG_VERSION_PRE": "",
+            "CARGO_PRIMARY_PACKAGE": "1",
+            "LD_LIBRARY_PATH": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/oracle target/debug/deps"
+          }
+        }
+      ]
+    },
+    {
+      "label": "native-initial",
+      "lane": "native",
+      "artifacts": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///home/runner/work/lustr/lustr/dist/package-qualification-native-library/native%20project%20with%20spaces/right#shared_symbol@0.2.0",
+          "manifest_path": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right/Cargo.toml",
+          "target": {
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "name": "shared_symbol",
+            "src_path": "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right/src/lib.rs",
+            "edition": "2024",
+            "doc": true,
+            "doctest": true,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "features": [],
+          "filenames": [
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps/libshared_symbol-4365b94d99e8634d.rlib",
+            "/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps/libshared_symbol-4365b94d99e8634d.rmeta"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "compiler_invocations": []
+    }
+  ],
+  "failure": "ValueError: native-initial: Cargo exited 101, expected 0:    Compiling shared_symbol v0.1.0 (/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left)\n   Compiling shared_symbol v0.2.0 (/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right)\n     Running `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' /tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=e7593bf0e1a14e9e -C extra-filename=-0022a28955bb587c --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps'`\n     Running `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/right/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.2.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=2 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' /tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native --crate-name shared_symbol --edition=2024 right/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=584f9d5251a9eefb -C extra-filename=-4365b94d99e8634d --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps'`\nerror: could not compile `shared_symbol` (lib) due to 1 previous error\n\nCaused by:\n  process didn't exit successfully: `CARGO='/tmp/lustr-package-xowmyxx1/relocated package/bin/cargo' CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left' CARGO_MANIFEST_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' /tmp/lustr-package-xowmyxx1/relocated package/bin/lustr-native --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=e7593bf0e1a14e9e -C extra-filename=-0022a28955bb587c --out-dir '/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps' -C strip=debuginfo -L 'dependency=/home/runner/work/lustr/lustr/dist/package-qualification-native-library/native target/debug/deps'` (exit status: 1)\nwarning: build failed, waiting for other jobs to finish...\n"
+}

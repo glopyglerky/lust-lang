@@ -1,0 +1,1 @@
+6557  execve("/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc", ["/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc", "-vV"], 0x7fff59b62040 /* 123 vars */) = 0

@@ -1,0 +1,1 @@
+3907  execve("/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/native-private-module-consumer output/lustr_library_contract-68129d507d5e866b", ["/home/runner/work/lustr/lustr/dist/native-library-safe-evidence/native-private-module-consumer output/lustr_library_contract-68129d507d5e866b"], 0x7ffef6d59088 /* 123 vars */) = 0
