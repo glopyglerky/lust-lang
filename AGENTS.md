@@ -32,6 +32,13 @@ a dispatcher, race two compilers, retry through rustc, or duplicate source
 analysis to conceal a missing native implementation. See
 [the acceptance gate](docs/compiler-set/native-acceptance.md).
 
+The user permits redesigning Lustr from the ground up to meet those floors.
+Neither the current native adapter nor its process model is fixed. Both cold
+and warm performance are mandatory. Keep the pinned upstream tree as an honest
+reference while implementing and measuring redesigns in owned code. Time real
+release builds, not the upstream correctness-only gate profile, and retain the
+actual build invocation and all benchmark observations in automatic CI.
+
 Cargo already owns compiler and toolchain selection. The user's latest direction
 removes an additional coordinator from the native product path. Do not build or
 ship `lustr`, `cargo-lustr` or `cargo-lust` coordinator executables in the native

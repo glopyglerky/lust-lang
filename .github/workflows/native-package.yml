@@ -4,63 +4,42 @@ on:
   push:
     branches: [next, 'build/lustr-native-package*']
     paths:
+      - 'LICENSE'
       - 'crates/lustr/fixtures/**'
       - 'crates/lustr-native/**'
       - 'compiler/native/**'
       - 'upstream/lust.pin'
+      - 'tools/*native*.py'
       - 'tools/package-toolchain.py'
-      - 'tools/build-native-cargo.py'
       - 'tools/qualify-package.py'
-      - 'tools/qualify-native-cargo.py'
-      - 'tools/qualify-native-library.py'
-      - 'tools/test-native-library-invocations.py'
-      - 'tools/test-native-protocol.py'
-      - 'tools/check-native-unsafe-regressions.py'
-      - 'tools/check-native-mixed-generics.py'
-      - 'tools/qualify-native-speed.py'
-      - 'tools/test-native-speed.py'
-      - 'tools/diagnose-native-library-safe.py'
-      - 'tools/native-qualification.py'
-      - 'tests/native-qualification/**'
-      - 'tests/native-cargo/**'
-      - 'tests/native-library/**'
-      - 'tests/native-library-safe/**'
-      - 'tests/native-speed/**'
-      - 'tests/native-mixed-generics/**'
+      - 'tools/lust-upstream-check.rs'
+      - 'tests/native-*/**'
       - 'docs/compiler-set/native-package.md'
       - 'docs/compiler-set/native-acceptance.md'
       - 'docs/compiler-set/native-contract.md'
+      - 'docs/compiler-set/measurements/2026-11-11-native-composition/optimized-ci/native-speed-evidence/report.json.gz'
       - '.github/workflows/native-package.yml'
   pull_request:
     paths:
+      - 'LICENSE'
       - 'crates/lustr/fixtures/**'
       - 'crates/lustr-native/**'
       - 'compiler/native/**'
       - 'upstream/lust.pin'
+      - 'tools/*native*.py'
       - 'tools/package-toolchain.py'
-      - 'tools/build-native-cargo.py'
       - 'tools/qualify-package.py'
-      - 'tools/qualify-native-cargo.py'
-      - 'tools/qualify-native-library.py'
-      - 'tools/test-native-library-invocations.py'
-      - 'tools/test-native-protocol.py'
-      - 'tools/check-native-unsafe-regressions.py'
-      - 'tools/check-native-mixed-generics.py'
-      - 'tools/qualify-native-speed.py'
-      - 'tools/test-native-speed.py'
-      - 'tools/diagnose-native-library-safe.py'
-      - 'tools/native-qualification.py'
-      - 'tests/native-qualification/**'
-      - 'tests/native-cargo/**'
-      - 'tests/native-library/**'
-      - 'tests/native-library-safe/**'
-      - 'tests/native-speed/**'
-      - 'tests/native-mixed-generics/**'
+      - 'tools/lust-upstream-check.rs'
+      - 'tests/native-*/**'
       - 'docs/compiler-set/native-package.md'
       - 'docs/compiler-set/native-acceptance.md'
       - 'docs/compiler-set/native-contract.md'
+      - 'docs/compiler-set/measurements/2026-11-11-native-composition/optimized-ci/native-speed-evidence/report.json.gz'
       - '.github/workflows/native-package.yml'
   workflow_dispatch:
+  # Full backstop, independent of path filters. Schedules run from the default branch.
+  schedule:
+    - cron: '37 4 * * 1'
 
 permissions:
   contents: read
@@ -75,7 +54,7 @@ jobs:
   linux:
     name: Native-only package (Linux x86_64)
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       RUSTUP_TOOLCHAIN: 1.99.1
       PYTHONDONTWRITEBYTECODE: '1'
@@ -83,6 +62,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Restore locked dependency downloads
+        id: dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: native-downloads-v1-${{ runner.os }}-${{ runner.arch }}-rust1.99.1-${{ hashFiles('compiler/native/Cargo.lock', 'crates/lustr-native/Cargo.lock') }}
       - name: Install the pinned bootstrap and external test oracle
         run: rustup toolchain install 1.99.1 --profile minimal
       - name: Install functional process and native object inspection tools
@@ -90,14 +77,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y strace binutils
       - name: Verify unchanged Lust source
+        id: source_before
         run: |
           rustc --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
           "$RUNNER_TEMP/lust-upstream-check"
       - name: Check compiler invocation evidence parsing
+        id: invocations
         run: python3 tools/test-native-library-invocations.py
       - name: Check strict native acceptance decisions
-        run: python3 tools/test-native-speed.py
+        id: acceptance_tests
+        run: |
+          python3 tools/test-native-speed.py
+          python3 tools/test-native-ci-summary.py
+          python3 tools/test-native-build.py
       - name: Build the native compilers and runtime
+        id: native_build
         run: |
           compiler/native/scripts/build-tcc.sh
           cargo build --manifest-path compiler/native/Cargo.toml --release --locked
@@ -108,64 +102,92 @@ jobs:
             --tcc-root "$GITHUB_WORKSPACE/compiler/native/third_party/tcc" \
             --target-dir "$RUNNER_TEMP/lustr-native-cargo" \
             --receipt "$RUNNER_TEMP/native-cargo-build.json"
+      - name: Save verified dependency downloads
+        if: steps.native_build.outcome == 'success' && steps.dependencies.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ steps.dependencies.outputs.cache-primary-key }}
       - name: Check native artifact codec and real ELF object validation
+        id: artifacts
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
           rustc --edition=2024 --test crates/lustr-native/src/native_artifact.rs -o "$RUNNER_TEMP/native-artifact-tests"
           "$RUNNER_TEMP/native-artifact-tests"
       - name: Check native compiler metadata queries
+        id: protocol
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
           python3 tools/test-native-protocol.py \
-            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native" \
             --work "$RUNNER_TEMP/native-protocol-evidence"
       - name: Check unsafe grammar and callable safety regressions
+        id: unsafe
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
           python3 tools/check-native-unsafe-regressions.py \
-            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native" \
             --oracle "$(rustup which rustc)" \
             --output "$RUNNER_TEMP/native-unsafe-regression-evidence"
       - name: Check generic helpers with native unsafe and library support
+        id: mixed_generics
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
           python3 tools/check-native-mixed-generics.py \
-            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native" \
             --oracle "$(rustup which rustc)" \
             --output "$RUNNER_TEMP/native-mixed-generics-evidence"
       - name: Retain native dependency sources
+        id: vendor
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: cargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"
       - name: Record bounded safe-library diagnostics
+        id: safe_library
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
           python3 tools/diagnose-native-library-safe.py \
-            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native" \
             --cargo "$(rustup which cargo)" \
             --oracle "$(rustup which rustc)" \
             --output "$RUNNER_TEMP/native-library-safe-evidence"
       - name: Assemble the relocatable package
+        id: package
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
           python3 tools/package-toolchain.py \
             --output "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu" \
             --native-bin compiler/native/target/release \
-            --native-cargo-bin "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --native-cargo-bin "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native" \
             --native-cargo-receipt "$RUNNER_TEMP/native-cargo-build.json" \
             --cargo-bin "$(rustup which cargo)" \
             --cargo-notices "$(rustc --print sysroot)/share/doc/cargo" \
             --vendor-dir "$RUNNER_TEMP/native-vendor" \
             --compatibility-origin none
       - name: Verify relocation, actual engines, and retained native path
+        id: relocation
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
         run: |
           python3 tools/qualify-package.py \
             --package "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu" \
             --baseline-native compiler/native/target/release/lust \
             --oracle-rustc "$(rustup which rustc)" \
             --output "$RUNNER_TEMP/lustr-native-dist/package-qualification.json"
-      - name: Record actual native coverage and remaining gaps
+      - name: Record pinned upstream coverage and remaining gaps
+        id: upstream_coverage
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
           python3 tools/native-qualification.py \
-            --lust "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust" \
+            --lust "$GITHUB_WORKSPACE/compiler/native/target/release/lust" \
             --rustc "$(rustup which rustc)" \
             --output "$RUNNER_TEMP/lustr-native-dist/native-qualification"
       - name: Enforce native compatibility, concurrency and zero-regression speed
+        id: native_speed
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
           python3 tools/qualify-native-speed.py \
-            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native" \
             --lust "$GITHUB_WORKSPACE/compiler/native/target/release/lust" \
             --cargo "$(rustup which cargo)" \
             --rustc "$(rustup which rustc)" \
@@ -173,8 +195,20 @@ jobs:
             --tcc-root "$GITHUB_WORKSPACE/compiler/native/third_party/tcc" \
             --output "$RUNNER_TEMP/native-speed-evidence"
       - name: Verify unchanged source after build and qualification
+        id: source_after
         if: always()
         run: '"$RUNNER_TEMP/lust-upstream-check"'
+      - name: Publish the complete qualification summary
+        if: always()
+        env:
+          LUSTR_CI_STEPS: ${{ toJSON(steps) }}
+          QUALIFIED_SOURCE: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 tools/native-ci-summary.py \
+            --report "$RUNNER_TEMP/native-speed-evidence/report.json" \
+            --receipt "$RUNNER_TEMP/native-cargo-build.json" \
+            --source-commit "$QUALIFIED_SOURCE" \
+            --output "$RUNNER_TEMP/native-qualification-summary.md"
       - name: Archive the qualified preview
         run: |
           tar --sort=name --owner=0 --group=0 --numeric-owner \
@@ -207,5 +241,6 @@ jobs:
             ${{ runner.temp }}/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
             ${{ runner.temp }}/native-cargo-build.json
             ${{ runner.temp }}/native-cargo-build.cargo.log
+            ${{ runner.temp }}/native-qualification-summary.md
           if-no-files-found: warn
 

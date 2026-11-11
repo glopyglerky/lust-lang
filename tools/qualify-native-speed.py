@@ -30,9 +30,9 @@ import time
 SCHEMA = "lustr.native-speed-qualification.v1"
 MIN_PAIRS = 12
 DIRECT_MODES = ("process-cold", "warm-noop", "body-edit", "signature-edit", "type-edit", "macro-edit", "cold-invalid")
-CARGO_MODES = ("fresh-target", "no-change", "body-edit", "signature-edit", "cold-invalid")
-MIXED_MODES = ("fresh-target", "no-change", "body-edit", "signature-edit")
-FULL_MODES = ("fresh-target", "no-change", "check", "release", "compile-plus-test", "doctests")
+CARGO_MODES = ("fresh-target", "no-change", "body-edit", "signature-edit", "type-edit", "macro-edit", "cold-invalid")
+MIXED_MODES = ("fresh-target", "no-change", "body-edit", "signature-edit", "type-edit", "macro-edit")
+FULL_MODES = ("fresh-target", "no-change", "check", "release", "compile-plus-test", "doctests", "type-edit", "macro-edit")
 COMPILER_NAMES = {"rustc", "rustdoc", "rustup", "lust", "lust-core", "lustr", "lustr-native", "cargo-lustr", "cargo-lust"}
 
 
@@ -125,11 +125,6 @@ def expected_series() -> list[str]:
             result.append(f"{family}/{mode}")
             if mode not in ("cold-invalid", "check", "compile-plus-test", "doctests"):
                 result.append(f"{family}/{mode}/compile-plus-run")
-    # These edit classes are part of the product requirement. The existing
-    # Cargo runner does not implement them; missing evidence stays explicit.
-    for family in ("cargo", "mixed", "full-rust"):
-        for mode in ("type-edit", "macro-edit"):
-            result.extend((f"{family}/{mode}", f"{family}/{mode}/compile-plus-run"))
     return result
 
 
@@ -534,6 +529,21 @@ class Campaign:
         for mode in modes:
             self.attempt(family + "/" + mode, lambda mode=mode: self.workspace_mode(family, snapshot, package, executable, expected, mode))
 
+    def edited_workspace_source(self, family: str, original: str, expected: bytes, mode: str, sample: int):
+        helper = self.helpers["qualify-native-cargo.py"]
+        if family == "mixed":
+            require(original.count("value * 7") == 1 and expected.count(b"local=21") == 1,
+                    "mixed edit fixture no longer has its exact helper/output contract")
+            definition, body, increment = helper.semantic_edit(mode, sample, "value * 7", "i32")
+            return definition + original.replace("value * 7", body), expected.replace(b"local=21", f"local={21 + increment}".encode())
+        require(family == "full-rust" and original.count("fixture_core::body_probe(20)") == 1
+                and expected.count(b"body=42") == 1 and "lustr_edit_probe" not in original,
+                "full-Rust edit fixture no longer has its exact body/output contract")
+        definition, body, increment = helper.semantic_edit(mode, sample, "value", "u32")
+        probe = f"fn lustr_edit_probe(value: u32) -> u32 {{ {body} }}\n"
+        source = definition + probe + original.replace("fixture_core::body_probe(20)", "lustr_edit_probe(fixture_core::body_probe(20))")
+        return source, expected.replace(b"body=42", f"body={42 + increment}".encode())
+
     def workspace_mode(self, family: str, snapshot: Path, package: str, executable: str, expected: bytes, mode: str):
         directory = self.work / family / mode
         directory.mkdir(parents=True)
@@ -565,9 +575,17 @@ class Campaign:
                     wanted = expected.replace(b"local=21", f"local={(4 + sample) * 7}".encode())
                 elif sample >= 0 and mode == "signature-edit":
                     source = source.replace("fn helper(value: i32) -> i32", "fn helper(value: i64) -> i64" if sample % 2 == 0 else "fn helper(value: i32) -> i32")
+                elif mode in ("type-edit", "macro-edit"):
+                    source, wanted = self.edited_workspace_source(family, original, expected, mode, sample)
                 root = project / "app/src/main.rs"
+                if sample >= 0 and mode in ("body-edit", "signature-edit", "type-edit", "macro-edit"):
+                    require(root.read_text() != source, "edit did not change the previous source")
                 if root.read_text() != source:
                     root.write_text(source)
+                retained = self.output / "edited-inputs" / family / mode / (digest(root) + ".rs")
+                retained.parent.mkdir(parents=True, exist_ok=True)
+                if not retained.exists():
+                    retained.write_text(source)
                 subcommand = "check" if mode == "check" else "test" if mode in ("compile-plus-test", "doctests") else "build"
                 argv = [self.cargo, subcommand, "--offline", "--locked", "--jobs", "2", "--target-dir", target, "--message-format=json", "-vv"]
                 if mode == "compile-plus-test":
@@ -592,6 +610,11 @@ class Campaign:
                     artifact_events = [event for event in events if event.get("reason") == "compiler-artifact"]
                     if mode == "no-change" and sample >= 0:
                         require(artifact_events and all(event.get("fresh") is True for event in artifact_events), "no-change build performed compilation")
+                    if mode in ("body-edit", "signature-edit", "type-edit", "macro-edit", "no-change"):
+                        compiler = self.native if lane == "candidate" else self.rustc
+                        row["rebuild_evidence"] = self.helpers["qualify-native-cargo.py"].compiler_rebuild_evidence(
+                            events, self.helpers["qualify-native-library.py"].compiler_invocations(stderr.decode(errors="replace"), compiler),
+                            compiler, project, root, executable, mode == "no-change" and sample >= 0)
                     if family == "full-rust" and sample == -1 and mode == "fresh-target":
                         script_events = [event for event in events if event.get("reason") == "build-script-executed"]
                         require(script_events and any(["FIXTURE_BUILD_VALUE", "7"] in event.get("env", []) for event in script_events),
@@ -612,7 +635,9 @@ class Campaign:
                                                candidate=lane == "candidate", require_overlap=True)
                         self.report.setdefault("concurrency_evidence", {})[lane] = evidence
                 results[lane] = {"time": row["elapsed_ns"], "runtime": run_ns, "files": tree_files(project), "correct": correct, "reason": reason,
-                                 "runtime_temp": runtime_temp, "cold": cold, "compiler_tmpdir": row["compiler_tmpdir"]}
+                                 "runtime_temp": runtime_temp, "cold": cold, "compiler_tmpdir": row["compiler_tmpdir"],
+                                 "command": row["index"], "source_file": str(retained.relative_to(self.output)),
+                                 "expected_stdout": wanted.decode()}
                 functional[lane] = {"correct": correct, "reason": reason, "sample": sample, "command": row["index"]}
             baseline, candidate = results["baseline"], results["candidate"]
             equal = baseline["files"] == candidate["files"]
@@ -625,7 +650,9 @@ class Campaign:
                          "cold": baseline["cold"] and candidate["cold"],
                          "baseline_runtime_temp": baseline["runtime_temp"], "candidate_runtime_temp": candidate["runtime_temp"],
                          "baseline_tmpdir": baseline["compiler_tmpdir"], "candidate_tmpdir": candidate["compiler_tmpdir"],
-                         "baseline_source_files": baseline["files"], "candidate_source_files": candidate["files"]}
+                         "baseline_source_files": baseline["files"], "candidate_source_files": candidate["files"],
+                         "baseline_command": baseline["command"], "candidate_command": candidate["command"],
+                         "source_file": candidate["source_file"], "expected_stdout": candidate["expected_stdout"]}
                 observations.append(entry)
                 totals.append(dict(entry, baseline_ns=baseline["time"] + baseline["runtime"], candidate_ns=candidate["time"] + candidate["runtime"]))
         self.evaluate_series(family + "/" + mode, observations)

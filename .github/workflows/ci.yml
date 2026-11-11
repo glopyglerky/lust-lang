@@ -4,7 +4,20 @@ name: CI
 on:
   push:
     branches: [next]
+    paths:
+      - 'compiler/native/**'
+      - 'upstream/lust.pin'
+      - 'tools/lust-upstream-check.rs'
+      - '.github/workflows/ci.yml'
   pull_request:
+    paths:
+      - 'compiler/native/**'
+      - 'upstream/lust.pin'
+      - 'tools/lust-upstream-check.rs'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '7 3 * * 1'
 
 permissions:
   contents: read

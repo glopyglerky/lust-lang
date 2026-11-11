@@ -154,11 +154,13 @@ python3 tools/build-native-cargo.py \
   --receipt /absolute/new/native-cargo-build.json
 ```
 
-The result is `native-cargo-target/x86_64-unknown-linux-gnu/gate/lustr-native`.
+The result is `native-cargo-target/x86_64-unknown-linux-gnu/release/lustr-native`.
 The helper selects the actual bootstrap executable and verifies Cargo's verbose
 compiler invocation. It requires optimization level 3,
-16 code generation units, ThinLTO, no debug information and incremental compiler
-builds, matching upstream's gate profile. The receipt binds the resulting
+one code generation unit, ThinLTO, line-table debug information and no incremental
+compiler build, matching upstream's release profile. Upstream reserves its
+`gate` profile for correctness work and explicitly excludes it from timing.
+The version-2 receipt rejects a gate-profile executable. It binds the resulting
 executable hash and version to the source commit, unchanged native tree, helper,
 bootstrap version, TinyCC inputs and observed compiler command. Its adjacent
 `.cargo.log` retains the build output with command environment assignments
@@ -168,7 +170,7 @@ removed. Packaging requires both files:
 python3 tools/package-toolchain.py \
   --output dist/lustr-native-preview-x86_64-unknown-linux-gnu \
   --native-bin compiler/native/target/release \
-  --native-cargo-bin /absolute/new/native-cargo-target/x86_64-unknown-linux-gnu/gate/lustr-native \
+  --native-cargo-bin /absolute/new/native-cargo-target/x86_64-unknown-linux-gnu/release/lustr-native \
   --native-cargo-receipt /absolute/new/native-cargo-build.json \
   --compatibility-origin none \
   --cargo-bin /absolute/cargo-distribution/bin/cargo \
@@ -183,16 +185,16 @@ and `LICENSE-THIRD-PARTY` in the notice directory. This native-only payload
 contains Cargo, `lustr-native`, pristine Lust, and their native runtime and
 sources. It excludes stock rustc, a rustlib sysroot, and compiler coordinators.
 The compiler bootstrap and separate rustc test oracle remain outside the
-payload. An independently built binary cannot acquire a gate-profile claim
+payload. An independently built binary cannot acquire a release-profile claim
 from its filename or the packaging command. Qualification applies to the
 recorded executable and settings.
 
-Local attempts with the release and gate profiles received SIGKILL. The cause
-was not established. A separate local compiler with optimization level 1
-passed correctness probes, but that artifact does not satisfy the package
-build requirements. The earlier binary-only revision's exact gate profile
-subsequently built successfully in CI. That result does not qualify this new
-library implementation; it must build and pass its own required gates.
+Historical local attempts with the release and gate profiles received SIGKILL.
+The cause was not established. A separate optimization-level-1 compiler passed
+correctness probes. The native library implementation subsequently built with
+the gate profile and passed its correctness checks in CI at `c3d57f6`, but its
+strict speed and full-Rust acceptance failed. That record remains diagnostic
+for the prior profile; new qualification must build the actual release recipe.
 
 Its runtime
 layout matches the existing native package's `lib/lust` tree. The build recipe

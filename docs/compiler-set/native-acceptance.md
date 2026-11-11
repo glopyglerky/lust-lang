@@ -6,6 +6,11 @@ requirements apply together, including mixed programs and concurrent Cargo
 builds. There is no permitted performance regression. This document records
 the requirement; it does not claim the current compiler meets it.
 
+Both cold and warm compilation must meet their respective floors. Lustr's
+implementation may be redesigned as needed; the existing adapter layout is
+not a product constraint. Preserve the upstream reference and history so each
+redesign can be compared against the actual baseline.
+
 ## Design
 
 Cargo resolves dependencies, selects features and targets, runs build scripts,
@@ -49,7 +54,10 @@ Use identical sources, manifests, lockfiles, features, profiles, target triples,
 panic behavior, overflow checks and Cargo job counts in each comparison. Bind
 the actual executable hashes and build receipts. A different compiler build
 profile must be recorded; diagnostic opt1 binaries cannot qualify a delivered
-optimized compiler. Trace functional execution separately from timing.
+optimized compiler. Use the actual release profile for both native compilers;
+Lust's correctness-oriented `gate` profile is not its performance recipe.
+Require the observed compiler invocation, rather than trusting a `release`
+directory name. Trace functional execution separately from timing.
 
 Record cold compilation, fresh-process cache reuse, no-op requests, body edits,
 signature edits, type and macro edits, rejection latency and compilation plus

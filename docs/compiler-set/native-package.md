@@ -83,9 +83,12 @@ BlueFe with stock rustc and bundling the result is historical reference work.
 
 The package workflow bootstraps the compiler with recorded Rust 1.99.1 inputs,
 then keeps that compiler outside the delivery as a test oracle. The native Cargo
-compiler uses the recorded optimized `gate` profile. Its receipt binds actual
-compiler flags, source, TinyCC inputs and the binary hash. Local opt1 diagnostic
-builds are correctness experiments and cannot stand in for this package build.
+compiler uses the recorded `release` profile, with one codegen unit, ThinLTO,
+line-table debug information and no incremental compiler build. Its version-2
+receipt binds actual compiler flags, source, TinyCC inputs and the binary hash.
+Historical `gate` builds and local opt1 builds remain correctness evidence;
+they cannot stand in for release performance qualification. The
+[CI guide](native-ci.md) records automatic checks and upstream design sources.
 
 `tools/package-toolchain.py` defaults to `--compatibility-origin none` and
 requires standalone `--cargo-bin` and `--cargo-notices` inputs. It preserves

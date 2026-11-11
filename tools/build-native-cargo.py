@@ -14,12 +14,14 @@ import sys
 
 
 HOST = "x86_64-unknown-linux-gnu"
-SCHEMA = "lustr.native-cargo-build.v1"
-SETTINGS = {"opt_level": 3, "codegen_units": 16, "lto": "thin", "debug": False,
-            "incremental": True}
-PROFILE_ENV = {"CARGO_PROFILE_GATE_OPT_LEVEL": "3", "CARGO_PROFILE_GATE_CODEGEN_UNITS": "16",
-               "CARGO_PROFILE_GATE_LTO": "thin", "CARGO_PROFILE_GATE_DEBUG": "false",
-               "CARGO_PROFILE_GATE_INCREMENTAL": "true", "CARGO_INCREMENTAL": "1"}
+SCHEMA = "lustr.native-cargo-build.v2"
+# Upstream explicitly reserves its gate profile for correctness work. Measure
+# and package the release recipe used by Lust's perfcheck and shipped binaries.
+SETTINGS = {"opt_level": 3, "codegen_units": 1, "lto": "thin", "debug": "line-tables-only",
+            "incremental": False}
+PROFILE_ENV = {"CARGO_PROFILE_RELEASE_OPT_LEVEL": "3", "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": "1",
+               "CARGO_PROFILE_RELEASE_LTO": "thin", "CARGO_PROFILE_RELEASE_DEBUG": "line-tables-only",
+               "CARGO_PROFILE_RELEASE_INCREMENTAL": "false", "CARGO_INCREMENTAL": "0"}
 
 
 def digest(path: Path) -> str:
@@ -70,7 +72,7 @@ def validate_invocation(argv: list[str], target: Path, bootstrap: str) -> dict:
     if not argv or argv[0] != bootstrap or option(argv, "--crate-name") != "lustr_native":
         raise ValueError("receipt does not contain the direct bootstrap invocation for lustr_native")
     for name, value in (("--crate-type", "bin"), ("--edition", "2024"), ("--target", HOST),
-                        ("--out-dir", str(target / HOST / "gate/deps"))):
+                        ("--out-dir", str(target / HOST / "release/deps"))):
         if option(argv, name) != value:
             raise ValueError(f"unexpected native compiler build option {name}")
     if option(argv, "--emit") != "dep-info,link" or "src/main.rs" not in argv:
@@ -98,14 +100,13 @@ def validate_invocation(argv: list[str], target: Path, bootstrap: str) -> dict:
             raise ValueError(f"ambiguous codegen option {arg}")
         codegen[name] = value
         at += 1
-    if (codegen.get("opt-level") != "3" or codegen.get("codegen-units") != "16"
-            or codegen.get("lto") != "thin" or codegen.get("debuginfo", "0") != "0"):
-        raise ValueError("actual native build must use opt3, 16 codegen units, ThinLTO and no debug information")
-    incremental = codegen.get("incremental")
-    if not incremental or not Path(os.path.normpath(incremental)).is_relative_to(target / HOST / "gate/incremental"):
-        raise ValueError("actual native build must use its owned incremental directory")
+    if (codegen.get("opt-level") != "3" or codegen.get("codegen-units") != "1"
+            or codegen.get("lto") != "thin" or codegen.get("debuginfo") != "line-tables-only"):
+        raise ValueError("actual native release build must use opt3, one codegen unit, ThinLTO and line tables")
+    if "incremental" in codegen:
+        raise ValueError("timed release compiler must not use an incremental compiler build")
     return {"opt_level": int(codegen["opt-level"]), "codegen_units": int(codegen["codegen-units"]),
-            "lto": codegen["lto"], "debug": False, "incremental": True}
+            "lto": codegen["lto"], "debug": codegen["debuginfo"], "incremental": False}
 
 
 def running_argv(line: str) -> list[str] | None:
@@ -146,7 +147,7 @@ def verify_receipt(path: Path, repository: Path, binary: Path, tcc: Path) -> dic
         raise ValueError("missing native Cargo build receipt schema")
     build = record["build"]
     actual = validate_invocation(build["rustc_argv"], Path(build["target_dir"]), record["bootstrap"]["path"])
-    if build.get("profile") != "gate" or build.get("settings") != actual:
+    if build.get("profile") != "release" or build.get("settings") != actual:
         raise ValueError("native Cargo receipt settings differ from the observed compiler invocation")
     if record["binary"]["sha256"] != digest(binary):
         raise ValueError("native Cargo executable differs from the recorded build")
@@ -202,7 +203,7 @@ def main() -> None:
     cargo_identity = {"path": str(cargo), "sha256": digest(cargo), "verbose_version": run([cargo, "-Vv"], env=env)}
     tcc_hash = runtime_digest(tcc)
     argv = [str(cargo), "build", "--manifest-path", str(repository / "crates/lustr-native/Cargo.toml"),
-            "--profile", "gate", "--target", HOST, "--target-dir", str(target), "--locked", "--offline",
+            "--profile", "release", "--target", HOST, "--target-dir", str(target), "--locked", "--offline",
             "-j1", "-vv", "--message-format=json"]
     target.mkdir(parents=True, exist_ok=False)
     receipt.parent.mkdir(parents=True, exist_ok=True)
@@ -233,7 +234,7 @@ def main() -> None:
     if len(invocations) != 1 or len(artifacts) != 1 or artifacts[0].get("fresh") is not False:
         raise ValueError("expected one fresh native compiler invocation and linked Cargo artifact")
     settings = validate_invocation(invocations[0], target, str(rustc))
-    binary = target / HOST / "gate/lustr-native"
+    binary = target / HOST / "release/lustr-native"
     if artifacts[0]["executable"] != str(binary) or not os.access(binary, os.X_OK):
         raise ValueError("Cargo did not produce the expected native compiler executable")
     version = run([binary, "--version", "--verbose"], env=env)
@@ -243,7 +244,7 @@ def main() -> None:
         raise ValueError("native build inputs changed during compilation")
     record = {"schema": SCHEMA, "source": source, "bootstrap": bootstrap, "cargo": cargo_identity,
               "tinycc": {"path": str(tcc), "sha256": tcc_hash},
-              "build": {"profile": "gate", "settings": settings, "target_dir": str(target),
+              "build": {"profile": "release", "settings": settings, "target_dir": str(target),
                         "cargo_argv": argv, "rustc_argv": invocations[0], "profile_environment": PROFILE_ENV},
               "binary": {"path": str(binary), "sha256": digest(binary), "verbose_version": version},
               "log": {"file": log.name, "sha256": digest(log)}}

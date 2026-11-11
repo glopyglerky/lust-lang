@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -96,6 +97,54 @@ def module_source(answer: int, result_type: str = "u32") -> str:
     )
 
 
+def semantic_edit(mode: str, sample: int, value: str, scalar: str) -> tuple[str, str, int]:
+    """Keep the edited type or macro observable in the executable's output.
+
+    Warmup is sample -1. Every later sample changes the array layout or the
+    macro expansion, including the first measured request after warmup.
+    """
+    require(type(sample) is int and sample >= -1, "invalid edit sample")
+    require(scalar in ("u32", "i32"), "unsupported edit scalar")
+    count = sample + 2
+    if mode == "type-edit":
+        return "", (f"let values: [{scalar}; {count}] = [{value}; {count}]; "
+                    f"values[0] + values.len() as {scalar}"), count
+    require(mode == "macro-edit", "unknown semantic edit mode")
+    definition = f"macro_rules! lustr_edit {{ ($value:expr) => {{ $value + {count} }}; }}\n"
+    return definition, f"lustr_edit!({value})", count
+
+
+def edited_module_source(mode: str, sample: int) -> tuple[str, int]:
+    definition, body, increment = semantic_edit(mode, sample, "42", "u32")
+    return (definition + f"pub fn answer() -> u32 {{ {body} }}\n"
+            + "pub fn path() -> &'static str { module_path!() }\n"), 42 + increment
+
+
+def compiler_rebuild_evidence(events: list[dict], invocations: list[dict], compiler: Path,
+                              project: Path, source: Path, target: str, fresh: bool) -> dict:
+    """Bind Cargo freshness to the exact source compiler invocation it reports."""
+    artifacts = [event for event in events if event.get("reason") == "compiler-artifact"
+                 and event.get("target", {}).get("name") == target
+                 and "bin" in event.get("target", {}).get("kind", [])]
+    require(len(artifacts) == 1, "expected one binary artifact for rebuild evidence")
+    require(type(fresh) is bool and artifacts[0].get("fresh") is fresh,
+            "Cargo artifact freshness does not match the measured mode")
+    actual = []
+    for invocation in invocations:
+        argv = invocation["argv"]
+        if not argv or Path(argv[0]).resolve() != compiler.resolve() or "--crate-name" not in argv:
+            continue
+        at = argv.index("--crate-name")
+        if at + 1 >= len(argv) or argv[at + 1] != target.replace("-", "_"):
+            continue
+        if any((project / value).resolve() == source.resolve() for value in argv[1:] if value.endswith(".rs")):
+            actual.append(invocation)
+    require(len(actual) == (0 if fresh else 1),
+            "expected no source compiler invocation for no-op" if fresh
+            else "changed input lacks its exact source compiler invocation")
+    return {"artifact_fresh": fresh, "compiler_invocations": actual}
+
+
 def expected_output(answer: int = 42, included: str = "first", external: str = "unset",
                     feature: bool = False) -> bytes:
     return (
@@ -111,6 +160,11 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
     require(not output.exists(), "evidence output already exists")
     output.parent.mkdir(parents=True, exist_ok=True)
     native, cargo, oracle, fixture = (path.resolve() for path in (native, cargo, oracle, fixture))
+    parser_path = Path(__file__).with_name("qualify-native-library.py")
+    spec = importlib.util.spec_from_file_location("native_cargo_invocations", parser_path)
+    require(spec is not None and spec.loader is not None, "cannot load compiler invocation parser")
+    invocation_parser = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(invocation_parser)
     report = {
         "schema": "lustr.native-cargo-qualification.v1",
         "runner_sha256": digest(Path(__file__).resolve()),
@@ -119,20 +173,23 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
         "full_native_speed_qualified": False,
         "runtime_coordinator": False,
         "scope": "Dependency-free native binary crate, Cargo dep-info and supported development profile. Independent native libraries require their separate qualification; no test harness or full Rust claim.",
-        "timing_scope": "Paired Cargo builds of the same fixture and profile; fresh targets and native unit caches, unchanged inputs, body and signature edits, and cold invalid inputs. No daemon latency equivalence is claimed.",
+        "timing_scope": "Paired Cargo builds of the same fixture and profile; fresh targets and native unit caches, unchanged inputs, body/signature/type/macro edits, and cold invalid inputs. No daemon latency equivalence is claimed.",
         "cache_policy": {
             "fresh-target": "New Cargo target, new empty per-lane TMPDIR runtime cache, and removal of only the owned source-adjacent .lust-cache before every sample; setup excluded from timing.",
             "cold-invalid": "New Cargo target, empty native unit cache and new empty per-lane TMPDIR before each invalid input; no preceding valid build.",
             "no-change": "Existing Cargo target and native unit cache; Cargo must report its artifact fresh without invoking the compiler.",
             "body-edit": "Existing Cargo target and native unit cache after a valid warmup; each changed body must rebuild.",
             "signature-edit": "Existing Cargo target and native unit cache after a valid warmup; each changed signature must rebuild.",
+            "type-edit": "Existing Cargo target and native unit cache; each local array layout changes and the executable reports the new length.",
+            "macro-edit": "Existing Cargo target and native unit cache; each macro body changes and the executable reports its new arithmetic result.",
             "system_state": "OS page caches are not flushed; fresh refers to compiler artifact caches, not a cold host.",
         },
         "tools": {name: {"path": str(path), "sha256": digest(path)}
                   for name, path in (("native", native), ("cargo", cargo), ("oracle", oracle))},
         "fixture_sha256": {path.relative_to(fixture).as_posix(): digest(path)
                            for path in sorted(fixture.rglob("*")) if path.is_file()},
-        "commands": [], "checks": [], "timings": [], "success": False,
+        "invocation_parser_sha256": digest(parser_path),
+        "commands": [], "checks": [], "timings": [], "edit_sources": {}, "success": False,
     }
     with tempfile.TemporaryDirectory(prefix="lustr-native-cargo-") as temporary:
         scratch = Path(temporary)
@@ -181,7 +238,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                   env: dict[str, str] | None = None) -> tuple[int, int | None]:
             work_project = projects[lane] if project is None else project
             work_env = environments[lane] if env is None else env
-            result = execute(label, [cargo, "build", "--offline", "--locked", "--message-format=json",
+            result = execute(label, [cargo, "build", "--offline", "--locked", "--message-format=json", "-vv",
                                      "--target-dir", target, *flags], work_env, work_project,
                              0 if wanted is not None else 101)
             command_index = len(report["commands"]) - 1
@@ -197,6 +254,10 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                     label + ": Cargo did not report the real executable")
             if fresh is not None:
                 require(artifacts[0]["fresh"] is fresh, label + ": incorrect Cargo freshness")
+            report["commands"][command_index]["rebuild_evidence"] = compiler_rebuild_evidence(
+                events, invocation_parser.compiler_invocations(result.stderr.decode(errors="replace"), native if lane == "native" else oracle),
+                native if lane == "native" else oracle, work_project, work_project / "src/main.rs",
+                "lustr_native_contract", artifacts[0]["fresh"])
             run = execute(label + "-runtime", [artifact], work_env, work_project)
             runtime_index = len(report["commands"]) - 1
             require(run.stdout == wanted, f"{label}: wrong output {run.stdout!r}, expected {wanted!r}")
@@ -380,23 +441,35 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
             report["checks"].append("type, move and aliasing errors remain compilation failures in both compilers")
 
             original_main = (fixture / "src/main.rs").read_text()
-            for mode in ("fresh-target", "no-change", "body-edit", "signature-edit", "cold-invalid"):
+            for mode in ("fresh-target", "no-change", "body-edit", "signature-edit", "type-edit", "macro-edit", "cold-invalid"):
                 mode_targets = {lane: scratch / (lane + " " + mode) for lane in projects}
                 for lane, project in projects.items():
                     (project / "src/main.rs").write_text(original_main)
-                    (project / "src/value.rs").write_text(module_source(42))
+                    warm_module, warm_answer = edited_module_source(mode, -1) if mode in ("type-edit", "macro-edit") else (module_source(42), 42)
+                    (project / "src/value.rs").write_text(warm_module)
                     (project / "data.txt").write_text("first\n")
-                    if mode in ("no-change", "body-edit", "signature-edit"):
+                    if mode in ("no-change", "body-edit", "signature-edit", "type-edit", "macro-edit"):
                         environments[lane]["TMPDIR"] = prepare_runtime_temp(scratch / lane, mode + "-warm", True)["path"]
-                        build(mode + "-" + lane + "-warmup", lane, mode_targets[lane], expected_output())
+                        build(mode + "-" + lane + "-warmup", lane, mode_targets[lane], expected_output(warm_answer), fresh=False)
+                if mode in ("type-edit", "macro-edit"):
+                    report["edit_sources"][mode] = [{"sample": -1, "value_rs": warm_module,
+                                                     "expected_stdout": expected_output(warm_answer).decode()}]
                 for sample in range(samples):
                     order = ("native", "oracle") if sample % 2 == 0 else ("oracle", "native")
                     answer = 43 + sample if mode in ("body-edit", "signature-edit") else 42
+                    if mode in ("type-edit", "macro-edit"):
+                        edited_source, answer = edited_module_source(mode, sample)
+                        report["edit_sources"][mode].append({"sample": sample, "value_rs": edited_source,
+                                                             "expected_stdout": expected_output(answer).decode()})
                     for lane in order:
                         project = projects[lane]
                         if mode in ("body-edit", "signature-edit"):
                             kind = "u64" if mode == "signature-edit" and sample % 2 == 0 else "u32"
                             (project / "src/value.rs").write_text(module_source(answer, kind))
+                        if mode in ("type-edit", "macro-edit"):
+                            require((project / "src/value.rs").read_text() != edited_source,
+                                    "semantic edit did not change the previous source")
+                            (project / "src/value.rs").write_text(edited_source)
                         if mode == "cold-invalid":
                             (project / "src/main.rs").write_text(
                                 f'fn main() {{ let value: u32 = "invalid-{sample}"; println!("{{}}", value); }}\n')
@@ -426,7 +499,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                             "source_sha256": {name: digest(project / name)
                                               for name in ("src/main.rs", "src/value.rs", "data.txt", "Cargo.toml")},
                         })
-            report["checks"].append("balanced paired Cargo timings retain correct outputs, signature/body rebuilds, empty-cache fresh compilation and cold invalid-program rejection")
+            report["checks"].append("balanced paired Cargo timings retain correct outputs and exact compiler invocation evidence for body/signature/type/macro rebuilds, empty-cache fresh compilation and cold invalid-program rejection")
             for lane in projects:
                 require(not (scratch / lane / "unexpected-compiler").exists(),
                         lane + ": unexpected compiler fallback or wrapper invocation")

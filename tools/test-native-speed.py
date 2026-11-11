@@ -248,5 +248,58 @@ class RuntimeCacheLifecycle(unittest.TestCase):
                 helper.prepare_runtime_temp(root, 'cold', True)
 
 
+class EditRebuildEvidence(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.helper = MODULE.load_helper(ROOT, 'qualify-native-cargo.py')
+
+    def evidence(self, fresh=False):
+        return ([{'reason': 'compiler-artifact', 'target': {'name': 'example', 'kind': ['bin']},
+                  'fresh': fresh}],
+                [{'argv': ['/compiler/lustr-native', '--crate-name', 'example', 'src/main.rs'],
+                  'environment': {}}])
+
+    def check(self, events, calls, fresh=False):
+        return self.helper.compiler_rebuild_evidence(
+            events, calls, Path('/compiler/lustr-native'), Path('/owned/project'),
+            Path('/owned/project/src/main.rs'), 'example', fresh)
+
+    def test_all_cargo_families_collect_type_and_macro_modes_once(self):
+        for family, modes in (('cargo', MODULE.CARGO_MODES), ('mixed', MODULE.MIXED_MODES),
+                              ('full-rust', MODULE.FULL_MODES)):
+            for mode in ('type-edit', 'macro-edit'):
+                self.assertEqual(modes.count(mode), 1, (family, mode))
+                self.assertEqual(MODULE.expected_series().count(f'{family}/{mode}'), 1)
+
+    def test_changed_input_requires_real_source_compilation(self):
+        events, calls = self.evidence()
+        result = self.check(events, calls)
+        self.assertEqual(result['compiler_invocations'], calls)
+        for invalid in ([], [{'argv': ['/compiler/lustr-native', '-vV']}],
+                        [{'argv': ['/other/lustr-native', '--crate-name', 'example', 'src/main.rs']}],
+                        [{'argv': ['/compiler/lustr-native', '--crate-name', 'example', 'src/other.rs']}],
+                        [{'argv': ['/compiler/lustr-native', '--crate-name', 'other', 'src/main.rs']}]):
+            with self.subTest(calls=invalid), self.assertRaises(ValueError):
+                self.check(events, invalid)
+
+    def test_fresh_artifact_cannot_count_as_an_edit(self):
+        events, calls = self.evidence(fresh=True)
+        with self.assertRaises(ValueError):
+            self.check(events, calls)
+
+    def test_noop_requires_no_source_compilation(self):
+        events, calls = self.evidence(fresh=True)
+        self.assertEqual(self.check(events, [], fresh=True)['compiler_invocations'], [])
+        with self.assertRaises(ValueError):
+            self.check(events, calls, fresh=True)
+
+    def test_missing_duplicate_or_nonbinary_artifacts_cannot_prove_rebuild(self):
+        events, calls = self.evidence()
+        for invalid in ([], events + events,
+                        [{'reason': 'compiler-artifact', 'target': {'name': 'example', 'kind': ['lib']}, 'fresh': False}]):
+            with self.subTest(events=invalid), self.assertRaises(ValueError):
+                self.check(invalid, calls)
+
+
 if __name__ == '__main__':
     unittest.main()
