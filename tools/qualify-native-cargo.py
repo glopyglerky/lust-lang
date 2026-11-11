@@ -94,7 +94,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
         "native_full_rust": False,
         "full_native_speed_qualified": False,
         "runtime_coordinator": False,
-        "scope": "Dependency-free native binary crate, Cargo dep-info and supported development profile. No native rlib, test harness, or full Rust claim.",
+        "scope": "Dependency-free native binary crate, Cargo dep-info and supported development profile. Independent native libraries require their separate qualification; no test harness or full Rust claim.",
         "timing_scope": "Paired Cargo builds of the same fixture and profile; fresh targets and native unit caches, unchanged inputs, body and signature edits, and cold invalid inputs. No daemon latency equivalence is claimed.",
         "cache_policy": {
             "fresh-target": "New Cargo target and removal of only the owned source-adjacent .lust-cache before every sample; reset time excluded.",
@@ -312,13 +312,13 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                 })
             report["checks"].append("native debug assertions, overflow defaults/overrides and panic unwind/abort match the Rust oracle, including exit 101 and SIGABRT")
 
-            # These invocations must fail, without publishing pretend library or metadata artifacts.
+            # Unsupported invocations must fail without publishing pretend artifacts.
+            # Real scalar native libraries have a separate independent-library gate.
             reject_root = scratch / "unsupported requests"
             reject_root.mkdir()
             source = reject_root / "source.rs"
             source.write_text("pub fn answer() -> u32 { 42 }\n")
             for label, flags in (
-                ("rlib", ["--crate-type", "rlib", "--emit=link"]),
                 ("metadata", ["--crate-type", "bin", "--emit=metadata"]),
                 ("optimized-profile", ["--crate-type", "bin", "--emit=link", "-C", "opt-level=3"]),
                 ("foreign-target", ["--crate-type", "bin", "--emit=link", "--target", "aarch64-unknown-linux-gnu"]),
@@ -331,7 +331,17 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                                  environments["native"], reject_root, None)
                 require(result.returncode == 2, label + ": expected explicit unsupported-invocation exit 2")
                 require(not artifact.exists(), label + ": unsupported invocation produced an artifact")
-            report["checks"].append("unsupported rlib, metadata, optimization and foreign targets, plus malformed options, fail without fake artifacts")
+            generic_source = reject_root / "generic.rs"
+            generic_source.write_text("pub fn identity<T>(value: T) -> T { value }\n")
+            generic_artifact = reject_root / "libgeneric.rlib"
+            result = execute("native-reject-generic-library",
+                             [native, "--crate-name", "generic", "--edition=2024", generic_source,
+                              "--crate-type", "rlib", "--emit=link", "-o", generic_artifact],
+                             environments["native"], reject_root, None)
+            require(result.returncode == 2 and b"generic" in result.stderr.lower(),
+                    "generic library: expected explicit unsupported exported-shape rejection")
+            require(not generic_artifact.exists(), "unsupported generic export produced an artifact")
+            report["checks"].append("unsupported generic library exports, metadata-only binary output, optimization and foreign targets, plus malformed options, fail without fake artifacts")
 
             report["invalid_sources"] = {}
             for case in ("invalid-type", "invalid-move", "invalid-alias"):

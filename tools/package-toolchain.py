@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble a source-bound Linux package without changing either compiler."""
+"""Assemble a source-bound native Linux package; compatibility packaging is explicit."""
 from __future__ import annotations
 
 import argparse
@@ -111,25 +111,45 @@ def main() -> None:
     parser.add_argument("--native-bin", type=Path, required=True)
     parser.add_argument("--native-cargo-bin", type=Path, required=True)
     parser.add_argument("--native-cargo-receipt", type=Path, required=True)
-    parser.add_argument("--rust-root", type=Path, required=True)
+    parser.add_argument("--rust-root", type=Path,
+                        help="manual historical compatibility packaging only; never used for native-only output")
+    parser.add_argument("--cargo-bin", type=Path,
+                        help="standalone Cargo executable for native-only packaging")
+    parser.add_argument("--cargo-notices", type=Path,
+                        help="Cargo distribution notice directory containing LICENSE-MIT, LICENSE-APACHE and LICENSE-THIRD-PARTY")
     parser.add_argument("--vendor-dir", type=Path, required=True)
     parser.add_argument("--tcc-root", type=Path)
     parser.add_argument("--tinycc-source", type=Path)
-    parser.add_argument("--compatibility-origin", choices=["upstream-rust", "bluefe"], default="upstream-rust")
+    parser.add_argument("--compatibility-origin", choices=["none", "upstream-rust", "bluefe"], default="none")
     args = parser.parse_args()
     if (platform.system(), platform.machine()) != ("Linux", "x86_64"):
         parser.error("this package recipe is qualified only on Linux x86_64")
     repository = args.repository.resolve()
     native = repository / "compiler/native"
     output = args.output.resolve()
-    rust_root = args.rust_root.resolve()
+    rust_root = args.rust_root.resolve() if args.rust_root else None
+    native_only = args.compatibility_origin == "none"
+    if native_only:
+        if rust_root or not args.cargo_bin or not args.cargo_notices:
+            parser.error("native-only packaging requires --cargo-bin and --cargo-notices, without --rust-root")
+        cargo_binary = args.cargo_bin.resolve()
+        cargo_notices = args.cargo_notices.resolve()
+        for name in ("LICENSE-MIT", "LICENSE-APACHE", "LICENSE-THIRD-PARTY"):
+            if not (cargo_notices / name).is_file():
+                parser.error("missing Cargo distribution notice: " + name)
+    else:
+        if rust_root is None or args.cargo_bin or args.cargo_notices:
+            parser.error("explicit historical compatibility packaging requires --rust-root only")
+        cargo_binary = rust_root / "bin/cargo"
+        cargo_notices = None
     tcc = (args.tcc_root or native / "third_party/tcc").resolve()
     tinycc = (args.tinycc_source or native / "third_party/tinycc").resolve()
     if output.exists():
         parser.error("output must be a new directory")
-    input_roots = [rust_root, args.native_bin.resolve(), args.native_cargo_bin.resolve(),
+    input_roots = [cargo_binary, args.native_bin.resolve(), args.native_cargo_bin.resolve(),
                    args.native_cargo_receipt.resolve(),
                    args.vendor_dir.resolve(), tcc, tinycc, native, repository / ".git"]
+    input_roots.extend(path for path in (rust_root, cargo_notices) if path is not None)
     if any(output.is_relative_to(path) or path.is_relative_to(output) for path in input_roots):
         parser.error("output must not overlap an input or protected source directory")
     if output.is_relative_to(repository) and output.relative_to(repository).parts[0] != "dist":
@@ -143,15 +163,21 @@ def main() -> None:
         raise ValueError("native compiler does not match the pinned upstream tree")
     if run(["git", "status", "--porcelain=v1", "--untracked-files=all"], repository):
         raise ValueError("commit implementation and packaging inputs before binding the package to HEAD")
-    for name in ("lustr", "cargo-lustr", "cargo-lust"):
-        path = rust_root / "bin" / name
-        if path.exists() or path.is_symlink():
-            raise ValueError(f"compatibility input contains an excluded coordinator executable: {path}")
-    if run([rust_root / "bin/rustc", "--print", "sysroot"]) != str(rust_root):
-        raise ValueError("--rust-root must name the actual compiler sysroot, not a rustup proxy")
-    compiler_version = run([rust_root / "bin/rustc", "-vV"])
-    cargo_version = run([rust_root / "bin/cargo", "-Vv"])
-    compatibility = compatibility_provenance(args.compatibility_origin, rust_root, compiler_version, cargo_version)
+    compiler_version = None
+    cargo_version = run([cargo_binary, "-Vv"])
+    if not cargo_version.startswith("cargo "):
+        raise ValueError("--cargo-bin is not a Cargo executable")
+    compatibility = {"origin": "none", "runtime_rustc_fallback": False}
+    if not native_only:
+        assert rust_root is not None
+        for name in ("lustr", "cargo-lustr", "cargo-lust"):
+            path = rust_root / "bin" / name
+            if path.exists() or path.is_symlink():
+                raise ValueError(f"compatibility input contains an excluded coordinator executable: {path}")
+        if run([rust_root / "bin/rustc", "--print", "sysroot"]) != str(rust_root):
+            raise ValueError("--rust-root must name the actual compiler sysroot, not a rustup proxy")
+        compiler_version = run([rust_root / "bin/rustc", "-vV"])
+        compatibility = compatibility_provenance(args.compatibility_origin, rust_root, compiler_version, cargo_version)
     native_cargo_version = run([args.native_cargo_bin.resolve(), "--version", "--verbose"])
     if not native_cargo_version.startswith("lustr-native ") or "native-full-rust: false" not in native_cargo_version:
         raise ValueError("--native-cargo-bin must be the explicit experimental native compiler")
@@ -173,7 +199,14 @@ def main() -> None:
         raise ValueError("build the pinned TinyCC runtime before packaging")
     if run(["git", "diff", "--name-only", "HEAD"], tinycc):
         raise ValueError("TinyCC tracked source differs from its recorded revision")
-    shutil.copytree(rust_root, output, symlinks=True)
+    if native_only:
+        output.mkdir(parents=True)
+        copy_executable(cargo_binary, output / "bin/cargo")
+        if sha256(output / "bin/cargo") != sha256(cargo_binary):
+            raise ValueError("Cargo executable changed while copying the package")
+    else:
+        assert rust_root is not None
+        shutil.copytree(rust_root, output, symlinks=True)
     for name in ("lust", "lust-core"):
         copy_executable(args.native_bin / name, output / "bin" / name)
     copy_executable(args.native_cargo_bin, output / "bin/lustr-native")
@@ -189,6 +222,11 @@ def main() -> None:
     shutil.copy2(repository / "LICENSE", notices / "Lustr-LICENSE")
     shutil.copy2(native / "LICENSE", notices / "Lust-LICENSE")
     shutil.copy2(tinycc / "COPYING", notices / "TinyCC-COPYING")
+    if cargo_notices is not None:
+        for name in ("LICENSE-MIT", "LICENSE-APACHE", "LICENSE-THIRD-PARTY"):
+            destination = notices / "cargo" / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(cargo_notices / name, destination)
     for path in args.vendor_dir.rglob("*"):
         if path.is_file() and ("license" in path.name.lower() or path.name.lower().startswith("copying")):
             destination = notices / "dependencies" / path.relative_to(args.vendor_dir)
@@ -209,6 +247,10 @@ def main() -> None:
         raise ValueError("native Cargo build evidence changed while copying the package")
     shutil.copy2(repository / "docs/compiler-set/native-package.md", output / "LUSTR-README.md")
     check_symlinks(output)
+    if native_only:
+        for path in output.rglob("*"):
+            if ((path.is_file() or path.is_symlink()) and path.name in ("rustc", "rustdoc", "lustr", "cargo-lustr", "cargo-lust")) or path.name == "rustlib":
+                raise ValueError("native-only package contains an excluded compiler, coordinator or sysroot: " + str(path.relative_to(output)))
     system_requirements = [
         "Linux x86_64; qualified on Ubuntu 24.04",
         "C development headers and linker",
@@ -231,17 +273,20 @@ def main() -> None:
         "native_lust": True,
         "native_full_rust": False,
         "runtime_coordinator": False,
+        "runtime_rustc_fallback": False if native_only else None,
+        "package_role": "native-only" if native_only else "historical-compatibility-preview",
         "rust_compatibility": args.compatibility_origin,
         "rust_compatibility_provenance": compatibility,
         "rustc_verbose_version": compiler_version,
         "cargo_verbose_version": cargo_version,
+        "cargo_sha256": sha256(cargo_binary),
         "lust_revision": pin["revision"],
         "lust_tree": native_tree,
         "tinycc_revision": tcc_revision,
         "native_version": run([output / "bin/lust", "--version"]),
         "native_profile": "release",
         "native_cargo": {
-            "status": "experimental-binary-crates",
+            "status": "experimental-native-crates",
             "executable": "bin/lustr-native",
             "implementation": "same-process compilation from pinned upstream Lust modules",
             "verbose_version": native_cargo_version,
@@ -255,11 +300,13 @@ def main() -> None:
                 "bootstrap": native_build["bootstrap"],
             },
             "native_full_rust": False,
-            "native_rlib": False,
+            "native_rlib": True,
+            "native_rlib_format": "lustr-scalar-v1",
+            "rustc_rlib_compatible": False,
             "proc_macros": False,
             "test_harness": False,
             "daemon_reuse": False,
-            "qualification": "embedded native_cargo_qualification in package-qualification.json",
+            "qualification": "separate native Cargo and independent-library qualification reports",
         },
         "qualification": "separate package-qualification.json and native-qualification evidence",
         "system_requirements": system_requirements,

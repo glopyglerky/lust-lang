@@ -55,6 +55,10 @@ def main() -> None:
     parser.add_argument("--package", type=Path, required=True)
     parser.add_argument("--repository", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--baseline-native", type=Path, required=True)
+    parser.add_argument("--oracle-rustc", type=Path,
+                        help="external test oracle, required for a native-only package and never bundled")
+    parser.add_argument("--diagnostic-without-trace", action="store_true",
+                        help="local correctness only; disables independent-library process qualification")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--samples", type=int, default=7)
     args = parser.parse_args()
@@ -73,7 +77,8 @@ def main() -> None:
         "runtime_coordinator": False,
         "platform": platform.platform(), "cpu_count": os.cpu_count(),
         "source_revision": None, "commands": [], "timings": [],
-        "checks": [], "success": False,
+        "checks": [], "success": False, "qualified": False,
+        "no_trace_qualification": args.diagnostic_without_trace,
         "timing_scope": "One supported source; paired process cold, daemon no-op and body-edit compilation. Runtime checked separately. No universal speed conclusion.",
     }
     daemons: list[subprocess.Popen] = []
@@ -83,6 +88,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="lustr-package-") as temporary:
         scratch = Path(temporary)
         native_cargo_evidence = scratch / "native-cargo-qualification.json"
+        native_library_evidence = args.output.resolve().with_name(args.output.stem + "-native-library")
         package = scratch / "relocated package"
         shutil.copytree(original, package, symlinks=True)
         environment = clean_environment(package, scratch)
@@ -121,6 +127,21 @@ def main() -> None:
             require(manifest["schema"] == "lustr.toolchain-package" and manifest["schema_version"] == 1, "unsupported package schema")
             require(manifest["native_lust"] is True and manifest["native_full_rust"] is False, "incorrect package coverage claims")
             require(manifest.get("runtime_coordinator") is False, "package must use Cargo selection without a coordinator")
+            native_only = manifest.get("rust_compatibility") == "none"
+            oracle = args.oracle_rustc.resolve() if args.oracle_rustc else package / "bin/rustc"
+            require(not native_only or args.oracle_rustc is not None,
+                    "native-only qualification requires an explicitly supplied external Rust oracle")
+            require(not native_only or not oracle.is_relative_to(package) and not oracle.is_relative_to(original),
+                    "native-only Rust oracle must be outside the delivered package")
+            if native_only:
+                require(manifest.get("runtime_rustc_fallback") is False and manifest.get("package_role") == "native-only",
+                        "native-only package must declare its actual role and lack of runtime fallback")
+                for path in package.rglob("*"):
+                    require(path.name != "rustlib" and not ((path.is_file() or path.is_symlink())
+                            and path.name in ("rustc", "rustdoc", "lustr", "cargo-lustr", "cargo-lust")),
+                            "native-only package contains a stock compiler or sysroot: " + str(path.relative_to(package)))
+                report["checks"].append("native-only payload has no stock rustc, rustdoc or Rust sysroot; oracle is external")
+            report["rust_oracle"] = {"path": str(oracle), "sha256": digest(oracle), "bundled": not native_only and oracle.is_relative_to(package)}
             require(manifest.get("native_cargo", {}).get("executable") == "bin/lustr-native"
                     and manifest["native_cargo"].get("native_full_rust") is False,
                     "package must identify the bounded in-process native compiler")
@@ -128,19 +149,31 @@ def main() -> None:
                 path = package / "bin" / name
                 require(not path.exists() and not path.is_symlink(), "unexpected coordinator in package: " + name)
             report["checks"].append("no coordinator executable in the package")
+            actual_payload = {path.relative_to(package).as_posix() for path in package.rglob("*")
+                              if path.is_file() or path.is_symlink()} - {"lustr-toolchain.json"}
+            expected_payload = {entry["path"] for entry in manifest["payload"]}
+            require(actual_payload == expected_payload and len(expected_payload) == len(manifest["payload"]),
+                    "package contains missing, extra or duplicate payload entries")
             for entry in manifest["payload"]:
                 path = package / entry["path"]
+                require(path.resolve().is_relative_to(package), "payload escapes package")
                 if "symlink" in entry:
                     require(path.is_symlink() and os.readlink(path) == entry["symlink"], "package symlink differs from manifest")
                     require(path.resolve().is_relative_to(package), "package symlink escapes root")
                 else:
-                    require(digest(path) == entry["sha256"], f"payload mismatch: {entry['path']}")
+                    require(not path.is_symlink() and digest(path) == entry["sha256"]
+                            and path.stat().st_size == entry["size"]
+                            and oct(path.stat().st_mode & 0o777) == entry["mode"], f"payload mismatch: {entry['path']}")
             report["checks"].append("complete payload hashes after relocation")
             provenance = manifest["native_cargo"]["build_provenance"]
             receipt_path = package / provenance["receipt"]
             require(receipt_path.resolve().is_relative_to(package), "native build receipt escapes package")
             require(digest(receipt_path) == provenance["receipt_sha256"], "native build receipt hash differs")
             native_build = json.loads(receipt_path.read_text())
+            build_log = package / provenance["log"]
+            require(build_log.resolve().is_relative_to(package)
+                    and digest(build_log) == provenance["log_sha256"] == native_build["log"]["sha256"],
+                    "native build log is missing or differs from its receipt")
             require(native_build["source"]["commit"] == report["source_revision"]
                     and native_build["binary"]["sha256"] == digest(package / "bin/lustr-native")
                     and native_build["build"]["profile"] == manifest["native_cargo"]["build_profile"]
@@ -162,12 +195,13 @@ def main() -> None:
                 path.rename(hidden)
                 hidden_sources.append((path, hidden))
             report["compiler_identities"] = {}
-            for name in ("rustc", "rustdoc", "cargo", "lust", "lustr-native"):
+            for name in (("cargo", "lust", "lustr-native") if native_only else ("rustc", "rustdoc", "cargo", "lust", "lustr-native")):
                 version = execute(f"{name}-identity", [package / "bin" / name, "--version"])
                 report["compiler_identities"][name] = version.stdout.decode().strip()
-            reported_root = execute("relocated-sysroot", [package / "bin/rustc", "--print", "sysroot"])
-            require(Path(reported_root.stdout.decode().strip()).resolve() == package, "compiler did not select relocated sysroot")
-            report["checks"].append("Rust sysroot relocates without rustup")
+            if not native_only:
+                reported_root = execute("relocated-sysroot", [package / "bin/rustc", "--print", "sysroot"])
+                require(Path(reported_root.stdout.decode().strip()).resolve() == package, "compiler did not select relocated sysroot")
+                report["checks"].append("historical compatibility Rust sysroot relocates without rustup")
             source = scratch / "source with spaces" / "supported.rs"
             source.parent.mkdir()
             source.write_text(fixture_source(42))
@@ -194,38 +228,52 @@ def main() -> None:
             result = execute("native-invalid", [package / "bin/lust", "check", invalid], cold, None)
             require(result.returncode == 1 and b"error[L0110]" in result.stderr, "native type error did not reject cleanly")
             report["checks"].append("native unsupported and invalid input remain failures")
-            full = scratch / "full Rust workspace"
-            shutil.copytree(repository / "crates/lustr/fixtures/full-rust", full, ignore=shutil.ignore_patterns("target"))
-            compatibility = [package / "bin/cargo"]
-            compatibility_environment = dict(environment, RUSTC=str(package / "bin/rustc"),
-                                             RUSTDOC=str(package / "bin/rustdoc"))
-            report["compiler_selection"] = {
-                "cargo": str(package / "bin/cargo"),
-                "rustc": compatibility_environment["RUSTC"],
-                "rustdoc": compatibility_environment["RUSTDOC"],
-                "mechanism": "Cargo RUSTC/RUSTDOC environment selection",
-            }
-            result = execute("compatibility-run", compatibility + ["run", "--offline", "--locked", "--quiet", "-p", "fixture-app",
-                                                                     "--", "two words"], compatibility_environment, cwd=full)
-            expected = b"derived=41 generated=7 async=42 raw=19 gat=13 const=15 ffi=21 body=42 probe=41 panic=1 drops=1\nargument=two words\n"
-            require(result.stdout == expected, "compatibility workspace runtime output differs")
-            result = execute("compatibility-tests", compatibility + ["test", "--offline", "--locked", "--workspace"],
-                             compatibility_environment, cwd=full)
-            require(b"features_keep_their_rust_semantics" in result.stdout and b"body_probe" in result.stdout, "expected unit test and doctest did not execute")
-            invalid_full = scratch / "invalid Rust workspace"
-            shutil.copytree(repository / "crates/lustr/fixtures/invalid-borrow", invalid_full, ignore=shutil.ignore_patterns("target"))
-            result = execute("compatibility-rejection", compatibility + ["check", "--offline", "--locked"],
-                             compatibility_environment, expected=None, cwd=invalid_full)
-            require(result.returncode == 101 and b"E0502" in result.stderr, "compatibility borrow error did not reject cleanly")
-            report["checks"].append("offline full-Rust compatibility workspace, proc macro, build script, panic/drop, tests, doctests and borrow rejection")
+            if not native_only:
+                full = scratch / "full Rust workspace"
+                shutil.copytree(repository / "crates/lustr/fixtures/full-rust", full, ignore=shutil.ignore_patterns("target"))
+                compatibility = [package / "bin/cargo"]
+                compatibility_environment = dict(environment, RUSTC=str(package / "bin/rustc"),
+                                                 RUSTDOC=str(package / "bin/rustdoc"))
+                report["compiler_selection"] = {
+                    "cargo": str(package / "bin/cargo"),
+                    "rustc": compatibility_environment["RUSTC"],
+                    "rustdoc": compatibility_environment["RUSTDOC"],
+                    "mechanism": "Cargo RUSTC/RUSTDOC environment selection",
+                }
+                result = execute("compatibility-run", compatibility + ["run", "--offline", "--locked", "--quiet", "-p", "fixture-app",
+                                                                         "--", "two words"], compatibility_environment, cwd=full)
+                expected = b"derived=41 generated=7 async=42 raw=19 gat=13 const=15 ffi=21 body=42 probe=41 panic=1 drops=1\nargument=two words\n"
+                require(result.stdout == expected, "compatibility workspace runtime output differs")
+                result = execute("compatibility-tests", compatibility + ["test", "--offline", "--locked", "--workspace"],
+                                 compatibility_environment, cwd=full)
+                require(b"features_keep_their_rust_semantics" in result.stdout and b"body_probe" in result.stdout, "expected unit test and doctest did not execute")
+                invalid_full = scratch / "invalid Rust workspace"
+                shutil.copytree(repository / "crates/lustr/fixtures/invalid-borrow", invalid_full, ignore=shutil.ignore_patterns("target"))
+                result = execute("compatibility-rejection", compatibility + ["check", "--offline", "--locked"],
+                                 compatibility_environment, expected=None, cwd=invalid_full)
+                require(result.returncode == 101 and b"E0502" in result.stderr, "compatibility borrow error did not reject cleanly")
+                report["checks"].append("offline full-Rust compatibility workspace, proc macro, build script, panic/drop, tests, doctests and borrow rejection")
             native_cargo_runner = repository / "tools/qualify-native-cargo.py"
             spec = importlib.util.spec_from_file_location("qualify_native_cargo", native_cargo_runner)
             require(spec is not None and spec.loader is not None, "cannot load native Cargo qualification")
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            module.qualify(package / "bin/lustr-native", package / "bin/cargo", package / "bin/rustc",
+            module.qualify(package / "bin/lustr-native", package / "bin/cargo", oracle,
                            repository / "tests/native-cargo", native_cargo_evidence)
             report["checks"].append("relocated in-process native Cargo binary compiler, real dep-info, external-input invalidation and explicit unsupported-artifact rejection")
+            native_library_runner = repository / "tools/qualify-native-library.py"
+            spec = importlib.util.spec_from_file_location("qualify_native_library", native_library_runner)
+            require(spec is not None and spec.loader is not None, "cannot load independent native library qualification")
+            library_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(library_module)
+            library_report = library_module.qualifier(
+                package / "bin/lustr-native", package / "bin/cargo", oracle,
+                repository / "tests/native-library", native_library_evidence,
+                diagnostic_without_trace=args.diagnostic_without_trace)
+            require(library_report["success"] is True, "independent native library correctness failed")
+            require(args.diagnostic_without_trace or library_report["qualified"] is True,
+                    "independent native library process trace was not qualified")
+            report["checks"].append("relocated native library objects, typed imports and actual Cargo dependency execution pass the independent source-hidden gate")
             for original_source, hidden_source in reversed(hidden_sources):
                 hidden_source.rename(original_source)
             hidden_sources.clear()
@@ -294,6 +342,7 @@ def main() -> None:
             report["summaries"] = summaries
             report["checks"].append("raw paired native cold, daemon no-op and body-edit results with runtime output checks")
             report["success"] = True
+            report["qualified"] = not args.diagnostic_without_trace
         except BaseException as error:
             report["failure"] = f"{type(error).__name__}: {error}"
             raise
@@ -322,6 +371,17 @@ def main() -> None:
                     evidence_error = error
                     report["success"] = False
                     report["native_cargo_evidence_error"] = f"{type(error).__name__}: {error}"
+                    report["qualified"] = False
+            library_report_path = native_library_evidence / "report.json"
+            if library_report_path.exists():
+                try:
+                    report["native_library_qualification"] = json.loads(library_report_path.read_text())
+                    report["native_library_evidence_directory"] = str(native_library_evidence)
+                except (OSError, ValueError) as error:
+                    evidence_error = error
+                    report["success"] = False
+                    report["qualified"] = False
+                    report["native_library_evidence_error"] = f"{type(error).__name__}: {error}"
             report["daemon_logs"] = {
                 path.name: path.read_text(errors="replace")
                 for path in scratch.glob("*.log")

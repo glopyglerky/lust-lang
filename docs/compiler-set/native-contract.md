@@ -9,7 +9,9 @@ full Rust compatibility compiler as the project's implementation.
 Lust is the starting compiler and must remain unchanged from its pinned upstream
 source. Everything it already supports must use Lust. Lustr-owned code must
 supply the remaining Rust language, library and crate behavior through qualified
-interfaces to that baseline. blueFe delivers the combined compiler.
+interfaces to that baseline. BlueFe holds stock Rust source and must use Lustr
+as its only Rust compiler. Building BlueFe with stock rustc and bundling that
+binary does not satisfy this requirement.
 
 The [upstream preservation policy](upstream-lust.md) requires both necessity and
 faster-results evidence for every proposed Lust divergence. No exception is
@@ -24,17 +26,18 @@ wrapper, a successful parse, an optimized rustc build, or a few fixtures.
 The integration must compose existing Lust-supported code and Lustr's additions
 in the same program. A bounded Cargo entry point now calls the native driver in
 process, with explicit adapters for the requested crate identity and real
-dependency records. This does not implement the remaining language features or
-Rust library artifacts.
+dependency records. Its owned native library format now carries separately
+compiled objects and safe scalar function signatures. Full language support,
+general crate metadata and Rust ABI interoperability remain incomplete.
 Do not replace that work with source keyword guesses, a rustc wrapper, or an
 unproved edit to the upstream compiler.
 
 Cargo owns compiler and toolchain selection. The native product must not add a
 coordinator process around it. Implement the required rustc command-line,
 metadata and artifact behavior in Lustr itself. The experimental `lustr-native`
-command supports a bounded native binary-crate contract. Upstream Lust remains
-a direct whole-target command, and full Rust compatibility uses Cargo with the
-selected complete Rust compiler.
+command is the native Cargo entry point. Upstream Lust remains a direct
+whole-target command. An unsupported native request is an implementation gap
+to fix in Lustr; a stock-rustc result cannot satisfy it.
 
 ## Transitional components
 
@@ -43,18 +46,20 @@ The published `preview-2026.11.09-2` packages contain no native Lust compiler.
 Their full Rust support and performance evidence belong to the rustc
 compatibility path. They do not satisfy this native compiler requirement.
 
-Retain earlier compatibility research while the replacement is developed; its
-coordinator is not built or shipped by the native package. Compatibility use
-must be explicit and must not count as native language coverage,
-native acceleration, or project completion. rustc remains useful as a bootstrap
-compiler and a differential oracle. Its optional Cranelift, frontend scheduling
-and compiler-build experiments are separate research.
+Retain earlier compatibility research as history. Its coordinator and stock
+Rust compiler are excluded from the native product. Rustc remains useful as a
+bootstrap compiler for Lustr itself and as a separate differential oracle. Its
+optional Cranelift, frontend scheduling and compiler-build experiments are
+separate research; they are not Lustr implementation work.
 
-The native compiler currently emits C/TinyCC development artifacts. It has no
-Rust rlib emitter, and its language and standard-library support remain
-incomplete. These are implementation gaps, not permission to reduce the full
-Rust requirement. A C object and an empty metadata file cannot substitute for
-Rust library metadata and ABI compatibility.
+The native compiler emits C/TinyCC development artifacts. Lustr's first library
+interface emits real relocatable objects and typed native metadata for safe
+primitive function signatures, with a bodyless-signature importer for binary
+consumers. This is Lustr's native format; Rust metadata interoperability, full
+language support and full standard-library support remain incomplete. These
+are implementation gaps, not permission to reduce the full Rust requirement.
+A C object and an empty metadata file cannot substitute for real checked crate
+metadata and the required ABI.
 
 ## Evidence required for each expansion
 

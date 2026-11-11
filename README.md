@@ -2,7 +2,8 @@
 
 Lustr is being developed to extend the native [Lust compiler](https://github.com/t3dotgg/lust-lang)
 to full Rust while retaining its fast frontend, incremental daemon and
-development code generation. blueFe is the toolchain integration project.
+development code generation. BlueFe holds stock Rust source and must use Lustr
+as its only Rust compiler.
 
 Existing Lust-supported code must use unchanged upstream Lust. Lustr must supply
 the missing Rust language, library and crate support in its own code. Full, unchanged Rust
@@ -11,7 +12,8 @@ rustc does not satisfy it. See the [native compiler contract](docs/compiler-set/
 
 Full native Rust coverage remains incomplete. The experimental
 [`lustr-native`](crates/lustr-native/README.md) entry point now reuses the native
-pipeline in process and implements a bounded Cargo binary-crate interface.
+pipeline in process and implements a bounded Cargo interface for binaries and
+independently compiled native libraries with safe scalar function exports.
 `compiler/native` is the unchanged upstream Lust source, pinned by
 [`upstream/lust.pin`](upstream/lust.pin). Lustr-owned expansion belongs outside
 that baseline. No Lust divergence is admitted. Any exception must demonstrate
@@ -31,57 +33,37 @@ LUST_TCC_HOME=/absolute/tcc CARGO_TARGET_DIR=/absolute/lustr-native-build \
 /absolute/lustr-native-build/release/lust build unchanged.rs -o application
 ```
 
-## Native and compatibility package
+## Native compiler package
 
-The package recipe supplies pristine `lust` and `lust-core`, matching TinyCC
-runtime assets and source libraries, the experimental `lustr-native` compiler,
-and a complete Rust toolchain. It does not
-ship `lustr`, `cargo-lustr`, or `cargo-lust` coordinator executables. Full Rust
-compatibility uses Cargo's existing `RUSTC` and `RUSTDOC` selection.
+The current package recipe supplies unchanged `lust` and `lust-core`, the real
+`lustr-native` compiler, Cargo, TinyCC and native runtime/source assets. The
+native product excludes stock rustc, rustdoc, a stock Rust sysroot and coordinator
+executables. Rustc is used separately to bootstrap Lustr and compare results.
 
-The standalone variant uses official Rust 1.99.1. The combined BlueFe variant
-uses the separately qualified compiler built from unchanged Rust source.
-Delivered manifests identify the actual source commits, versions and binary
-hashes. See the [package guide](docs/compiler-set/native-package.md) for archive
-verification, Linux requirements, source bundles and rebuild instructions.
+Lustr now has an owned native library emitter and metadata importer. A library
+contains real relocatable objects plus typed export metadata. A consumer can
+link that library after its producer source is hidden. The initial interface
+supports safe primitive function signatures; its [entry-point guide](crates/lustr-native/README.md)
+records the remaining language, module, generic and crate limitations.
 
-After verifying and extracting an archive, set its absolute directory:
-
-```sh
-LUSTR_ROOT=/absolute/path/to/bluefe-lustr-native-preview-x86_64-unknown-linux-gnu
-
-# Existing native Lust support, without a coordinator process.
-"$LUSTR_ROOT/bin/lust" build main.rs -o app
-./app
-
-# Full Rust compatibility, selected directly by Cargo.
-RUSTC="$LUSTR_ROOT/bin/rustc" RUSTDOC="$LUSTR_ROOT/bin/rustdoc" \
-  "$LUSTR_ROOT/bin/cargo" build --workspace --locked
-RUSTC="$LUSTR_ROOT/bin/rustc" RUSTDOC="$LUSTR_ROOT/bin/rustdoc" \
-  "$LUSTR_ROOT/bin/cargo" test --workspace --locked
-```
-
-For a dependency-free binary crate using the supported development settings,
-Cargo can select the experimental native compiler directly:
+Cargo selects the compiler directly:
 
 ```sh
-RUSTC="$LUSTR_ROOT/bin/lustr-native" \
-  "$LUSTR_ROOT/bin/cargo" build --locked
+LUSTR_ROOT=/absolute/path/to/lustr-native-preview-x86_64-unknown-linux-gnu
+RUSTC="$LUSTR_ROOT/bin/lustr-native" "$LUSTR_ROOT/bin/cargo" build --locked
 ```
 
-Read its [supported options and limits](crates/lustr-native/README.md) first.
-Compilation calls the native pipeline in the same process. It does not start
-another Rust compiler or fall back after a failure. Unsupported invocations
-fail explicitly. Cargo libraries, native rlib/metadata, procedural macros, test
-harnesses and full-language support remain incomplete. Do not select the
-upstream `lust` command as `RUSTC`; its CLI remains unchanged.
+Full native Rust support and BlueFe compilation remain unfinished. The required
+library fixture currently exposes unsupported unsafe Rust. Package qualification
+retains that failure and does not upload an installable archive while its gate
+is unsuccessful. See the [native package guide](docs/compiler-set/native-package.md)
+for actual scope, source/runtime identities and qualification rules.
 
-The native compiler also has a reproduced external-input cache defect for macro
-names separated from `!` by whitespace or comments. The package guide records
-the affected forms and a command-scoped workaround with a speed cost. Full
-native Rust coverage, a qualified repair for that defect, and representative
-full-project speed evidence remain incomplete. Existing raw package timings
-measure only their stated, executed fixtures.
+The unchanged upstream direct compiler also has a reproduced external-input
+cache defect involving whitespace/comments before macro `!`. Its historical
+reproducer and workaround remain recorded. The owned Cargo path does not use
+that whole-request cache. Native Cargo daemon reuse and exact preservation of
+all Lust speed gains remain unqualified.
 
 ## Earlier compatibility work
 
@@ -98,7 +80,7 @@ without adding another dispatch layer.
 | Path | Responsibility |
 | --- | --- |
 | `compiler/native` | Exact pinned upstream Lust source, including its native compiler, libraries, TinyCC integration and differential fixtures. No Lustr-owned edits are admitted here. |
-| `crates/lustr-native` | Experimental in-process native compiler, Cargo argument handling, exact-root input adapters and real dependency records. |
+| `crates/lustr-native` | In-process native compiler, Cargo argument handling, native object/metadata emission, typed library imports and real dependency records. |
 | `crates/lustr` | Historical compatibility coordinator and reusable Rust fixtures. Its coordinator is not built or shipped in the native package. |
 | `upstream/lust.pin` and `tools/lust-upstream-check.rs` | Upstream revision/tree identity and the Rust source-preservation guard. |
 | `crates/lustr-semantic` | Optional version-pinned rustc inspection. It exports inspection data, not executable MIR. |
@@ -113,9 +95,10 @@ code, outside the native product path.
 
 ## Working contract and research
 
-Native execution, workspace tests, doctests, invalid-borrow rejection and wasm
-linking have dedicated BlueFe gates. Backend qualification also checks both
-Rust ABI directions, ownership transfer and panic cleanup. Exact compiler heads,
+Earlier BlueFe compatibility gates exercise execution, workspace tests,
+doctests, invalid-borrow rejection, wasm linking and backend ABI behavior. Their
+results describe the historical rustc-based path. The current Lustr-only gate
+must establish native compiler coverage separately. Exact compiler heads,
 source fingerprints, backend hashes and unsupported targets belong with results.
 
 See the [integration and performance model](docs/compiler-set/bluefe-performance.md),

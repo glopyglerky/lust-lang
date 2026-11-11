@@ -1,0 +1,12 @@
+[workspace]
+members = ["app"]
+exclude = ["left", "right"]
+resolver = "2"
+
+[profile.dev]
+opt-level = 0
+debug = 0
+incremental = false
+debug-assertions = true
+overflow-checks = true
+panic = "unwind"

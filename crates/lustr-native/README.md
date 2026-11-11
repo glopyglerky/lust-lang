@@ -2,8 +2,9 @@
 
 `lustr-native` is an experimental native compiler. It runs the unchanged Lust
 compiler pipeline in the same process. Cargo selects it through `RUSTC`; no
-compiler-selection process, rustc fallback, source rewrite, or fake Rust
-metadata is involved.
+compiler-selection process, rustc fallback, or application source rewrite is
+involved. Its first native library format stores real compiled objects and a
+typed interface. It does not claim to implement rustc's metadata format.
 
 The protected source under `compiler/native` stays unchanged. `src/main.rs`
 declares its original modules directly from that tree. Two explicit adapters,
@@ -13,33 +14,67 @@ path and source text. This avoids deriving `module_path!()` from `main.rs`.
 
 ## Current boundary
 
-The first supported contract is a dependency-free Rust 2024 binary with the
-Lust-supported language subset and the development backend. Native `rlib`,
-Rust metadata, procedural macro artifacts, test harnesses, other editions,
-cross-compilation, arbitrary custom cfg values, release optimization, external
-Rust libraries, and unimplemented rustc flags return errors. This compiler is
-not a full rustc replacement.
+The compiler accepts a bounded Rust 2024 development contract on Linux x86-64.
+It is not a full rustc replacement.
+
+| Path | Implemented behavior | Remaining limits |
+| --- | --- | --- |
+| Binary without `--extern` | Uses the original Lust pipeline and supported language subset. | Existing upstream language limits still apply. |
+| Library producer | Checks the source, emits native ELF objects, and writes a real ar `.rlib` with typed `lustr.meta` metadata. `--emit=dep-info,metadata,link` also writes the corresponding native `.rmeta`. | At least one original public safe scalar free function at the crate root is required. Libraries with dependencies, public modules/re-exports, exported generics, types, traits, macros, const functions, or unsafe functions are not implemented. |
+| Binary with `--extern name=path` | Loads native artifacts, resolves their public function signatures, checks the original consumer, and links the recorded objects. Different versions of the same crate have separate native symbols. | Consumer source currently supports root free functions and `use` declarations. Generic consumer functions, modules, body-local items, crate attributes, and standard-library source splicing are not implemented on this path. A root import such as `use dependency;` or `use dependency as alias;` is also not implemented. Qualified calls and function imports are supported. |
+
+Exported parameters and results can be unit, bool, char, signed or unsigned
+integers through 128 bits, pointer-sized integers, `f32`, or `f64`. The native
+checker still validates private producer bodies. Consumer calls retain their
+checked argument and return types, and the original borrow checker runs before
+external calls are lowered to actual imported function pointers. Function
+pointer coercion for the supported safe signatures is included.
+
+An artifact binds its target, crate disambiguator, compiler/runtime identity,
+panic strategy, exported signatures, source locations, and object checksums.
+The importer rejects incompatible identities and malformed artifacts. It reads
+compiled objects rather than reparsing dependency source. A `.rlib` made by
+rustc or another Lustr build is not an interchangeable input.
+
+The producer rejects public contracts that its metadata cannot preserve.
+Examples include `#[must_use]`, `#[deprecated]`, linkage attributes, and
+`#[track_caller]`. The original parser rejects `unsafe`; the importer and
+code generator also reject an artifact carrying an unsafe signature. Storing
+an unsafe bit in the format does not supply unsafe-operation checking.
+Library producers requiring live static initialization or generated shared
+glue are also rejected until their cross-crate contracts are implemented.
+Producer crate inner attributes are rejected as well. Declaration provenance
+is checked against the original AST and resolver identity, so an attributed
+module or re-export cannot silently lose its contract during flattening.
+
+Metadata-only compilation, including `cargo check` and early metadata
+pipelining, remains unsupported. Native transitive dependencies, procedural
+macro artifacts, the Rust test harness, other editions, cross-compilation,
+arbitrary custom cfg values, release optimization, and unimplemented rustc
+flags also remain explicit failures.
 
 The Cargo probes identify the compiler as `lustr-native 0.1.0`, including its
 own build hash and C/TinyCC backend. They do not impersonate rustc or LLVM.
 Cargo manifests with a Rust-version requirement greater than this experimental
 version can reject it. That limitation must not be hidden by a false version.
 
-`--print=file-names` reports only the native binary artifact. It reports other
-crate types as unsupported, using Cargo's documented probe convention. No rlib
-or metadata file is created. Unknown output and code-generation requests fail.
+`--print=file-names` reports binary and native `lib`/`rlib` outputs. It reports
+other crate types as unsupported using Cargo's probe convention. The native
+metadata is specific to this compiler and is emitted only with an actual
+linked library. Unknown output and code-generation requests fail.
 
 Newer Cargo versions also request silent JSON reporting for the forced
 `unused_crate_dependencies` lint. This entry point accepts that exact request
-and reports an empty unused-dependency set after successful compilation. All
-explicit `--extern` inputs are rejected, so this is the complete set for the
-supported dependency-free contract. It does not enable arbitrary forced lints
-or external Rust library artifacts.
+and reports unused native dependency names after successful compilation.
+Resolved calls, function values, and imports determine that set. A binary
+without dependencies reports an empty set. This does not enable arbitrary
+forced lints or consumption of rustc library artifacts.
 
 The native profile maps panic strategy, overflow checking, debug assertions,
 feature cfg values and debug information to upstream Request/Session inputs.
-Only optimization level zero is supported. Cargo's incremental directory, when
-requested, contains Lust's real unit cache in a `lustr-native` subdirectory.
+Only application optimization level zero is supported. On the original binary
+path, Cargo's incremental directory contains Lust's real unit cache in a
+`lustr-native` subdirectory when requested.
 The application's compile-time environment is captured before that internal
 cache selection. It cannot observe the compiler's internal cache path.
 
@@ -50,16 +85,19 @@ the request or run a separate stripping process. Other strip modes and stripping
 an artifact built with native debug information remain unsupported.
 
 This entry point does not use the upstream whole-request cache or daemon.
-Cargo handles unchanged-target freshness. Actual compilations use the native
-unit cache. Daemon latency and performance parity with direct `lust` are not
-claimed. The separate pristine `lust` executable keeps its original fast path.
+Cargo handles unchanged-target freshness. The original binary path reuses the
+native unit cache; the initial library and import paths emit their native
+objects again when Cargo executes the compiler. These paths do not yet have a
+speed-parity result. The separate pristine `lust` executable keeps its
+original fast path.
 
 ## Dependency information
 
 After a successful native compilation, dep-info comes from the actual native
 source map, resolver's loaded paths and expansion dependency records. It tracks
 included files and `env!`/`option_env!` observations, the compiler executable and
-TinyCC runtime files. Native configuration names found in the compiler source
+TinyCC runtime files. Imported `.rlib` paths are also dependencies, so a changed
+artifact invalidates its consumer. Native configuration names found in the compiler source
 are also recorded, including unset values, so changing an override invalidates
 Cargo's freshness before it can reuse an older executable.
 
@@ -103,21 +141,29 @@ python3 tools/package-toolchain.py \
   --native-bin compiler/native/target/release \
   --native-cargo-bin /absolute/new/native-cargo-target/x86_64-unknown-linux-gnu/gate/lustr-native \
   --native-cargo-receipt /absolute/new/native-cargo-build.json \
-  --rust-root "$(rustc --print sysroot)" \
+  --compatibility-origin none \
+  --cargo-bin /absolute/cargo-distribution/bin/cargo \
+  --cargo-notices /absolute/cargo-distribution \
   --vendor-dir /absolute/path/to/native-vendor
 ```
 
 The packager verifies the receipt against the supplied executable, current
 source and TinyCC files. It copies the receipt and log into the package.
-An independently built binary cannot acquire a gate-profile claim from its
-filename or the packaging command. Qualification applies to the recorded
-executable and settings.
+The standalone Cargo distribution must provide `LICENSE-MIT`, `LICENSE-APACHE`,
+and `LICENSE-THIRD-PARTY` in the notice directory. This native-only payload
+contains Cargo, `lustr-native`, pristine Lust, and their native runtime and
+sources. It excludes stock rustc, a rustlib sysroot, and compiler coordinators.
+The compiler bootstrap and separate rustc test oracle remain outside the
+payload. An independently built binary cannot acquire a gate-profile claim
+from its filename or the packaging command. Qualification applies to the
+recorded executable and settings.
 
 Local attempts with the release and gate profiles received SIGKILL. The cause
 was not established. A separate local compiler with optimization level 1
 passed correctness probes, but that artifact does not satisfy the package
-build requirements. The exact gate profile subsequently built successfully
-in CI.
+build requirements. The earlier binary-only revision's exact gate profile
+subsequently built successfully in CI. That result does not qualify this new
+library implementation; it must build and pass its own required gates.
 
 Its runtime
 layout matches the existing native package's `lib/lust` tree. The build recipe
@@ -126,11 +172,25 @@ trees, build recipes, lockfiles, observed compiler-build settings and TinyCC
 files into its own cache identity.
 Its registry dependencies match the pinned upstream native lockfile exactly.
 
-The external fixture and qualification runner are under `tests/native-cargo`
-and `tools/qualify-native-cargo.py`. They exercise actual Cargo execution,
-freshness after source/include/environment edits, runtime behavior, rejection
-and independently timed native/oracle builds. Results apply only to the exact
-recorded executable and selected profile.
+## Qualification
+
+`tests/native-cargo` and `tools/qualify-native-cargo.py` exercise ordinary Cargo
+execution, freshness after source/include/environment edits, runtime behavior,
+rejection, and separately timed native/oracle builds.
+
+`tests/native-library` and `tools/qualify-native-library.py` exercise independent
+library compilation through Cargo, source-hidden consumers, colliding crate
+names, scalar ABI behavior, visibility and type errors, imported overflow
+locations, malformed artifacts, and rebuilds after edits. Its full fixture
+also requires unsafe functions and calls. That fixture remains a failing
+completion gate until native unsafe semantics exist. A separate safe-library
+diagnostic can establish its stated cases without changing that requirement.
+
+Local builds made with optimization level 1 and LTO disabled are diagnostic
+only. They do not satisfy the recorded package profile. Process tracing is
+also required for final library qualification; a run that cannot trace is
+marked unqualified. No package is a complete Rust replacement merely because
+these bounded fixtures pass.
 
 ## Protocol references
 

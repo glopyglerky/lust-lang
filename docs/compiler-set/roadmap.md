@@ -4,10 +4,11 @@ The [native compiler contract](native-contract.md) states the project requiremen
 Start with unchanged upstream Lust and add Lustr-owned support for full Rust while
 retaining and expanding its fast development compilation. Existing Lust support
 must keep using the native path. Lustr supplies the missing native support;
-blueFe delivers the combined compiler. Follow the [upstream preservation policy](upstream-lust.md);
+BlueFe preserves stock Rust source and uses Lustr as its only Rust compiler.
+Follow the [upstream preservation policy](upstream-lust.md);
 every proposed Lust divergence requires both necessity and faster-results evidence.
 
-The earlier Cargo/rustc coordinator work is transitional compatibility tooling.
+The earlier Cargo/rustc coordinator work is historical compatibility tooling.
 It must remain accurately identified and cannot close native compiler tasks.
 Cargo already selects compilers and toolchains. The native package does not
 build or ship an additional coordinator; the rustc command-line and artifact
@@ -21,9 +22,10 @@ contract must be implemented in the native compiler.
 | Native frontend | Existing parser, expansion, resolution, trait/type checking, borrow checking and monomorphization. Remaining language gaps must be reproduced and implemented here. |
 | Native libraries and generation | Existing source libraries, adapters and C/TinyCC generation. Missing APIs and semantic support remain native implementation work. |
 | Fast edit path | Existing daemon, query reads, retained state and caches. Every expansion needs warm/cold and edit invalidation checks. |
-| Cargo/crate support | The experimental native Cargo compiler accepts bounded binary invocations and emits real dependency records. Native Rust rlib/metadata, proc macros, test harnesses and general artifact interoperability remain open. |
-| Full Rust compatibility | Supplied by the complete Rust compiler selected directly through Cargo. This is not native Lust coverage. |
-| Packaged previews | The current recipe packages pristine Lust, its matching runtime, the experimental in-process native Cargo compiler and a complete Rust toolchain, with no coordinator executable. Full native coverage and rustc command/artifact compatibility remain open. Earlier packages at `595cdc4` included a coordinator; `preview-2026.11.09-2` contained no native Lust. |
+| Cargo/crate support | The native Cargo compiler accepts bounded binary and library invocations and emits real dependency records. Owned native rlib/metadata carries real objects and safe scalar signatures, with source-hidden binary imports. General metadata, transitive libraries, proc macros and test harnesses remain open; the required unsafe library fixture is still red. |
+| Full Rust compatibility | Unfinished in native Lustr. The separately retained Rust oracle does not satisfy the product requirement. |
+| Packaged previews | The current native-only recipe excludes stock rustc, rustdoc, a Rust sysroot and the coordinator. Required qualification failures prevent archive publication. Earlier stock/mixed packages remain historical reference artifacts. |
+| BlueFe build | The Lustr-only gate configures unchanged upstream bootstrap to use the native Lustr executable. The first actual diagnostic fails at the unsupported `-Zallow-features=` compiler probe. No successful Lustr-built BlueFe is claimed. |
 
 ## 1. Reproduce native coverage gaps
 
@@ -48,7 +50,7 @@ first failures. They are a starting regression set, not a complete Rust suite.
 The broader native regression also reproduces stale whole-request cache results
 when whitespace or comments separate `env!`/include macro names from `!` and an
 external input changes. This bug is present in pinned upstream Lust. The
-[package guide](native-package.md#known-native-cache-limitation) records the
+[historical package record](historical-native-compatibility-package.md#known-native-cache-limitation) records the
 defect and the performance cost of its explicit workaround. Correctness and
 whole-compiler performance evidence are still required before admitting a fix.
 
@@ -90,20 +92,22 @@ unsafe/FFI boundaries, allocation ownership, panic recovery, TLS and atomics.
 Native library checking is not rlib emission. A C ABI demonstration or metadata
 placeholder does not establish Rust artifact compatibility.
 
-## 5. Deliver the native compiler through blueFe
+## 5. Build unchanged BlueFe with Lustr and deliver the native compiler
 
 Package the native compiler, its matching libraries and required TinyCC assets
 with correct notices, relocation behavior, source bindings and privacy checks.
-Make the native compiler the primary product entry point as its command and
-artifact contracts become usable. Preserve existing compatibility tools during
-that transition and identify their use explicitly.
+Make the native compiler the product entry point as its command and artifact
+contracts become usable. BlueFe's unchanged Rust source must compile with Lustr
+as its only Rust compiler through the original bootstrap configuration.
+Historical compatibility tools remain separate from this delivery.
 
 Acceptance requires clean installation, offline repeated compilation, actual
 native execution, upgrade/cache invalidation, rollback and every advertised
-host/target. The existing rustc-based preview is not this delivery.
+host/target, plus observed Lustr-only BlueFe compilation. The existing
+rustc-based preview is not this delivery.
 
-The Linux x86_64 package gates cover relocation, native execution, runtime asset
-discovery, payload identity and offline compatibility. Direct Lust keeps the
+The Linux x86_64 package gates require relocation, native execution, runtime asset
+discovery, payload identity and independent native library compilation. Direct Lust keeps the
 original compiler bytes and daemon behavior. The earlier coordinator's measured
 dispatch overhead is removed by excluding it from the product and using Cargo's
 existing selection. Other hosts, full-project performance and complete native

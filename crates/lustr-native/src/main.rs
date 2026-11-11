@@ -41,6 +41,10 @@ mod expand;
 #[path = "native_resolve.rs"]
 mod resolve;
 mod cargo_cli;
+mod native_artifact;
+mod native_codegen;
+mod native_library;
+mod native_import;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
