@@ -45,6 +45,8 @@ mod native_artifact;
 mod native_codegen;
 mod native_library;
 mod native_import;
+mod native_syntax;
+mod native_safety;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;

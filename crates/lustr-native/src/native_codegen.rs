@@ -123,7 +123,6 @@ fn signature(program: &Program, function: LocalDefId) -> Result<(Vec<AbiType>, A
     let name = program.display_path(program.fn_info(function).name);
     if definition.qual.is_const
         || definition.qual.is_async
-        || definition.qual.is_unsafe
         || definition.qual.abi.is_some()
         || !definition.generics.params.is_empty()
         || !definition.where_clause.preds.is_empty()
@@ -132,7 +131,7 @@ fn signature(program: &Program, function: LocalDefId) -> Result<(Vec<AbiType>, A
         || check::caller::is_track_caller(program, function)
     {
         return Err(format!(
-            "native library format v1 cannot preserve the exported contract of `{name}` (const, async, unsafe, generic, method, extern, variadic, or track_caller)"
+            "native library format v1 cannot preserve the exported contract of `{name}` (const, async, generic, method, extern, variadic, or track_caller)"
         ));
     }
     for attribute in &definition.attrs {
@@ -355,9 +354,14 @@ fn emit_functions(
     map: &SourceMap,
     imports: &[(LocalDefId, Export)],
     display: &ClientView,
+    safety: &crate::native_safety::NativeSafety,
 ) -> Result<Emitted, NativeError> {
     materialize(program, map)?;
     let bindings = import_bindings(program, imports)?;
+    // Imported contracts can require safety checking even when this source has
+    // no unsafe syntax. Decide once per program, without a per-body scan.
+    let needs_safety = safety.has_extension()
+        || program.fns.iter().enumerate().any(|(index, _)| program.fn_def(LocalDefId(index as u32)).qual.is_unsafe);
     let slots = (0..program.fns.len() as u32).collect::<Vec<_>>();
     let names = stable_names(program, &slots, imports)?;
     cgen::clear_extern_pool();
@@ -386,6 +390,12 @@ fn emit_functions(
                 let (checked, errors) = check::check_fn(program, function);
                 if !errors.is_empty() {
                     return Err(diagnostics("body checking", map, &errors));
+                }
+                if needs_safety {
+                    let errors = safety.check_body(program, &checked, function);
+                    if !errors.is_empty() {
+                        return Err(diagnostics("unsafe checking", map, &errors));
+                    }
                 }
                 let mut body = lower::lower(program, function, checked);
                 let errors = borrowck::borrowck(program, &body);
@@ -446,6 +456,7 @@ pub fn emit_library(
     work: &Path,
     debug: bool,
     display: &ClientView,
+    safety: &crate::native_safety::NativeSafety,
 ) -> Result<LibraryProduct, NativeError> {
     if !program.ast.inner_attrs.is_empty() {
         return Err("native library format v1 does not encode crate inner-attribute contracts".into());
@@ -457,7 +468,7 @@ pub fn emit_library(
     if program.statics.iter().enumerate().any(|(index, _)| program.static_live(index)) {
         return Err("native library format v1 does not yet encode per-crate static initialization".into());
     }
-    let emitted = emit_functions(program, map, &[], display)?;
+    let emitted = emit_functions(program, map, &[], display, safety)?;
     if !emitted.glue.protos.is_empty() {
         return Err("native library format v1 does not yet encode cross-crate shared glue; primitive function bodies without generated glue are supported".into());
     }
@@ -507,8 +518,9 @@ pub fn emit_binary(
     imports: &[(LocalDefId, Export)],
     dependencies: &[NativeArtifact],
     display: &ClientView,
+    safety: &crate::native_safety::NativeSafety,
 ) -> Result<(), NativeError> {
-    let emitted = emit_functions(program, map, imports, display)?;
+    let emitted = emit_functions(program, map, imports, display, safety)?;
     let main = program.main.ok_or_else(|| "native binary crate has no main function".to_string())?;
     let main_slot = emitted.slots[main.0 as usize];
     if !emitted.functions[main_slot as usize].has_code() {

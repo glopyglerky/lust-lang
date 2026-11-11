@@ -24,6 +24,7 @@ pub struct ImportedProgram {
     pub imports: Vec<(LocalDefId, Export)>,
     pub expand_deps: Vec<crate::expand::Dep>,
     pub unused_externs: Vec<String>,
+    pub safety: crate::native_safety::NativeSafety,
 }
 
 fn diagnostic(request: &Request, map: &SourceMap, text: &str, mut diags: Vec<Diag>) -> Response {
@@ -135,6 +136,25 @@ pub fn collect(
     session: &mut crate::driver::Session,
     dependencies: &[(String, NativeArtifact)],
 ) -> Result<ImportedProgram, Response> {
+    collect_impl(request, session, dependencies, false).map(|program| program.expect("unconditional native collection"))
+}
+
+/// An existing-driver rejection can enter the owned frontend only when its
+/// parser has recognized a supported extension and retained its semantics.
+/// Existing accepted programs stay on their original driver path.
+pub fn collect_extension(
+    request: &Request,
+    session: &mut crate::driver::Session,
+) -> Result<Option<ImportedProgram>, Response> {
+    collect_impl(request, session, &[], true)
+}
+
+fn collect_impl(
+    request: &Request,
+    session: &mut crate::driver::Session,
+    dependencies: &[(String, NativeArtifact)],
+    extension_required: bool,
+) -> Result<Option<ImportedProgram>, Response> {
     let text = std::fs::read_to_string(&request.file).map_err(|e| Response {
         code: 2,
         stderr: format!("error: read {}: {e}\n", request.file.display()),
@@ -172,7 +192,20 @@ pub fn collect(
         client: &client,
     };
     let (lexed, expand_deps) = crate::expand::expand_lexed_with_deps(lexed, &ctx).map_err(|d| err(vec![d]))?;
-    let mut ast = crate::parser::parse(&lexed, &interner, &known).map_err(|d| err(vec![d]))?;
+    let parsed = match crate::native_syntax::parse(&lexed, &interner, &known) {
+        Ok(parsed) => parsed,
+        Err(_) if extension_required => return Ok(None),
+        Err(diagnostic) => return Err(err(vec![diagnostic])),
+    };
+    let crate::native_syntax::Parsed { mut ast, safety } = parsed;
+    // The original collector treats a root function named `main` as a binary
+    // entry point even for a library request. Native libraries have no entry
+    // point; recognizing that parsed declaration is a separate target semantic.
+    let library_main = request.session.krate.target_kind == "lib"
+        && ast.items.iter().any(|item| matches!(&item.kind, ItemKind::Fn(def) if def.name == known.main));
+    if extension_required && !safety.has_extension() && !library_main {
+        return Ok(None);
+    }
     if !ast.inner_attrs.is_empty() || !ast.stmt_items.is_empty() {
         return Err(err(vec![unsupported(
             "native artifact imports do not yet support crate attributes or body-local items",
@@ -337,10 +370,19 @@ pub fn collect(
     session.front.src = text.clone();
     session.front.ast = ast.clone();
     session.front.client = client;
+    let collection_known = if request.session.krate.target_kind == "lib" {
+        let mut names = crate::intern::Known::new(&interner);
+        // Configure the binary-oriented collector for an artifact-only crate.
+        // Function names, resolver bindings and exported symbols stay original.
+        names.main = interner.intern("$lustr$library$no_entry");
+        Arc::new(names)
+    } else {
+        known
+    };
     let mut program = crate::check::collect::collect_with_order_resolved(
         ast,
         interner.clone(),
-        known,
+        collection_known,
         ids,
         false,
         &mut session.front.def_order,
@@ -359,6 +401,22 @@ pub fn collect(
             vec![Diag::new("L0130", Span::default(), "no main function", "Define the binary crate entry point.")],
         ));
     }
+    if request.session.krate.target_kind != "lib"
+        && let Some(main) = program.main
+        && program.fn_def(main).qual.is_unsafe
+    {
+        return Err(diagnostic(
+            request,
+            &map,
+            &text,
+            vec![Diag::new(
+                "L1001",
+                program.fn_def(main).name_span,
+                "the main function must be safe",
+                "Keep the entry point safe and put individual unsafe operations in explicit unsafe blocks.",
+            )],
+        ));
+    }
     let imports = imported
         .into_iter()
         .map(|(flat, export)| {
@@ -371,10 +429,11 @@ pub fn collect(
     // The emitter runs the original checker, lowering and borrow checker once
     // over every real consumer body before adapting its checked external calls.
     // Imported declarations have no bodies and are checked by their producers.
-    Ok(ImportedProgram {
+    Ok(Some(ImportedProgram {
         program,
         imports,
         expand_deps,
         unused_externs: dependencies.iter().filter(|(alias, _)| !used.contains(alias)).map(|(alias, _)| alias.clone()).collect(),
-    })
+        safety,
+    }))
 }

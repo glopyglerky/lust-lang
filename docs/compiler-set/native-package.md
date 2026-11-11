@@ -5,17 +5,20 @@ Cargo, TinyCC and the required runtime/source assets. Cargo selects Lustr
 through `RUSTC`. Stock rustc, rustdoc, a stock Rust sysroot and the historical
 coordinator are excluded from the native package.
 
-Full native Rust support is unfinished. The required independent-library gate
-currently fails on unsafe Rust support. The workflow retains that failure and
-will not upload an installable package while its qualification is unsuccessful.
+Full native Rust support is unfinished. Native unsafe call contracts are now
+implemented for the scalar library interface; the original required fixture
+and additional safety regressions remain package gates. The workflow retains
+failures and will not upload a package while its qualification is unsuccessful.
 A compiled executable, source-preservation check or successful archive assembly
 alone does not qualify the full replacement.
 
 ## Compiler behavior
 
 `bin/lustr-native` contains the unchanged upstream Lust modules and Lustr-owned
-interfaces in one process. A dependency-free binary retains its existing native
-driver path. Lustr now also emits native library objects and typed metadata and
+interfaces in one process. A dependency-free binary accepted by Lust retains
+its existing native driver path. Additional unsafe syntax is composed in owned
+code with the original type checker, lowerer and native backend. Lustr also
+emits native library objects and typed metadata and
 can resolve a binary's `--extern` dependencies against those artifacts. It does
 not compile the producer's source again or invoke another Rust compiler.
 
@@ -28,7 +31,7 @@ Lustr's format; rustc metadata and Rust ABI interoperability are not implemented
 
 Current library boundaries are explicit:
 
-- Original public safe free functions at the crate root with unit, bool, char,
+- Original public safe or unsafe free functions at the crate root with unit, bool, char,
   integer and floating-point parameters and results can be exported. Private
   helpers use the native compiler.
 - A binary can import separately compiled libraries, including two versions of
@@ -37,7 +40,11 @@ Current library boundaries are explicit:
 - Consumer source is parsed unchanged and checked with the upstream type and
   borrow checker. An owned IR step links imported calls through typed native
   function-pointer bindings using the upstream backend's ABI.
-- Unsafe Rust, public generic/type/trait/const/macro contracts, transitive library
+- Unsafe call context follows real function/local identities and lexical scope.
+  Scalar unsafe function pointers preserve their safety through supported
+  bindings and conversions. A library function named `main` is an ordinary
+  export; a binary entry point must remain safe.
+- Raw-pointer operations, unsafe FFI, public generic/type/trait/const/macro contracts, transitive library
   imports, consumer module/type/generic items and metadata-only compilation are
   unfinished. Producer statics requiring initialization, generated shared glue
   and unrepresented export attributes also fail explicitly. Public modules,
@@ -92,9 +99,11 @@ freshness after edits. Functional process tracing checks compiler execution;
 timing samples exclude tracing. Local diagnostics without permitted process
 tracing are explicitly marked unqualified.
 
-The original full fixture remains a required, failing test until its unsafe
-requirements are implemented. Separate safe-library diagnostic evidence can
-establish progress on its stated inputs but cannot make that full gate pass.
+The original full library fixture remains required. Its unsafe checks now
+include aliases, function pointers, lexical scope, macro-expanded expressions,
+shadowed names, lint precedence and closure returns. A separate regression
+gate rejects malformed unsafe syntax and missed safety-analysis contexts.
+Separate safe-library diagnostic evidence keeps its original scope.
 The workflow publishes an archive only after all of its required checks pass.
 Even passing these bounded checks would not prove complete Rust semantics,
 BlueFe bootstrap or universal compilation-speed preservation.

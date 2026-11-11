@@ -46,6 +46,7 @@ struct Args {
     strip_debug: bool,
     check_cfg: Vec<String>,
     warnings: bool,
+    query_only_options: Vec<String>,
     externs: Vec<(String, PathBuf)>,
 }
 
@@ -158,7 +159,11 @@ fn parse(args: Vec<OsString>) -> Result<Args, String> {
                 // dependency-free bin. External crate artifacts remain rejected.
             }
             "-Wwarnings" => out.warnings = true,
+            "-W" | "--warn" => warning(&mut out, &next()?)?,
+            "-Z" => unstable(&mut out, &next()?)?,
             "-C" | "--codegen" => codegen(&mut out, &next()?)?,
+            _ if arg.starts_with("-W") => warning(&mut out, &arg[2..])?,
+            _ if arg.starts_with("-Z") => unstable(&mut out, &arg[2..])?,
             _ if arg.starts_with("-C") => codegen(&mut out, &arg[2..])?,
             _ if arg.starts_with('-') && arg != "-" => return Err(format!("unsupported native rustc option `{arg}`")),
             _ => {
@@ -170,6 +175,35 @@ fn parse(args: Vec<OsString>) -> Result<Args, String> {
         i += 1;
     }
     Ok(out)
+}
+
+fn warning(out: &mut Args, name: &str) -> Result<(), String> {
+    match name {
+        "warnings" => out.warnings = true,
+        "rust_2018_idioms" | "unused_lifetimes" => out.query_only_options.push(format!("-W{name}")),
+        _ => return Err(format!("unsupported native warning option `{name}`")),
+    }
+    Ok(())
+}
+
+fn unstable(out: &mut Args, text: &str) -> Result<(), String> {
+    let Some(features) = text.strip_prefix("allow-features=") else {
+        return Err(format!("unsupported native unstable option `{text}`"));
+    };
+    if !features.is_empty()
+        && !features.split(',').all(|feature| {
+            let mut bytes = feature.bytes();
+            bytes.next().is_some_and(|b| b.is_ascii_alphabetic() || b == b'_')
+                && bytes.all(|b| b.is_ascii_alphanumeric() || b == b'_')
+        })
+    {
+        return Err("native allow-features requires a comma-separated list of feature names".into());
+    }
+    // Cargo carries its source-analysis options into target introspection.
+    // These print requests stop before analysis; compilation must still reject
+    // options whose feature/lint enforcement has not been implemented.
+    out.query_only_options.push(format!("-Z{text}"));
+    Ok(())
 }
 
 fn codegen(out: &mut Args, text: &str) -> Result<(), String> {
@@ -358,6 +392,9 @@ fn diagnostics(text: &str, json: bool) {
 }
 
 fn compile(args: &Args) -> Result<i32, String> {
+    if let Some(option) = args.query_only_options.first() {
+        return Err(format!("native source-analysis option `{option}` is not implemented for compilation; it is accepted only for print queries"));
+    }
     let kind = artifact_kind(args)?;
     if args.unused_externs_silent && (!args.json || !args.force_warn_unused_dependencies) {
         return Err("unused-externs-silent currently requires --error-format=json and --force-warn=unused_crate_dependencies".into());
@@ -451,9 +488,6 @@ fn compile(args: &Args) -> Result<i32, String> {
         if artifact.profile.panic_abort != key.profile.panic_abort {
             return Err(format!("native dependency `{alias}` has an incompatible panic strategy"));
         }
-        if artifact.exports.iter().any(|export| export.is_unsafe) {
-            return Err(format!("native dependency `{alias}` exports unsafe functions; native unsafe-call checking is not implemented"));
-        }
         dependencies.push((alias.clone(), artifact));
     }
     // Cargo's -Cincremental directory belongs to this compiler invocation.
@@ -491,11 +525,11 @@ fn compile(args: &Args) -> Result<i32, String> {
     };
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         if kind == ArtifactKind::Library {
-            crate::native_library::CompileOutput::from(crate::native_library::compile(&request, &mut session, metadata.as_deref()))
+            crate::native_library::compile(&request, &mut session, metadata.as_deref())
         } else if !dependencies.is_empty() {
             crate::native_library::compile_imported_binary(&request, &mut session, dependencies)
         } else {
-            crate::native_library::CompileOutput::from(crate::driver::compile(&request, &mut session))
+            crate::native_library::compile_binary(&request, &mut session)
         }
     }));
     let compiled = match result {

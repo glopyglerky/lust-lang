@@ -394,13 +394,19 @@ def qualifier(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Pa
             positives = [("primitive_abi", "primitive ABI passed\n"), ("conditional_consumer", "conditional=31\n"),
                          ("function_imports", "imports=31,109\n")]
             if require_unsafe:
-                positives.append(("unsafe_allowed", "unsafe=42\n"))
+                positives.extend([("unsafe_allowed", "unsafe=42\n"),
+                                  ("unsafe_nested_scope", "unsafe-nested=42\n"),
+                                  ("unsafe_builtin_macro", "unsafe-macro=42\n"),
+                                  ("unsafe_shadowed_name", "unsafe-shadow=42\n"),
+                                  ("unsafe_pointer_allowed", "unsafe-pointer=42\n"),
+                                  ("safe_to_unsafe_pointer", "safe-to-unsafe=31\n")])
             for case, expected_stdout in positives:
                 replay(lane + "-" + case, lane, consumer, projects[lane] / "cases" / (case + ".rs"),
                        0, run=True, expected_stdout=expected_stdout)
             negatives = ["private", "type_mismatch", "arity_mismatch", "result_mismatch"]
             if require_unsafe:
-                negatives.append("unsafe_forbidden")
+                negatives.extend(["unsafe_forbidden", "unsafe_scope_leak", "unsafe_alias_forbidden",
+                                  "unsafe_pointer_forbidden", "unsafe_to_safe_pointer", "unsafe_closure_return_forbidden"])
             for case in negatives:
                 replay(lane + "-reject-" + case, lane, consumer, projects[lane] / "cases" / (case + ".rs"), 1)
             replay(lane + "-imported-overflow", lane, consumer, projects[lane] / "cases/imported_overflow.rs",
@@ -409,6 +415,37 @@ def qualifier(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Pa
         report["checks"].append("consumer builds from actual dependency artifacts while producer source is absent; public signatures, privacy, scalar ABI boundaries and unit arguments remain checked")
         if require_unsafe:
             report["checks"].append("unsafe producer contract is preserved, safe caller rejected and unsafe caller executes correctly")
+            report["checks"].append("unsafe call permission follows lexical blocks through nested blocks and builtin macro expansion; a completed unsafe block does not authorize later calls")
+            report["checks"].append("unsafe aliases retain their contract while a shadowing safe function pointer remains callable in safe code")
+            report["checks"].append("unsafe function pointers require unsafe call context; safe functions can coerce to unsafe pointers but unsafe functions cannot coerce to safe pointers")
+            report["checks"].append("an inferred closure return cannot use its enclosing function's unsafe-pointer return contract to escape into a safe pointer")
+
+            for lane, compiler in (("oracle", oracle), ("native", native)):
+                for case, expected in (("private_unsafe_lint_order_forbidden", 1), ("private_unsafe_lint_order_allowed", 0)):
+                    source = projects[lane] / "cases" / (case + ".rs")
+                    artifact = output / ("lib" + case + "_" + lane + ".rlib")
+                    result = execute(lane + "-" + case, lane,
+                                     [compiler, "--crate-name", case, "--edition=2024", source,
+                                      "--crate-type", "rlib", "--emit=link", "-o", artifact])
+                    require(result["exit_code"] == expected, lane + ": unsafe_code lint order was not preserved")
+                    if expected:
+                        require(result["stderr"].strip() and not artifact.exists(),
+                                lane + ": deny(unsafe_code) produced no diagnostic or left a library artifact")
+                    else:
+                        require(artifact.is_file(), lane + ": later allow(unsafe_code) did not produce a library")
+                        if lane == "native":
+                            members = read_ar(artifact)
+                            objects = [(name, body) for name, body in members if name.endswith(".o")]
+                            metadata = inspect_metadata(next(body for name, body in members if name == "lustr.meta"), objects)
+                            require([(export["path"], export["unsafe"]) for export in metadata["exports"]] == [(["exposed"], False)],
+                                    "private unsafe lint control leaked its helper or changed the public safety contract")
+                        destination = output / (lane + " sealed unsafe lint control")
+                        source.rename(destination)
+                        hidden.append((source, destination))
+                        replay(lane + "-unsafe-lint-control-consumer", lane, builds[lane]["consumer"],
+                               projects[lane] / "cases/unsafe_lint_order_consumer.rs", 0, artifact,
+                               run=True, expected_stdout="unsafe-lint=42\n")
+            report["checks"].append("private unsafe function lint attributes retain written precedence: allow then deny rejects, deny then allow compiles and links without producer source")
 
         for lane, compiler in (("oracle", oracle), ("native", native)):
             source = projects[lane] / "cases/private_module_helper_library.rs"

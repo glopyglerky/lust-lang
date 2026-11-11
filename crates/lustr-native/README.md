@@ -19,8 +19,8 @@ It is not a full rustc replacement.
 
 | Path | Implemented behavior | Remaining limits |
 | --- | --- | --- |
-| Binary without `--extern` | Uses the original Lust pipeline and supported language subset. | Existing upstream language limits still apply. |
-| Library producer | Checks the source, emits native ELF objects, and writes a real ar `.rlib` with typed `lustr.meta` metadata. `--emit=dep-info,metadata,link` also writes the corresponding native `.rmeta`. | At least one original public safe scalar free function at the crate root is required. Libraries with dependencies, public modules/re-exports, exported generics, types, traits, macros, const functions, or unsafe functions are not implemented. |
+| Binary without `--extern` | Keeps the original Lust pipeline for its accepted programs. The owned frontend composes the additional unsafe function, block and scalar function-pointer contracts with the same native checker and backend. | Raw-pointer operations, unsafe FFI and other unimplemented language features remain errors. |
+| Library producer | Checks the source, emits native ELF objects, and writes a real ar `.rlib` with typed `lustr.meta` metadata. `--emit=dep-info,metadata,link` also writes the corresponding native `.rmeta`. | At least one original public scalar free function at the crate root is required. Safe and unsafe call contracts are preserved. Libraries with dependencies, public modules/re-exports, exported generics, types, traits, macros or const functions are not implemented. |
 | Binary with `--extern name=path` | Loads native artifacts, resolves their public function signatures, checks the original consumer, and links the recorded objects. Different versions of the same crate have separate native symbols. | Consumer source currently supports root free functions and `use` declarations. Generic consumer functions, modules, body-local items, crate attributes, and standard-library source splicing are not implemented on this path. A root import such as `use dependency;` or `use dependency as alias;` is also not implemented. Qualified calls and function imports are supported. |
 
 Exported parameters and results can be unit, bool, char, signed or unsigned
@@ -28,7 +28,11 @@ integers through 128 bits, pointer-sized integers, `f32`, or `f64`. The native
 checker still validates private producer bodies. Consumer calls retain their
 checked argument and return types, and the original borrow checker runs before
 external calls are lowered to actual imported function pointers. Function
-pointer coercion for the supported safe signatures is included.
+pointer coercion for the supported scalar signatures is included. An unsafe
+callable stays unsafe through local bindings, aliases, parameters, returns and
+casts. Safe functions can become unsafe pointers; the reverse conversion is
+rejected. The additional check runs after native type checking and before
+lowering, borrowing checks and code emission.
 
 An artifact binds its target, crate disambiguator, compiler/runtime identity,
 panic strategy, exported signatures, source locations, and object checksums.
@@ -38,9 +42,13 @@ rustc or another Lustr build is not an interchangeable input.
 
 The producer rejects public contracts that its metadata cannot preserve.
 Examples include `#[must_use]`, `#[deprecated]`, linkage attributes, and
-`#[track_caller]`. The original parser rejects `unsafe`; the importer and
-code generator also reject an artifact carrying an unsafe signature. Storing
-an unsafe bit in the format does not supply unsafe-operation checking.
+`#[track_caller]`. The owned syntax layer consumes supported unsafe grammar
+tokens from the real expanded token stream and retains their original spans,
+AST identities and callable contracts. It does not rewrite input files or
+modify the protected parser. Imported unsafe signatures receive the same
+call-context checks as local unsafe functions. Unsupported aggregate, alias,
+generic and nested function-pointer contracts remain errors. This does not
+implement arbitrary unsafe Rust operations or every Rust lint.
 Library producers requiring live static initialization or generated shared
 glue are also rejected until their cross-crate contracts are implemented.
 Producer crate inner attributes are rejected as well. Declaration provenance
@@ -56,7 +64,14 @@ flags also remain explicit failures.
 The Cargo probes identify the compiler as `lustr-native 0.1.0`, including its
 own build hash and C/TinyCC backend. They do not impersonate rustc or LLVM.
 Cargo manifests with a Rust-version requirement greater than this experimental
-version can reject it. That limitation must not be hidden by a false version.
+version can reject it. BlueFe currently reaches that check after its compiler
+query succeeds. That limitation must not be hidden by a false version.
+
+The exact query options used by BlueFe's bootstrap, including
+`-Zallow-features=`, `-Wrust_2018_idioms` and `-Wunused_lifetimes`, are accepted
+for supported introspection requests. They are still rejected for source
+compilation until their requested feature/lint behavior exists. Query success
+is not a claim that those compilation semantics are implemented.
 
 `--print=file-names` reports binary and native `lib`/`rlib` outputs. It reports
 other crate types as unsupported using Cargo's probe convention. The native
@@ -182,9 +197,13 @@ rejection, and separately timed native/oracle builds.
 library compilation through Cargo, source-hidden consumers, colliding crate
 names, scalar ABI behavior, visibility and type errors, imported overflow
 locations, malformed artifacts, and rebuilds after edits. Its full fixture
-also requires unsafe functions and calls. That fixture remains a failing
-completion gate until native unsafe semantics exist. A separate safe-library
-diagnostic can establish its stated cases without changing that requirement.
+also requires unsafe functions and calls. The expanded gate checks lexical
+unsafe scope, safe/unsafe pointer conversions, shadowing, lint order and
+closure return contracts without removing any original requirement.
+`tools/check-native-unsafe-regressions.py` retains malformed-grammar and
+safety-analysis regressions found during review. `tools/test-native-protocol.py`
+checks the actual BlueFe query and rejects unsupported compilation requests.
+A separate safe-library diagnostic keeps its original scope.
 
 Local builds made with optimization level 1 and LTO disabled are diagnostic
 only. They do not satisfy the recorded package profile. Process tracing is

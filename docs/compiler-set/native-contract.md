@@ -27,7 +27,9 @@ The integration must compose existing Lust-supported code and Lustr's additions
 in the same program. A bounded Cargo entry point now calls the native driver in
 process, with explicit adapters for the requested crate identity and real
 dependency records. Its owned native library format now carries separately
-compiled objects and safe scalar function signatures. Full language support,
+compiled objects and safe/unsafe scalar function signatures. An owned semantic
+check enforces the additional unsafe callable contracts before native lowering.
+Full language support,
 general crate metadata and Rust ABI interoperability remain incomplete.
 Do not replace that work with source keyword guesses, a rustc wrapper, or an
 unproved edit to the upstream compiler.
@@ -53,7 +55,7 @@ optional Cranelift, frontend scheduling and compiler-build experiments are
 separate research; they are not Lustr implementation work.
 
 The native compiler emits C/TinyCC development artifacts. Lustr's first library
-interface emits real relocatable objects and typed native metadata for safe
+interface emits real relocatable objects and typed native metadata for safe/unsafe
 primitive function signatures, with a bodyless-signature importer for binary
 consumers. This is Lustr's native format; Rust metadata interoperability, full
 language support and full standard-library support remain incomplete. These

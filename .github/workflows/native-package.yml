@@ -13,6 +13,8 @@ on:
       - 'tools/qualify-package.py'
       - 'tools/qualify-native-cargo.py'
       - 'tools/qualify-native-library.py'
+      - 'tools/test-native-protocol.py'
+      - 'tools/check-native-unsafe-regressions.py'
       - 'tools/diagnose-native-library-safe.py'
       - 'tools/native-qualification.py'
       - 'tests/native-qualification/**'
@@ -32,6 +34,8 @@ on:
       - 'tools/qualify-package.py'
       - 'tools/qualify-native-cargo.py'
       - 'tools/qualify-native-library.py'
+      - 'tools/test-native-protocol.py'
+      - 'tools/check-native-unsafe-regressions.py'
       - 'tools/diagnose-native-library-safe.py'
       - 'tools/native-qualification.py'
       - 'tests/native-qualification/**'
@@ -88,6 +92,17 @@ jobs:
         run: |
           rustc --edition=2024 --test crates/lustr-native/src/native_artifact.rs -o "$RUNNER_TEMP/native-artifact-tests"
           "$RUNNER_TEMP/native-artifact-tests"
+      - name: Check native compiler metadata queries
+        run: |
+          python3 tools/test-native-protocol.py \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --work "$RUNNER_TEMP/native-protocol-evidence"
+      - name: Check unsafe grammar and callable safety regressions
+        run: |
+          python3 tools/check-native-unsafe-regressions.py \
+            --native "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --oracle "$(rustup which rustc)" \
+            --output "$RUNNER_TEMP/native-unsafe-regression-evidence"
       - name: Retain native dependency sources
         run: cargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"
       - name: Record bounded safe-library diagnostics
@@ -148,6 +163,8 @@ jobs:
             dist/package-qualification.json
             dist/package-qualification-native-library
             ${{ runner.temp }}/native-library-safe-evidence
+            ${{ runner.temp }}/native-protocol-evidence
+            ${{ runner.temp }}/native-unsafe-regression-evidence
             dist/native-qualification
             dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
             ${{ runner.temp }}/native-cargo-build.json

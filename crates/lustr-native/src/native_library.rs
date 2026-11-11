@@ -68,16 +68,32 @@ pub fn artifact_profile(request: &Request) -> Profile {
     }
 }
 
-pub fn compile(request: &Request, session: &mut crate::driver::Session, metadata: Option<&Path>) -> Response {
-    let (mut program, mut response) = match check(request, session) {
-        Ok(checked) => checked,
-        Err(response) => return response,
+pub fn compile(request: &Request, session: &mut crate::driver::Session, metadata: Option<&Path>) -> CompileOutput {
+    let (program, response, safety, expand_deps) = match check(request, session) {
+        Ok((program, response)) => (program, response, crate::native_safety::NativeSafety::default(), Vec::new()),
+        Err(original) => match crate::native_import::collect_extension(request, session) {
+            Ok(Some(imported)) => (imported.program, Response::default(), imported.safety, imported.expand_deps),
+            Ok(None) => return original.into(),
+            Err(response) => return response.into(),
+        },
     };
+    let response = emit_checked_library(request, session, metadata, program, response, &safety);
+    CompileOutput { response, expand_deps, unused_externs: Vec::new() }
+}
+
+fn emit_checked_library(
+    request: &Request,
+    session: &mut crate::driver::Session,
+    metadata: Option<&Path>,
+    mut program: Program,
+    mut response: Response,
+    safety: &crate::native_safety::NativeSafety,
+) -> Response {
     let mut wrote_archive = false;
     let mut wrote_metadata = false;
     let result = (|| {
         let product =
-            crate::native_codegen::emit_library(&mut program, &session.front.map, session.obj_dir(), request.debug, &session.front.client)?;
+            crate::native_codegen::emit_library(&mut program, &session.front.map, session.obj_dir(), request.debug, &session.front.client, safety)?;
         let artifact = NativeArtifact {
             crate_name: request.session.krate.target_name.clone(),
             disambiguator: format!("{:016x}", program.stable_crate.0),
@@ -125,8 +141,32 @@ pub fn compile_imported_binary(
         Ok(imported) => imported,
         Err(response) => return response.into(),
     };
-    let crate::native_import::ImportedProgram { mut program, imports, expand_deps, unused_externs } = imported;
     let dependencies: Vec<NativeArtifact> = dependencies.into_iter().map(|(_, artifact)| artifact).collect();
+    emit_imported_binary(request, session, imported, &dependencies)
+}
+
+/// The unchanged driver remains the first and only path for programs it
+/// accepts. Owned syntax and semantic analysis supply explicit native extensions
+/// after rejection, without executing another compiler or rewriting source.
+pub fn compile_binary(request: &Request, session: &mut crate::driver::Session) -> CompileOutput {
+    let original = crate::driver::compile(request, session);
+    if original.code == 0 {
+        return original.into();
+    }
+    match crate::native_import::collect_extension(request, session) {
+        Ok(Some(imported)) => emit_imported_binary(request, session, imported, &[]),
+        Ok(None) => original.into(),
+        Err(response) => response.into(),
+    }
+}
+
+fn emit_imported_binary(
+    request: &Request,
+    session: &mut crate::driver::Session,
+    imported: crate::native_import::ImportedProgram,
+    dependencies: &[NativeArtifact],
+) -> CompileOutput {
+    let crate::native_import::ImportedProgram { mut program, imports, expand_deps, unused_externs, safety } = imported;
     let result = crate::native_codegen::emit_binary(
         &mut program,
         &session.front.map,
@@ -134,8 +174,9 @@ pub fn compile_imported_binary(
         &request.out,
         request.debug,
         &imports,
-        &dependencies,
+        dependencies,
         &session.front.client,
+        &safety,
     );
     let response = match result {
         Ok(()) => Response::default(),
