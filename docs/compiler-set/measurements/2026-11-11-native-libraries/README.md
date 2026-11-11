@@ -38,8 +38,9 @@ typed metadata, hides producer source, and compiles unchanged consumers using
 their `--extern` artifacts. It covers scalar ABI boundaries, unit values,
 function pointers, cfg behavior, visibility/type/arity/result errors, producer
 overflow locations, malformed and foreign archives, unsupported public
-contracts, and Cargo freshness after body, signature and artifact edits. A root
-export calling a private-module helper remains a positive control.
+contracts, and Cargo freshness after body and signature edits. Malformed and
+foreign artifact inputs are explicitly rejected. A root export calling a
+private-module helper remains a positive control.
 
 The safe suite is supplemental. It always leaves `qualified=false` and
 `full_required_suite_passed=false`; it cannot replace the unsafe requirements
@@ -121,8 +122,9 @@ The [corrected package run](https://github.com/glopyglerky/lustr/actions/runs/43
 at `105b308` rebuilt the optimized compiler, passed the same strict 81-command
 safe suite, assembled the native-only payload and exercised relocation. Its
 [package qualification report](ci/lustr-105/package-qualification.json) records
-207 successful ordinary native Cargo checks, including expected error outcomes
-and existing timing samples. The manifest contains 204 payload entries and
+207 ordinary native Cargo commands completed with their expected results,
+including rejection cases. It also retains the existing timing samples.
+The manifest contains 204 payload entries and
 excludes stock rustc, rustdoc, a Rust sysroot and coordinator executables.
 
 The corrected run then reached the actual required independent-library gate.
@@ -150,9 +152,9 @@ invocations and no stock compiler invocation in the BlueFe build attempt.
 Its target-information probe rejects `-Zallow-features=`, as recorded in the
 [build log](ci/bluefe-94fd/bluefe-native/build.log). The
 [qualification report](ci/bluefe-94fd/bluefe-native/qualification.json) remains
-unsuccessful. Protected source checks pass before and after the attempt. This
-is observed native execution and a retained compiler gap; BlueFe's Rust
-compiler source has not compiled successfully.
+unsuccessful. Protected source checks pass before and after the attempt. Both
+native invocations were compiler queries. The target-information query failed
+before any BlueFe Rust source compilation began.
 
 ## Required CI and unresolved compiler work
 
