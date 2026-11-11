@@ -9,6 +9,9 @@ every proposed Lust divergence requires both necessity and faster-results eviden
 
 The earlier Cargo/rustc coordinator work is transitional compatibility tooling.
 It must remain accurately identified and cannot close native compiler tasks.
+Cargo already selects compilers and toolchains. The native package does not
+build or ship an additional coordinator; the rustc command-line and artifact
+contract must be implemented in the native compiler.
 
 ## Current implementation
 
@@ -19,8 +22,8 @@ It must remain accurately identified and cannot close native compiler tasks.
 | Native libraries and generation | Existing source libraries, adapters and C/TinyCC generation. Missing APIs and semantic support remain native implementation work. |
 | Fast edit path | Existing daemon, query reads, retained state and caches. Every expansion needs warm/cold and edit invalidation checks. |
 | Cargo/crate support | Partial native resolver and whole-target compilation. Native Rust rlib emission and general artifact interoperability remain open. |
-| Full Rust compatibility | Currently supplied by rustc through the separate coordinator. This is not native compiler coverage. |
-| Packaged previews | The [qualified package at `595cdc4`](https://github.com/glopyglerky/lustr/actions/runs/42977250507) contains pristine native Lust with its matching runtime, a coordinator and official Rust 1.99.1 for explicit compatibility. Full native coverage and a native replacement for the rustc command/artifact contract remain open. The earlier `preview-2026.11.09-2` contains no native Lust. |
+| Full Rust compatibility | Supplied by the complete Rust compiler selected directly through Cargo. This is not native Lust coverage. |
+| Packaged previews | The current recipe packages pristine Lust and its matching runtime alongside a complete Rust toolchain, with no coordinator executable. Full native coverage and rustc command/artifact compatibility remain open. Earlier packages at `595cdc4` included a coordinator; `preview-2026.11.09-2` contained no native Lust. |
 
 ## 1. Reproduce native coverage gaps
 
@@ -41,6 +44,13 @@ an external C function, and native rlib emission. Existing generics/traits and
 and borrow cases remain rejected. `tests/native-qualification` and
 `tools/native-qualification.py` preserve these fixtures, compiler identities and
 first failures. They are a starting regression set, not a complete Rust suite.
+
+The broader native regression also reproduces stale whole-request cache results
+when whitespace or comments separate `env!`/include macro names from `!` and an
+external input changes. This bug is present in pinned upstream Lust. The
+[package guide](native-package.md#known-native-cache-limitation) records the
+defect and the performance cost of its explicit workaround. Correctness and
+whole-compiler performance evidence are still required before admitting a fix.
 
 ## 2. Extend the native implementation
 
@@ -92,11 +102,12 @@ Acceptance requires clean installation, offline repeated compilation, actual
 native execution, upgrade/cache invalidation, rollback and every advertised
 host/target. The existing rustc-based preview is not this delivery.
 
-The Linux x86_64 package now passes relocation, native execution, runtime asset
-discovery, payload identity and offline compatibility gates. Direct Lust keeps
-the original compiler bytes and daemon behavior; the optional coordinator has
-measured dispatch overhead. Other hosts, full-project performance and complete
-native coverage remain separate requirements.
+The Linux x86_64 package gates cover relocation, native execution, runtime asset
+discovery, payload identity and offline compatibility. Direct Lust keeps the
+original compiler bytes and daemon behavior. The earlier coordinator's measured
+dispatch overhead is removed by excluding it from the product and using Cargo's
+existing selection. Other hosts, full-project performance and complete native
+coverage remain separate requirements.
 
 ## 6. Establish full-project speed
 

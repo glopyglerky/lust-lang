@@ -29,8 +29,8 @@ def require(condition: bool, message: str) -> None:
 def clean_environment(package: Path, scratch: Path) -> dict[str, str]:
     environment = dict(os.environ)
     for name in list(environment):
-        if name.startswith(("CARGO_", "RUST", "LUST_", "LUSTR_")) or name in {
-            "CARGO", "LUSTC", "LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES"
+        if name.startswith(("CARGO_", "RUST", "LUST_", "LUSTR_", "LD_", "DYLD_")) or name in {
+            "CARGO", "LUSTC", "LIBPATH", "SHLIB_PATH", "LDR_PRELOAD"
         }:
             environment.pop(name)
     environment.update({
@@ -69,6 +69,7 @@ def main() -> None:
         "schema": "lustr.package-qualification", "schema_version": 1,
         "runner_sha256": digest(Path(__file__).resolve()),
         "native_full_rust": False, "full_native_speed_qualified": False,
+        "runtime_coordinator": False,
         "platform": platform.platform(), "cpu_count": os.cpu_count(),
         "source_revision": None, "commands": [], "timings": [],
         "checks": [], "success": False,
@@ -117,6 +118,11 @@ def main() -> None:
             report["source_revision"] = manifest["source_revision"]
             require(manifest["schema"] == "lustr.toolchain-package" and manifest["schema_version"] == 1, "unsupported package schema")
             require(manifest["native_lust"] is True and manifest["native_full_rust"] is False, "incorrect package coverage claims")
+            require(manifest.get("runtime_coordinator") is False, "package must use Cargo selection without a coordinator")
+            for name in ("lustr", "cargo-lustr", "cargo-lust"):
+                path = package / "bin" / name
+                require(not path.exists() and not path.is_symlink(), "unexpected coordinator in package: " + name)
+            report["checks"].append("no coordinator executable in the package")
             for entry in manifest["payload"]:
                 path = package / entry["path"]
                 if "symlink" in entry:
@@ -139,7 +145,7 @@ def main() -> None:
                 path.rename(hidden)
                 hidden_sources.append((path, hidden))
             report["compiler_identities"] = {}
-            for name in ("rustc", "cargo", "lust"):
+            for name in ("rustc", "rustdoc", "cargo", "lust"):
                 version = execute(f"{name}-identity", [package / "bin" / name, "--version"])
                 report["compiler_identities"][name] = version.stdout.decode().strip()
             reported_root = execute("relocated-sysroot", [package / "bin/rustc", "--print", "sysroot"])
@@ -151,7 +157,7 @@ def main() -> None:
             cold = dict(environment, LUST_NO_DAEMON="1", LUST_NO_CACHE="1",
                         LUST_CACHE_DIR=str(scratch / "cold-cache"))
             built = scratch / "native-output"
-            execute("native-build", [package / "bin/lustr", "--engine", "lust", "build", source, "-o", built], cold)
+            execute("native-build", [package / "bin/lust", "build", source, "-o", built], cold)
             result = execute("native-run", [built])
             require(result.stdout == b"42\n", "native runtime output differs")
             report["checks"].append("installed native compile and actual executable output")
@@ -159,30 +165,40 @@ def main() -> None:
             library_source = scratch / "read-library.rs"
             library_source.write_text('fn main() { let text = std::fs::read_to_string("input.txt").unwrap(); println!("{}", text); }\n')
             library_binary = scratch / "read-library"
-            execute("native-library-build", [package / "bin/lustr", "--engine", "lust", "build", library_source, "-o", library_binary], cold)
+            execute("native-library-build", [package / "bin/lust", "build", library_source, "-o", library_binary], cold)
             result = execute("native-library-run", [library_binary])
             require(result.stdout == b"packaged library works\n", "packaged source library did not preserve filesystem behavior")
             report["checks"].append("native filesystem operation through relocated library assets")
             unsupported = repository / "crates/lustr/fixtures/subset/unsupported.rs"
-            result = execute("native-unsupported", [package / "bin/lustr", "--engine", "lust", "check", unsupported], cold, None)
+            result = execute("native-unsupported", [package / "bin/lust", "check", unsupported], cold, None)
             require(result.returncode == 1 and b"error[L0405]" in result.stderr, "native unsupported case did not reject cleanly")
             invalid = scratch / "invalid.rs"
             invalid.write_text('fn main() { let value: u32 = "wrong"; println!("{}", value); }\n')
-            result = execute("native-invalid", [package / "bin/lustr", "--engine", "lust", "check", invalid], cold, None)
+            result = execute("native-invalid", [package / "bin/lust", "check", invalid], cold, None)
             require(result.returncode == 1 and b"error[L0110]" in result.stderr, "native type error did not reject cleanly")
             report["checks"].append("native unsupported and invalid input remain failures")
             full = scratch / "full Rust workspace"
             shutil.copytree(repository / "crates/lustr/fixtures/full-rust", full, ignore=shutil.ignore_patterns("target"))
-            compatibility = [package / "bin/lustr", "--engine", "rustc"]
+            compatibility = [package / "bin/cargo"]
+            compatibility_environment = dict(environment, RUSTC=str(package / "bin/rustc"),
+                                             RUSTDOC=str(package / "bin/rustdoc"))
+            report["compiler_selection"] = {
+                "cargo": str(package / "bin/cargo"),
+                "rustc": compatibility_environment["RUSTC"],
+                "rustdoc": compatibility_environment["RUSTDOC"],
+                "mechanism": "Cargo RUSTC/RUSTDOC environment selection",
+            }
             result = execute("compatibility-run", compatibility + ["run", "--offline", "--locked", "--quiet", "-p", "fixture-app",
-                                                                     "--", "two words"], cwd=full)
+                                                                     "--", "two words"], compatibility_environment, cwd=full)
             expected = b"derived=41 generated=7 async=42 raw=19 gat=13 const=15 ffi=21 body=42 probe=41 panic=1 drops=1\nargument=two words\n"
             require(result.stdout == expected, "compatibility workspace runtime output differs")
-            result = execute("compatibility-tests", compatibility + ["test", "--offline", "--locked", "--workspace"], cwd=full)
+            result = execute("compatibility-tests", compatibility + ["test", "--offline", "--locked", "--workspace"],
+                             compatibility_environment, cwd=full)
             require(b"features_keep_their_rust_semantics" in result.stdout and b"body_probe" in result.stdout, "expected unit test and doctest did not execute")
             invalid_full = scratch / "invalid Rust workspace"
             shutil.copytree(repository / "crates/lustr/fixtures/invalid-borrow", invalid_full, ignore=shutil.ignore_patterns("target"))
-            result = execute("compatibility-rejection", compatibility + ["check", "--offline", "--locked"], expected=None, cwd=invalid_full)
+            result = execute("compatibility-rejection", compatibility + ["check", "--offline", "--locked"],
+                             compatibility_environment, expected=None, cwd=invalid_full)
             require(result.returncode == 101 and b"E0502" in result.stderr, "compatibility borrow error did not reject cleanly")
             report["checks"].append("offline full-Rust compatibility workspace, proc macro, build script, panic/drop, tests, doctests and borrow rejection")
             for original_source, hidden_source in reversed(hidden_sources):
@@ -192,7 +208,6 @@ def main() -> None:
             lanes = {
                 "pristine": [baseline],
                 "packaged_native": [package / "bin/lust"],
-                "packaged_lustr": [package / "bin/lustr", "--engine", "lust"],
             }
             for mode in ("process-cold", "daemon-noop", "daemon-body-edit"):
                 environments = {}
@@ -224,7 +239,7 @@ def main() -> None:
                     if mode == "daemon-body-edit":
                         source.write_text(fixture_source(expected_answer))
                     order = list(lanes)
-                    order = order[sample % 3:] + order[:sample % 3]
+                    order = order[sample % len(order):] + order[:sample % len(order)]
                     for lane in order:
                         binary = scratch / f"{lane}-bench"
                         execute(f"{mode}-{lane}-{sample}", lanes[lane] + ["build", source, "-o", binary], environments[lane])

@@ -8,6 +8,14 @@ Keep upstream Lust unchanged and supply full Rust support through Lustr-owned na
 
 The [native compiler contract](native-contract.md) and [upstream preservation policy](upstream-lust.md) are authoritative. No Lust divergence is admitted without demonstrated necessity and faster results. The existing Cargo coordinator obtains compatibility through rustc and does not replace its frontend. Cranelift and rustc build tuning are compatibility research. They do not implement full native Lustr coverage, and their speed measurements cannot be transferred to the native compiler.
 
+Cargo already selects compilers and toolchains. The native package therefore
+contains no additional coordinator. Its native compiler runs directly; its
+complete Rust compatibility compiler is selected through Cargo's existing
+`RUSTC`/`RUSTDOC` or installed toolchain configuration. Lustr must implement the
+rustc command-line and artifact contract itself before Cargo can use it as the
+native replacement. The coordinator sections below describe retained earlier
+research, outside the current product build path.
+
 ## Decision
 
 The required execution paths are:

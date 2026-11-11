@@ -45,10 +45,8 @@ Use --profile check for metadata checking. Cargo still selects project flags,
 wrappers, features and dependencies. Other commands are rejected in this mode;
 no workspace-wide Rust flag or wrapper configuration is replaced.
 
-No toolchains are installed automatically. A relocatable package selects its
-bundled Cargo/rustc when no explicit toolchain or tool override is supplied.
-An ordinary coordinator installation preserves the existing tool selection.
-No compilation or program is retried after failure. The coordinator does not change panic, features, target,
+No toolchains are installed or selected automatically. No compilation or program
+is retried after failure. The coordinator does not change panic, features, target,
 optimization, source, dependency versions, configuration files or Rust flags
 except the explicitly requested frontend job options above.
 Cranelift selection uses command-scoped Cargo --config arguments, so nested Cargo
@@ -68,17 +66,15 @@ The lustr, cargo-lustr, and cargo-lust executables use the same coordinator.
 It preserves arguments, flags, profiles and compiler wrappers, installs nothing,
 and cannot be combined with +toolchain or --engine lust. Plans run no probes;
 doctor reports availability rather than semantic or backend qualification.
-Packaged discovery requires lustr-toolchain.json beside bin and selects paths
-relative to the running executable. This marker identifies a package; it does not
-certify native Rust coverage or performance. +toolchain, --bluefe-root, LUST_CARGO,
-RUSTC, RUSTDOC, RUSTUP_TOOLCHAIN, and a different CARGO preserve explicit selection.
-Native Lust uses its existing sibling executable and runtime discovery unchanged.
 ";
 
 /// Shared command entry point for the direct and both Cargo extension names.
 /// Cargo adds its subcommand name to argv; remove only that leading name.
 pub fn run_cli(args: &[OsString]) -> i32 {
     let args = if args.first().is_some_and(|arg| arg == "lust" || arg == "lustr") { &args[1..] } else { args };
+    if args == [OsString::from("doctor")] {
+        return doctor::run();
+    }
     run(args)
 }
 
@@ -524,7 +520,7 @@ fn string_json(value: &str) -> String {
 }
 
 pub fn run(args: &[OsString]) -> i32 {
-    let mut request = match parse(args) {
+    let request = match parse(args) {
         Ok(Action::Help) => {
             print!("{HELP}");
             return 0;
@@ -539,17 +535,6 @@ pub fn run(args: &[OsString]) -> i32 {
             return 2;
         }
     };
-    if request.bluefe_root.is_none() && request.toolchain.is_none() && request.engine != Engine::Lust {
-        if let Some(root) = toolchain::packaged_root() {
-            if let Some(name) = std::env::var_os("RUSTUP_TOOLCHAIN") {
-                let mut selector = OsString::from("+");
-                selector.push(name);
-                request.toolchain = Some(selector);
-            } else {
-                request.bluefe_root = Some(root);
-            }
-        }
-    }
     if !request.explain {
         if let Some(root) = &request.bluefe_root {
             if let Err(error) = toolchain::validate(root) {
@@ -558,7 +543,7 @@ pub fn run(args: &[OsString]) -> i32 {
             }
         }
         if request.args == [OsString::from("doctor")] {
-            return doctor::run_for_root(request.bluefe_root.as_deref(), request.toolchain.as_deref());
+            return doctor::run_for_root(request.bluefe_root.as_deref());
         }
     }
     let plan = match plan(&request, Programs::from_environment()) {

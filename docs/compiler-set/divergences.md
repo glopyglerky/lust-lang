@@ -23,7 +23,8 @@ a different compiler configuration does not supply that evidence.
 
 ## Lustr-owned implementation
 
-`crates/lustr` is the transitional coordinator. Its build has no registry or C
+`crates/lustr` retains the historical coordinator. It is not built or shipped by
+the native package; Cargo owns compiler and toolchain selection. Its own build has no registry or C
 build dependencies, and its Rust source forbids unsafe code. The automatic
 route uses Cargo/rustc; explicit Lust selection invokes a whole native target.
 Command-scoped backend settings, explicit BlueFe selection, and the compatibility

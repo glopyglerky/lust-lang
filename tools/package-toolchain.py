@@ -108,7 +108,6 @@ def main() -> None:
     parser.add_argument("--repository", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--native-bin", type=Path, required=True)
-    parser.add_argument("--coordinator-bin", type=Path, required=True)
     parser.add_argument("--rust-root", type=Path, required=True)
     parser.add_argument("--vendor-dir", type=Path, required=True)
     parser.add_argument("--tcc-root", type=Path)
@@ -125,7 +124,7 @@ def main() -> None:
     tinycc = (args.tinycc_source or native / "third_party/tinycc").resolve()
     if output.exists():
         parser.error("output must be a new directory")
-    input_roots = [rust_root, args.native_bin.resolve(), args.coordinator_bin.resolve(), args.vendor_dir.resolve(), tcc, tinycc, native, repository / ".git"]
+    input_roots = [rust_root, args.native_bin.resolve(), args.vendor_dir.resolve(), tcc, tinycc, native, repository / ".git"]
     if any(output.is_relative_to(path) or path.is_relative_to(output) for path in input_roots):
         parser.error("output must not overlap an input or protected source directory")
     if output.is_relative_to(repository) and output.relative_to(repository).parts[0] != "dist":
@@ -139,6 +138,10 @@ def main() -> None:
         raise ValueError("native compiler does not match the pinned upstream tree")
     if run(["git", "status", "--porcelain=v1", "--untracked-files=all"], repository):
         raise ValueError("commit implementation and packaging inputs before binding the package to HEAD")
+    for name in ("lustr", "cargo-lustr", "cargo-lust"):
+        path = rust_root / "bin" / name
+        if path.exists() or path.is_symlink():
+            raise ValueError(f"compatibility input contains an excluded coordinator executable: {path}")
     if run([rust_root / "bin/rustc", "--print", "sysroot"]) != str(rust_root):
         raise ValueError("--rust-root must name the actual compiler sysroot, not a rustup proxy")
     compiler_version = run([rust_root / "bin/rustc", "-vV"])
@@ -152,8 +155,6 @@ def main() -> None:
     if run(["git", "diff", "--name-only", "HEAD"], tinycc):
         raise ValueError("TinyCC tracked source differs from its recorded revision")
     shutil.copytree(rust_root, output, symlinks=True)
-    for name in ("lustr", "cargo-lustr", "cargo-lust"):
-        copy_executable(args.coordinator_bin / name, output / "bin" / name)
     for name in ("lust", "lust-core"):
         copy_executable(args.native_bin / name, output / "bin" / name)
     support = output / "lib/lust"
@@ -178,6 +179,20 @@ def main() -> None:
     archive_directory(args.vendor_dir, source / "vendor.tar.gz")
     shutil.copy2(repository / "docs/compiler-set/native-package.md", output / "LUSTR-README.md")
     check_symlinks(output)
+    system_requirements = [
+        "Linux x86_64; qualified on Ubuntu 24.04",
+        "C development headers and linker",
+    ]
+    if args.compatibility_origin == "bluefe":
+        system_requirements.extend([
+            "glibc 2.39 or newer, including the x86_64 ELF loader",
+            "libstdc++.so.6 providing GLIBCXX_3.4.32 and libgcc_s.so.1",
+            "OpenSSL 3 runtime: libssl.so.3 and libcrypto.so.3",
+            "libcurl.so.4 and libz.so.1, with their distribution dependencies",
+            "CA certificates for Cargo HTTPS registry and Git access",
+        ])
+    else:
+        system_requirements.append("glibc compatible with Ubuntu 24.04")
     manifest = {
         "schema": "lustr.toolchain-package",
         "schema_version": 1,
@@ -185,6 +200,7 @@ def main() -> None:
         "source_revision": revision,
         "native_lust": True,
         "native_full_rust": False,
+        "runtime_coordinator": False,
         "rust_compatibility": args.compatibility_origin,
         "rust_compatibility_provenance": compatibility,
         "rustc_verbose_version": compiler_version,
@@ -195,7 +211,22 @@ def main() -> None:
         "native_version": run([output / "bin/lust", "--version"]),
         "native_profile": "release",
         "qualification": "separate package-qualification.json and native-qualification evidence",
-        "system_requirements": ["Linux x86_64", "glibc compatible with Ubuntu 24.04", "C development headers and linker"],
+        "system_requirements": system_requirements,
+        "known_limitations": [{
+            "id": "native-external-input-cache-invalidation",
+            "status": "unfixed-in-pinned-upstream",
+            "lust_revision": pin["revision"],
+            "affected_macros": ["env", "option_env", "include", "include_str", "include_bytes"],
+            "trigger": "whitespace or comments between the macro name and ! can evade the whole-request cache guard",
+            "impact": "a native invocation can reuse stale results after an environment variable or included file changes",
+            "source": "compiler/native/src/driver/cache.rs::src_reads_outside",
+            "regression_test": "actual_lust_invalidates_external_reads_with_comments_before_macro_bang",
+            "workaround": {
+                "scope": "only the affected native invocation; package defaults remain unchanged",
+                "environment": {"LUST_NO_DAEMON": "1", "LUST_NO_CACHE": "1"},
+                "performance_cost": "disables daemon reuse and disk cache reuse; warm native latency is not preserved",
+            },
+        }],
         "payload": [],
     }
     for path in sorted(output.rglob("*")):

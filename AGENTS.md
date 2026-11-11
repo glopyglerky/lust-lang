@@ -22,6 +22,13 @@ README, source map, decisions and divergence records about this fork's actual
 behavior. Preserve required upstream compatibility, licensing and source history.
 Do not claim complete native Rust or whole-toolchain memory safety prematurely.
 
+Cargo already owns compiler and toolchain selection. The user's latest direction
+removes an additional coordinator from the native product path. Do not build or
+ship `lustr`, `cargo-lustr` or `cargo-lust` coordinator executables in the native
+package. Use direct Lust and Cargo's standard compiler selection. Implement the
+rustc command-line and artifact contract in the native compiler before selecting
+it as Cargo's full replacement; a launcher does not supply that missing support.
+
 ## Product contract
 
 Follow [the native compiler contract](docs/compiler-set/native-contract.md).

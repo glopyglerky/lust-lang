@@ -26,6 +26,12 @@ in the same program. Its native extension interface is not implemented yet.
 Do not replace that work with source keyword guesses, a rustc wrapper, or an
 unproved edit to the upstream compiler.
 
+Cargo owns compiler and toolchain selection. The native product must not add a
+coordinator process around it. Implement the required rustc command-line,
+metadata and artifact behavior in Lustr itself. Until that exists, native Lust
+remains a direct whole-target command and full Rust compatibility uses Cargo
+with the selected complete Rust compiler.
+
 ## Transitional components
 
 The current `crates/lustr` coordinator's `auto` mode selects Cargo/rustc.
@@ -33,8 +39,9 @@ The published `preview-2026.11.09-2` packages contain no native Lust compiler.
 Their full Rust support and performance evidence belong to the rustc
 compatibility path. They do not satisfy this native compiler requirement.
 
-Keep existing compatibility tools usable while the replacement is developed.
-Their fallback must be explicit and must not count as native language coverage,
+Retain earlier compatibility research while the replacement is developed; its
+coordinator is not built or shipped by the native package. Compatibility use
+must be explicit and must not count as native language coverage,
 native acceleration, or project completion. rustc remains useful as a bootstrap
 compiler and a differential oracle. Its optional Cranelift, frontend scheduling
 and compiler-build experiments are separate research.
