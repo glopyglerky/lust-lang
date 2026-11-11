@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+const TOOLCHAIN_ROOT: &str = if cfg!(windows) { r"C:\not installed toolchain" } else { "/not installed toolchain" };
+
 fn words(input: &[&str]) -> Vec<OsString> {
     input.iter().map(OsString::from).collect()
 }
@@ -21,7 +23,7 @@ fn programs() -> cargo_lust::Programs {
 fn frontend_plan_preserves_cargo_and_compiler_argument_boundaries() {
     let input = request(&[
         "--bluefe-root",
-        "/not installed toolchain",
+        TOOLCHAIN_ROOT,
         "--frontend-jobs",
         "4",
         "rustc",
@@ -57,22 +59,22 @@ fn frontend_plan_preserves_cargo_and_compiler_argument_boundaries() {
 #[test]
 fn frontend_option_requires_explicit_toolchain_and_target_command() {
     for input in [
-        vec!["--bluefe-root", "/abs", "--frontend-jobs", "0", "rustc"],
-        vec!["--bluefe-root", "/abs", "--frontend-jobs=-1", "rustc"],
-        vec!["--bluefe-root", "/abs", "--frontend-jobs"],
+        vec!["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs", "0", "rustc"],
+        vec!["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=-1", "rustc"],
+        vec!["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs"],
         vec!["--frontend-jobs", "4", "rustc"],
-        vec!["--bluefe-root", "/abs", "--frontend-jobs=4", "check"],
-        vec!["--bluefe-root", "/abs", "--frontend-jobs=4", "--engine", "cranelift", "rustc"],
-        vec!["--bluefe-root", "/abs", "--frontend-jobs=4", "--frontend-jobs=2", "rustc"],
+        vec!["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=4", "check"],
+        vec!["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=4", "--engine", "cranelift", "rustc"],
+        vec!["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=4", "--frontend-jobs=2", "rustc"],
     ] {
         assert!(cargo_lust::parse(&words(&input)).is_err(), "{input:?}");
     }
     for flags in [vec!["--jobs-frontend=2"], vec!["--jobs-frontend", "2"], vec!["-Zthreads=2"], vec!["-Z", "threads=2"]] {
-        let mut input = vec!["--bluefe-root", "/abs", "--frontend-jobs=4", "rustc", "--"];
+        let mut input = vec!["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=4", "rustc", "--"];
         input.extend(flags);
         assert!(cargo_lust::parse(&words(&input)).is_err(), "{input:?}");
     }
-    let mut forged = request(&["--bluefe-root", "/abs", "rustc"]);
+    let mut forged = request(&["--bluefe-root", TOOLCHAIN_ROOT, "rustc"]);
     forged.frontend_jobs = Some(0);
     assert!(cargo_lust::plan(&forged, programs()).is_err());
 }
@@ -80,13 +82,13 @@ fn frontend_option_requires_explicit_toolchain_and_target_command() {
 #[test]
 fn frontend_plan_is_pure_and_inserts_only_one_argument_boundary() {
     let selected = cargo_lust::plan(
-        &request(&["--bluefe-root", "/not installed toolchain", "--frontend-jobs=1", "rustc", "--profile", "check"]),
+        &request(&["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=1", "rustc", "--profile", "check"]),
         programs(),
     )
     .unwrap();
     assert_eq!(selected.args, words(&["rustc", "--profile", "check", "--", "-Zunstable-options", "--jobs-frontend=1"]));
     let output = Command::new(env!("CARGO_BIN_EXE_lustr"))
-        .args(["--bluefe-root", "/not installed toolchain", "--frontend-jobs=4", "plan", "rustc", "--lib"])
+        .args(["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=4", "plan", "rustc", "--lib"])
         .output()
         .unwrap();
     assert!(output.status.success());
@@ -103,7 +105,7 @@ fn frontend_preserves_every_nonzero_argument_byte() {
     use std::os::unix::ffi::OsStringExt;
     for byte in 1..=255 {
         let argument = OsString::from_vec(vec![b'x', byte, b'y']);
-        let mut input = words(&["--bluefe-root", "/abs", "--frontend-jobs=4", "rustc", "--"]);
+        let mut input = words(&["--bluefe-root", TOOLCHAIN_ROOT, "--frontend-jobs=4", "rustc", "--"]);
         input.push(argument.clone());
         let cargo_lust::Action::Execute(request) = cargo_lust::parse(&input).unwrap() else { panic!() };
         let plan = cargo_lust::plan(&request, programs()).unwrap();
