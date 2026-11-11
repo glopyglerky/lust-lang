@@ -6,15 +6,17 @@ full Rust compatibility compiler as the project's implementation.
 
 ## Required behavior
 
-Lust is the starting compiler and must remain unchanged from its pinned upstream
-source. Everything it already supports must use Lust. Lustr-owned code must
-supply the remaining Rust language, library and crate behavior through qualified
-interfaces to that baseline. blueFe delivers the combined compiler.
+Lust is the starting compiler. Preserve its upstream provenance and the working
+Lustr fixes maintained in this fork. Everything it already supports must retain
+its native path. Lustr-owned code supplies the remaining Rust language, library
+and crate behavior through qualified interfaces. blueFe delivers the combined
+compiler.
 
-The [upstream preservation policy](upstream-lust.md) requires both necessity and
-faster-results evidence for every proposed Lust divergence. No exception is
-currently admitted. Changing or renaming a copied Lust implementation, or
-applying an unrecorded generated patch, does not satisfy this rule.
+The [source preservation policy](upstream-lust.md) records upstream and fork
+identities separately. Review native changes with regression evidence and update
+the accepted fork pin together with their record. Correctness repairs may change
+upstream-derived files without proving an unrelated speedup. Keep performance
+claims tied to measured equivalent work, and do not hide generated patches.
 
 The intended result accepts unchanged full Rust projects while retaining and
 extending Lust's fast development compilation. Full language coverage and
@@ -50,8 +52,8 @@ Rust library metadata and ABI compatibility.
 - First reproduce valid Rust rejected by native Lust, or a native behavior
   differing from rustc. Preserve the source and first failure.
 - Implement the expansion in Lustr-owned code. Do not change the application to
-  avoid the feature or route its acceptance through rustc. Any necessary Lust
-  patch must first pass the separate necessity and faster-results admission gate.
+  avoid the feature or route its acceptance through rustc. Record necessary
+  changes to upstream-derived code with their tests and source provenance.
 - Check native compilation, emitted artifacts and runtime results against the
   oracle. Retain invalid-program rejection, ownership, panic and drop checks.
 - Test mixed programs containing existing and new native features. Check warm

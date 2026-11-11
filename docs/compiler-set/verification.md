@@ -2,11 +2,11 @@
 
 Verification date: 2026-11-08.
 
-Current source policy: `compiler/native` has since been restored to the complete
-[pinned upstream tree](upstream-lust.md). Earlier fork overrides and experimental
-coverage changes are excluded from that baseline. The results below retain their
-original source/configuration scope; they do not qualify the restoration or the
-required full Lustr replacement. The rustc-based preview does not include Lust.
+Current source policy: `compiler/native` preserves upstream provenance and the
+maintained fork fixes described in the [recovery record](upstream-lust.md).
+The results below retain their original source/configuration scope; they do not
+qualify an unexecuted new build or the required full Lustr replacement. The
+rustc-based preview does not include Lust.
 
 ## What this establishes
 

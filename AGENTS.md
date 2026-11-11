@@ -9,12 +9,15 @@ blueFe delivers the combined toolchain. A coordinator that forwards full Rust
 to rustc and rustc build tuning do not complete this requirement. Migration
 toward memory-safe Rust remains a separate, later optimization goal.
 
-`compiler/native` is the exact upstream Lust baseline, not an unrestricted
-Lustr editing area. Keep its complete tracked tree identical to `upstream/lust.pin`.
-Lustr-owned expansion, fixtures and helpers belong outside that tree. No generated
-overlay, vendored copy rename or build-time patch may conceal a Lust divergence.
-Any proposed Lust change needs both a reproducible necessity case and faster
-equivalent-workload results before admission. Correctness tests alone are insufficient.
+`compiler/native` contains upstream Lust with maintained Lustr fixes. Preserve
+both upstream provenance and the fork's working implementation. Never replace
+fork source with a pristine upstream tree merely to satisfy a source check.
+`upstream/lust.pin` records the upstream tree separately from the accepted fork
+tree. Reviewed compiler changes are allowed: update that fork tree pin and the
+[change record](docs/compiler-set/upstream-lust.md) in the same commit, retaining
+regression evidence. Correctness repairs do not require an unrelated speedup.
+Measure performance changes separately and retain failures. Unrecorded generated
+patches must not conceal divergences.
 The current root Cargo workspace builds the transitional coordinator in
 `crates/lustr`; do not mistake that layout for completed native coverage. The
 optional pinned semantic driver is `crates/lustr-semantic`. Keep the primary
@@ -25,8 +28,8 @@ Do not claim complete native Rust or whole-toolchain memory safety prematurely.
 ## Product contract
 
 Follow [the native compiler contract](docs/compiler-set/native-contract.md).
-Use unchanged upstream Lust for its supported code and implement missing support
-in Lustr-owned code through explicit, qualified interfaces. Preserve accepted behavior and differential testing
+Use the maintained native Lust/Lustr compiler for its supported code and implement
+missing support through explicit, qualified interfaces. Preserve accepted behavior and differential testing
 discipline. Added features must execute through native compilation, with actual
 runtime and rejection evidence. Do not rewrite applications into the subset,
 disable required checks, or count a rustc fallback as native feature support.

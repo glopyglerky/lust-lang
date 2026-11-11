@@ -1,5 +1,7 @@
-# Exact upstream source baseline. No Lust divergences are admitted.
+# Upstream provenance and separately reviewed native fork tree.
+# Update tree with reviewed native changes and the record in docs/compiler-set/upstream-lust.md.
 repository = "https://github.com/t3dotgg/lust-lang"
 revision = "240e08d91d4aed0299639f6f11fd522912b248f9"
-tree = "0ab1b09815802894e6078de0af59273cbdf46cb0"
+upstream_tree = "0ab1b09815802894e6078de0af59273cbdf46cb0"
+tree = "5a1e07fd605e1267c16e9f293691e470e6840107"
 path = "compiler/native"

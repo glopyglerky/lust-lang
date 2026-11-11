@@ -4,16 +4,17 @@ Lustr is being developed to extend the native [Lust compiler](https://github.com
 to full Rust while retaining its fast frontend, incremental daemon and
 development code generation. blueFe is the toolchain integration project.
 
-Existing Lust-supported code must use unchanged upstream Lust. Lustr must supply
+Existing Lust-supported code must retain its native compilation path. Lustr must supply
 the missing Rust language, library and crate support in its own code. Full, unchanged Rust
 projects with measured fast compilation are the requirement. Forwarding them to
 rustc does not satisfy it. See the [native compiler contract](docs/compiler-set/native-contract.md).
 
 Full native Rust coverage and the Lustr expansion interface are incomplete.
-`compiler/native` is the unchanged upstream Lust source, pinned by
-[`upstream/lust.pin`](upstream/lust.pin). Lustr-owned expansion belongs outside
-that baseline. No Lust divergence is admitted. Any exception must demonstrate
-both necessity and faster results under the [upstream preservation policy](docs/compiler-set/upstream-lust.md).
+`compiler/native` contains the upstream Lust source and maintained Lustr fixes.
+[`upstream/lust.pin`](upstream/lust.pin) records upstream provenance separately
+from the accepted fork tree. The [preservation and recovery record](docs/compiler-set/upstream-lust.md)
+explains the restored startup, FFI, build-script and cache fixes. Reviewed native
+changes remain allowed; restoring a pristine upstream tree must not erase them.
 The current root Cargo workspace still builds the separate
 compatibility coordinator. That workspace and the published rustc-based previews
 are transitional tools, not the completed native compiler.
@@ -88,9 +89,9 @@ cargo install --path crates/lustr --locked
 
 | Path | Responsibility |
 | --- | --- |
-| `compiler/native` | Exact pinned upstream Lust source, including its native compiler, libraries, TinyCC integration and differential fixtures. No Lustr-owned edits are admitted here. |
+| `compiler/native` | Upstream native compiler, libraries, TinyCC integration and differential fixtures, with recorded Lustr fixes. |
 | `crates/lustr` | Transitional Cargo/rustc coordinator, BlueFe tool selection and compatibility qualification. |
-| `upstream/lust.pin` and `tools/lust-upstream-check.rs` | Upstream revision/tree identity and the Rust source-preservation guard. |
+| `upstream/lust.pin` and `tools/lust-upstream-check.rs` | Upstream provenance, accepted fork-tree identity and a guard against unrecorded source loss or drift. |
 | `crates/lustr-semantic` | Optional version-pinned rustc inspection. It exports inspection data, not executable MIR. |
 | `crates/lustr-bench` | Standalone paired benchmark runner and correctness gates. It is outside the coordinator workspace. |
 | `docs/compiler-set` | Current design, decisions, divergence records, measured evidence and future work. |

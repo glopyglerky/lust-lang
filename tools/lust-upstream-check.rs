@@ -3,6 +3,7 @@ use std::process::Command;
 
 struct Pin {
     revision: String,
+    upstream_tree: String,
     tree: String,
     path: String,
 }
@@ -20,25 +21,26 @@ fn pin() -> Result<Pin, String> {
             return Err("duplicate upstream pin field".into());
         }
     }
-    if values.len() != 4 || values.get("repository") != Some(&"https://github.com/t3dotgg/lust-lang") {
+    if values.len() != 5 || values.get("repository") != Some(&"https://github.com/t3dotgg/lust-lang") {
         return Err("unexpected upstream pin fields or repository".into());
     }
     let revision = values.get("revision").ok_or("missing upstream revision")?.to_string();
-    let tree = values.get("tree").ok_or("missing upstream tree")?.to_string();
+    let upstream_tree = values.get("upstream_tree").ok_or("missing upstream tree")?.to_string();
+    let tree = values.get("tree").ok_or("missing accepted fork tree")?.to_string();
     let path = values.get("path").ok_or("missing upstream path")?.to_string();
-    if [&revision, &tree].iter().any(|value| value.len() != 40 || !value.bytes().all(|byte| byte.is_ascii_hexdigit()))
+    if [&revision, &upstream_tree, &tree].iter().any(|value| value.len() != 40 || !value.bytes().all(|byte| byte.is_ascii_hexdigit()))
         || path.is_empty()
         || !Path::new(&path).components().all(|component| matches!(component, Component::Normal(_)))
     {
         return Err("invalid upstream object identity or path".into());
     }
-    Ok(Pin { revision, tree, path })
+    Ok(Pin { revision, upstream_tree, tree, path })
 }
 
 fn git(repo: &Path, args: &[&str]) -> Result<Vec<u8>, String> {
     let output = Command::new("git").arg("-C").arg(repo).args(args).output().map_err(|error| format!("cannot execute Git: {error}"))?;
     if !output.status.success() {
-        return Err("upstream source check failed; inspect the scoped Git diff and retain any unique changes outside Lust".into());
+        return Err("native source check failed; inspect the scoped Git diff and preserve both upstream source and fork changes".into());
     }
     Ok(output.stdout)
 }
@@ -51,7 +53,7 @@ fn check(repo: &Path, pin: &Pin, index: bool) -> Result<(), String> {
     };
     if tree.strip_suffix(b"\n").unwrap_or(&tree) != pin.tree.as_bytes() {
         return Err(
-            "Lust differs from its pinned upstream tree; no divergence is admitted without necessity and faster-results evidence".into()
+            "native source differs from the accepted fork tree; preserve working fixes and record reviewed changes with a pin update".into()
         );
     }
     git(
@@ -62,7 +64,7 @@ fn check(repo: &Path, pin: &Pin, index: bool) -> Result<(), String> {
         git(repo, &["diff", "--cached", "--no-ext-diff", "--ignore-submodules=none", "--quiet", "--exit-code", "HEAD", "--", &pin.path])?;
     }
     if !git(repo, &["ls-files", "--others", "--exclude-standard", "-z", "--", &pin.path])?.is_empty() {
-        return Err("untracked files in the Lust source tree; keep Lustr-owned additions outside the upstream baseline".into());
+        return Err("untracked files in the native source tree; review and record intentional additions before updating the fork pin".into());
     }
     Ok(())
 }
@@ -79,7 +81,10 @@ fn main() {
     };
     let result = pin().and_then(|pin| {
         check(Path::new("."), &pin, index)?;
-        println!("Lust tracked source matches upstream {}; no divergences admitted", pin.revision);
+        println!(
+            "Native source matches accepted fork tree {}; upstream {} has tree {}",
+            pin.tree, pin.revision, pin.upstream_tree
+        );
         Ok(())
     });
     if let Err(error) = result {
@@ -130,6 +135,7 @@ mod tests {
         fn pin(&self) -> Pin {
             Pin {
                 revision: "0".repeat(40),
+                upstream_tree: String::from_utf8(git(&self.0, &["rev-parse", "HEAD:vendor"]).unwrap()).unwrap().trim().into(),
                 tree: String::from_utf8(git(&self.0, &["rev-parse", "HEAD:vendor"]).unwrap()).unwrap().trim().into(),
                 path: "vendor".into(),
             }
@@ -176,4 +182,30 @@ mod tests {
         assert!(check(&fixture.0, &pin, false).is_err());
         check(&fixture.0, &pin, true).unwrap();
     }
+
+    #[test]
+    fn accepts_recorded_fork_fixes_and_rejects_reset_to_pristine_upstream() {
+        let fixture = Fixture::new();
+        let upstream = fixture.pin();
+        fs::write(fixture.0.join("vendor/source.rs"), "fn upstream_with_required_fix() {}\n").unwrap();
+        git(&fixture.0, &["add", "--", "vendor"]).unwrap();
+        fixture.commit();
+        let mut fork = fixture.pin();
+        fork.upstream_tree = upstream.tree.clone();
+        check(&fixture.0, &fork, false).unwrap();
+
+        fs::write(fixture.0.join("vendor/source.rs"), "fn upstream() {}\n").unwrap();
+        git(&fixture.0, &["add", "--", "vendor"]).unwrap();
+        assert!(check(&fixture.0, &fork, true).is_err());
+        fixture.commit();
+        assert!(check(&fixture.0, &fork, false).is_err());
+
+        fs::write(fixture.0.join("vendor/source.rs"), "fn upstream_with_required_fix_and_extension() {}\n").unwrap();
+        git(&fixture.0, &["add", "--", "vendor"]).unwrap();
+        fixture.commit();
+        let mut reviewed = fixture.pin();
+        reviewed.upstream_tree = upstream.tree;
+        check(&fixture.0, &reviewed, false).unwrap();
+    }
+
 }

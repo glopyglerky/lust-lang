@@ -2,7 +2,7 @@
 
 This document describes the transitional rustc-based coordinator. Its proofs
 and measurements do not establish the [required native Lustr compiler](native-contract.md).
-The [pinned upstream Lust source](upstream-lust.md) is preserved separately;
+The [native Lust/Lustr source and its upstream provenance](upstream-lust.md) are preserved;
 the current published preview does not contain it.
 
 Lustr coordinates the produced BlueFe compiler with an explicit toolchain root:

@@ -33,13 +33,13 @@ concurrency:
 
 jobs:
   upstream-lust:
-    name: Unchanged upstream Lust source
+    name: Upstream provenance and maintained fork source
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
         run: rustup toolchain install 1.99.1 --profile minimal
-      - name: Check upstream source identity
+      - name: Check maintained native source identity
         run: |
           rustc +1.99.1 --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
           "$RUNNER_TEMP/lust-upstream-check"
@@ -99,8 +99,13 @@ jobs:
         run: rustup toolchain install 1.99.1 --profile minimal
       - name: Build pinned tcc
         run: compiler/native/scripts/build-tcc.sh
-      - name: Build upstream Lust
+      - name: Build maintained native compiler
         run: cargo +1.99.1 build --manifest-path compiler/native/Cargo.toml --profile gate --locked
+      - name: Verify restored native regressions
+        run: |
+          cargo +1.99.1 test --manifest-path compiler/native/Cargo.toml --locked --bin lust-core driver::buildscript::tests::cargo_output_layouts_and_missing_output_are_distinct -- --exact
+          cargo +1.99.1 test --manifest-path compiler/native/Cargo.toml --locked --bin lust-core driver::cache::tests::external_input_macros_bypass_cache_by_tokens -- --exact
+          python3 compiler/native/scripts/test-image-startup.py compiler/native/target/gate/lust-core
       - name: Verify Lust execution and honest rejection
         env:
           LUST_TEST_LUST: ${{ github.workspace }}/compiler/native/target/gate/lust
@@ -132,7 +137,7 @@ jobs:
         run: python3 crates/lustr/bench/measure.py --coordinator target/release/cargo-lust --engine cranelift --samples 6 --output compiler-set-cranelift.json
       - name: Build native dependency for real-project qualification
         run: compiler/native/scripts/build-tcc.sh
-      - name: Compile, test, and measure unchanged Lust with both backends
+      - name: Compile, test, and measure native fork with both backends
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/compiler/native/third_party/tcc
         run: python3 crates/lustr/bench/measure-project.py --coordinator "$GITHUB_WORKSPACE/target/release/cargo-lust" --project compiler/native --samples 2 --output compiler-set-lust-project.json

@@ -4,9 +4,9 @@ Status: native compiler requirement, following the user's clarification.
 
 ## Goal
 
-Keep upstream Lust unchanged and supply full Rust support through Lustr-owned native implementation while retaining and expanding Lust's fast compilation model. Every construct Lust already supports must use Lust. Lustr supplies the missing language, library and crate support through qualified interfaces. blueFe delivers the combined compiler. This includes Cargo workspaces, dependencies, build scripts, proc macros, tests and release builds. Application rewrites into the subset do not satisfy the goal.
+Preserve upstream Lust provenance and maintained fork fixes while supplying full Rust support through Lustr-owned native implementation while retaining and expanding Lust's fast compilation model. Every construct Lust already supports must use Lust. Lustr supplies the missing language, library and crate support through qualified interfaces. blueFe delivers the combined compiler. This includes Cargo workspaces, dependencies, build scripts, proc macros, tests and release builds. Application rewrites into the subset do not satisfy the goal.
 
-The [native compiler contract](native-contract.md) and [upstream preservation policy](upstream-lust.md) are authoritative. No Lust divergence is admitted without demonstrated necessity and faster results. The existing Cargo coordinator obtains compatibility through rustc and does not replace its frontend. Cranelift and rustc build tuning are compatibility research. They do not implement full native Lustr coverage, and their speed measurements cannot be transferred to the native compiler.
+The [native compiler contract](native-contract.md) and [upstream preservation policy](upstream-lust.md) are authoritative. Reviewed native changes are allowed with recorded provenance and regression evidence. Do not delete working fixes to regain pristine upstream equality; correctness repairs and performance claims have separate evidence. The existing Cargo coordinator obtains compatibility through rustc and does not replace its frontend. Cranelift and rustc build tuning are compatibility research. They do not implement full native Lustr coverage, and their speed measurements cannot be transferred to the native compiler.
 
 ## Decision
 
@@ -15,7 +15,7 @@ The required execution paths are:
 | Path | Semantic frontend | Code generation | Intended use |
 | --- | --- | --- | --- |
 | Existing Lust support | Native Lust frontend | Native C output and TinyCC | Retain accepted behavior and the fast edit path |
-| Lustr expansions | Lustr-owned native support outside the upstream baseline | Qualified native generation with the required Rust behavior | Add missing Rust features without rewriting applications or hiding Lust patches |
+| Lustr expansions | Maintained Lustr native support with recorded upstream provenance | Qualified native generation with the required Rust behavior | Add missing Rust features without rewriting applications or hiding Lust patches |
 | Explicit compatibility tools | rustc | Project-selected backend | Bootstrap, differential oracle and transitional compatibility; excluded from native coverage |
 
 Lustr's extension interface remains unimplemented. It must preserve resolution, trait selection, borrow checking, const evaluation, layout, monomorphization and incremental invalidation as coverage grows. Mixed programs containing existing Lust features and Lustr expansions must compile and execute natively. The current native coverage remains incomplete; routing a program to rustc does not close a native implementation gap.

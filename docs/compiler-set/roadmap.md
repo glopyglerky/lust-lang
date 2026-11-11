@@ -1,11 +1,11 @@
 # Native compiler implementation roadmap
 
 The [native compiler contract](native-contract.md) states the project requirement.
-Start with unchanged upstream Lust and add Lustr-owned support for full Rust while
+Start with upstream Lust and the maintained fork fixes, then add full Rust support while
 retaining and expanding its fast development compilation. Existing Lust support
 must keep using the native path. Lustr supplies the missing native support;
 blueFe delivers the combined compiler. Follow the [upstream preservation policy](upstream-lust.md);
-every proposed Lust divergence requires both necessity and faster-results evidence.
+record reviewed native changes with regression evidence and update the accepted fork tree. Correctness repairs do not require an unrelated speedup.
 
 The earlier Cargo/rustc coordinator work is transitional compatibility tooling.
 It must remain accurately identified and cannot close native compiler tasks.
@@ -14,7 +14,7 @@ It must remain accurately identified and cannot close native compiler tasks.
 
 | Area | Status |
 | --- | --- |
-| Native compiler | Exact upstream Lust baseline in `compiler/native`. Full Rust coverage and the Lustr-owned extension interface remain incomplete. |
+| Native compiler | Upstream Lust plus recorded fork fixes in `compiler/native`. Full Rust coverage and the Lustr-owned extension interface remain incomplete. |
 | Native frontend | Existing parser, expansion, resolution, trait/type checking, borrow checking and monomorphization. Remaining language gaps must be reproduced and implemented here. |
 | Native libraries and generation | Existing source libraries, adapters and C/TinyCC generation. Missing APIs and semantic support remain native implementation work. |
 | Fast edit path | Existing daemon, query reads, retained state and caches. Every expansion needs warm/cold and edit invalidation checks. |
@@ -37,8 +37,8 @@ failures; they cannot count as language coverage observations.
 
 Implement missing behavior in Lustr-owned native parsing, resolution, type/borrow
 checking, const evaluation, libraries, lowering and generation through explicit
-interfaces to unchanged Lust. Any required Lust patch must first pass the separate
-necessity and faster-results gate. Do not replace valid
+interfaces to the maintained native compiler. Record required source patches and
+their regression evidence, preserving upstream provenance. Do not replace valid
 application code with subset-specific rewrites or suppress required checks.
 
 Acceptance requires failing-first regression cases, native artifacts, matching
