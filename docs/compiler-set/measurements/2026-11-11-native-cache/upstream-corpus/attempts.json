@@ -1,0 +1,230 @@
+{
+  "schema": "lustr.native-upstream-corpus-evidence.v1",
+  "qualified": false,
+  "performance_claim": false,
+  "compilers_omitted": "Only compiler copies and any leftover case ELFs are omitted. Exact hashes remain in the reports; every raw log, dep-info, source manifest and runner is preserved.",
+  "attempts": [
+    {
+      "label": "identity-preflight",
+      "original_directory": "/workspace/scratch/92a35dfe3ee0/native-upstream-corpus-pilot",
+      "note": "Stopped before fixture compilation because the first runner incorrectly treated a content build hash as a git revision. The original runner was reconstructed exactly and its SHA256 verified.",
+      "summary": null,
+      "failures": [
+        "ValueError: lust identity does not report the pinned upstream build"
+      ],
+      "source_commit": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+      "elapsed_ns": 1521256113,
+      "compiler_pairs_attempted_observed": 0,
+      "fixture_compile_and_run_commands": 0,
+      "report": {
+        "path": "identity-preflight-report.json.gz",
+        "sha256": "ab3f692563f83f50cf710d919bdc53a6cde5975ed42191038fac211c838cd674",
+        "bytes": 10131
+      },
+      "raw_archive": {
+        "path": "identity-preflight-raw.tar.gz",
+        "sha256": "1d030e83785322b4fd697fcce4222f60fc6d29fb76be3ead8e01106dbca919a2",
+        "bytes": 263688,
+        "files": 7,
+        "uncompressed_bytes": 1294403,
+        "all_member_hashes_verified": true
+      },
+      "runner": {
+        "path": "identity-preflight-runner.py",
+        "sha256": "0fc67325814c0b82028535ff5e46b4816c6f5054f228a6d01db4006f3c2b4a2c"
+      },
+      "excluded_case_elf_files": []
+    },
+    {
+      "label": "pilot",
+      "original_directory": "/workspace/scratch/92a35dfe3ee0/native-upstream-corpus-pilot2",
+      "note": "Explicit 18-case pilot, including modules/includes, environment/process behavior, nonzero/panic results and every release fixture.",
+      "summary": {
+        "complete": true,
+        "completed_cases": 18,
+        "counts": {
+          "passed": 18
+        },
+        "duplicates": [],
+        "inputs_stable": true,
+        "missing": [],
+        "qualified": false,
+        "scope": "explicit partial selection",
+        "selected_cases": 18,
+        "state": "passed",
+        "success": true,
+        "total_corpus_cases": 2293,
+        "unexpected": [],
+        "upstream_accepted_corpus": "unproved"
+      },
+      "failures": [],
+      "source_commit": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+      "elapsed_ns": 5471319195,
+      "compiler_pairs_attempted_observed": 18,
+      "fixture_compile_and_run_commands": 72,
+      "report": {
+        "path": "pilot-report.json.gz",
+        "sha256": "fa581ea9861a37a479a742edaf51b97cd028db4ef8656f07b350c7109f6c0239",
+        "bytes": 18823
+      },
+      "raw_archive": {
+        "path": "pilot-raw.tar.gz",
+        "sha256": "d3bbe1e987d3f9f6cfd39e1a515861c91d2565568edcdb2b8cb23cc52ab81c60",
+        "bytes": 315732,
+        "files": 281,
+        "uncompressed_bytes": 1849375,
+        "all_member_hashes_verified": true
+      },
+      "runner": {
+        "path": "pilot-runner.py",
+        "sha256": "3258258543c26fd809e540a4aee5cb4ce56c27f6f453b6989569ff03c0c939e1"
+      },
+      "excluded_case_elf_files": []
+    },
+    {
+      "label": "workspace-enospc",
+      "original_directory": "/workspace/scratch/92a35dfe3ee0/native-upstream-corpus-full",
+      "note": "Full matrix requested. Workspace ENOSPC prevented many cases from starting. All observed failures and raw logs remain; the original summary predates explicit attempted-pair accounting and infrastructure error classification.",
+      "summary": {
+        "complete": true,
+        "completed_cases": 2293,
+        "counts": {
+          "failed": 10,
+          "passed": 1041,
+          "unproved": 1242
+        },
+        "duplicates": [],
+        "inputs_stable": true,
+        "missing": [],
+        "qualified": false,
+        "scope": "full bounded matrix",
+        "selected_cases": 2293,
+        "state": "failed",
+        "success": false,
+        "total_corpus_cases": 2293,
+        "unexpected": [],
+        "upstream_accepted_corpus": "unproved"
+      },
+      "failures": [],
+      "source_commit": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+      "elapsed_ns": 126322414890,
+      "compiler_pairs_attempted_observed": 1043,
+      "fixture_compile_and_run_commands": 4180,
+      "report": {
+        "path": "workspace-enospc-report.json.gz",
+        "sha256": "f42ca959854ea1f1fad4a6c9a7e9d1dfcd5bd2fca02b08975eea2c7fa4a2d522",
+        "bytes": 474734
+      },
+      "raw_archive": {
+        "path": "workspace-enospc-raw.tar.gz",
+        "sha256": "e10cb85c9784d6e496050ff05795274eea15fc1f89b20965fa529a7c054f57bf",
+        "bytes": 2166780,
+        "files": 15691,
+        "uncompressed_bytes": 31563664,
+        "all_member_hashes_verified": true
+      },
+      "runner": {
+        "path": "workspace-enospc-runner.py",
+        "sha256": "b26cae882a0f5eef4608407e53ae1bf5d492e27885ee93e67e1087caf98d888a"
+      },
+      "excluded_case_elf_files": []
+    },
+    {
+      "label": "tmp-thread-pool",
+      "original_directory": "/tmp/lustr-native-upstream-corpus-full2",
+      "note": "Full matrix with two threads on /tmp. Three program launches failed with ETXTBSY and remain unproved. Fork/write-descriptor inheritance is a plausible harness cause, not traced proof.",
+      "summary": {
+        "compiler_pairs_attempted": 2293,
+        "compiler_pairs_missing": [],
+        "complete": true,
+        "completed_cases": 2293,
+        "counts": {
+          "passed": 2290,
+          "unproved": 3
+        },
+        "duplicates": [],
+        "inputs_stable": true,
+        "missing": [],
+        "qualified": false,
+        "scope": "full bounded matrix",
+        "selected_cases": 2293,
+        "state": "unproved",
+        "success": false,
+        "total_corpus_cases": 2293,
+        "unexpected": [],
+        "upstream_accepted_corpus": "unproved"
+      },
+      "failures": [],
+      "source_commit": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+      "elapsed_ns": 296861721811,
+      "compiler_pairs_attempted_observed": 2293,
+      "fixture_compile_and_run_commands": 9172,
+      "report": {
+        "path": "tmp-thread-pool-report.json.gz",
+        "sha256": "c9b7786aa54c4123febd540d2781a01bd42096abcea4f071b41982f306026dbf",
+        "bytes": 878777
+      },
+      "raw_archive": {
+        "path": "tmp-thread-pool-raw.tar.gz",
+        "sha256": "cf2cef50792067412382fc5b5230cc49f969d6116188269d6eb33c6088608971",
+        "bytes": 4178051,
+        "files": 34394,
+        "uncompressed_bytes": 62865724,
+        "all_member_hashes_verified": true
+      },
+      "runner": {
+        "path": "tmp-thread-pool-runner.py",
+        "sha256": "b1247ff9e856e02e1f4247fae2bffeee13c8f2ff088f0b1768f4e2d69466464f"
+      },
+      "excluded_case_elf_files": []
+    },
+    {
+      "label": "tmp-spawn-pool",
+      "original_directory": "/tmp/lustr-native-upstream-corpus-full3",
+      "note": "A distinct full matrix using two explicitly spawned worker processes. Prior attempts remain separate; no case was retried within any attempt.",
+      "summary": {
+        "compiler_pairs_attempted": 2293,
+        "compiler_pairs_missing": [],
+        "complete": true,
+        "completed_cases": 2293,
+        "counts": {
+          "passed": 2293
+        },
+        "duplicates": [],
+        "inputs_stable": true,
+        "missing": [],
+        "qualified": false,
+        "scope": "full bounded matrix",
+        "selected_cases": 2293,
+        "state": "passed",
+        "success": true,
+        "total_corpus_cases": 2293,
+        "unexpected": [],
+        "upstream_accepted_corpus": "unproved"
+      },
+      "failures": [],
+      "source_commit": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+      "elapsed_ns": 310980608997,
+      "compiler_pairs_attempted_observed": 2293,
+      "fixture_compile_and_run_commands": 9172,
+      "report": {
+        "path": "tmp-spawn-pool-report.json.gz",
+        "sha256": "b2c14d8eb9aa2bdba2ef0d1d15ade3f3e42cd4e54d294097bee14231c464835e",
+        "bytes": 878779
+      },
+      "raw_archive": {
+        "path": "tmp-spawn-pool-raw.tar.gz",
+        "sha256": "99a7ff0a66e91a81c38784833126bd2025b03ab374bbec0b414a9449638ee15e",
+        "bytes": 4178094,
+        "files": 34406,
+        "uncompressed_bytes": 62873975,
+        "all_member_hashes_verified": true
+      },
+      "runner": {
+        "path": "tmp-spawn-pool-runner.py",
+        "sha256": "f6425e39dfa4626f5e3f61c9737967130759c050dd36ad53071d00d5086aa9dc"
+      },
+      "excluded_case_elf_files": []
+    }
+  ]
+}

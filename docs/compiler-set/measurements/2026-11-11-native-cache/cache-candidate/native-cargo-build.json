@@ -1,0 +1,120 @@
+{
+  "schema": "lustr.native-cargo-build.v2",
+  "source": {
+    "commit": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+    "tree": "54a630dc7d850871cd7921340c15bcea63cb3bf4",
+    "native_tree": "0ab1b09815802894e6078de0af59273cbdf46cb0",
+    "helper_sha256": "e46e473fd59e46f2d01fc2971e209bd5071f670bc48d4f6fb99d35c17eec0d74"
+  },
+  "bootstrap": {
+    "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+    "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+    "verbose_version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1"
+  },
+  "cargo": {
+    "path": "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af",
+    "verbose_version": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 24.4.0 (noble) [64-bit]"
+  },
+  "tinycc": {
+    "path": "/home/runner/work/lustr/lustr/compiler/native/third_party/tcc",
+    "sha256": "0c001f9870462318828c4303d5b8b41648db1b8b01038fb543c5c289b74bfe04"
+  },
+  "build": {
+    "profile": "release",
+    "settings": {
+      "opt_level": 3,
+      "codegen_units": 1,
+      "lto": "thin",
+      "debug": "line-tables-only",
+      "incremental": false
+    },
+    "target_dir": "/home/runner/work/_temp/lustr-native-cargo",
+    "cargo_argv": [
+      "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "build",
+      "--manifest-path",
+      "/home/runner/work/lustr/lustr/crates/lustr-native/Cargo.toml",
+      "--profile",
+      "release",
+      "--target",
+      "x86_64-unknown-linux-gnu",
+      "--target-dir",
+      "/home/runner/work/_temp/lustr-native-cargo",
+      "--locked",
+      "--offline",
+      "-j1",
+      "-vv",
+      "--message-format=json"
+    ],
+    "rustc_argv": [
+      "/home/runner/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "--crate-name",
+      "lustr_native",
+      "--edition=2024",
+      "src/main.rs",
+      "--error-format=json",
+      "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+      "--crate-type",
+      "bin",
+      "--emit=dep-info,link",
+      "-C",
+      "opt-level=3",
+      "-C",
+      "lto=thin",
+      "-C",
+      "codegen-units=1",
+      "-C",
+      "debuginfo=line-tables-only",
+      "--check-cfg",
+      "cfg(docsrs,test)",
+      "--check-cfg",
+      "cfg(feature, values())",
+      "-C",
+      "metadata=a72110e0b6013015",
+      "-C",
+      "extra-filename=-7659f5f16a3370bd",
+      "--out-dir",
+      "/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/release/deps",
+      "--target",
+      "x86_64-unknown-linux-gnu",
+      "-L",
+      "dependency=/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/release/deps",
+      "-L",
+      "dependency=/home/runner/work/_temp/lustr-native-cargo/release/deps",
+      "--extern",
+      "libmimalloc_sys=/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/release/deps/liblibmimalloc_sys-72a530213052e161.rlib",
+      "--extern",
+      "mimalloc=/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/release/deps/libmimalloc-4870163be8efe85a.rlib",
+      "-L",
+      "native=/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/release/build/libmimalloc-sys-06b24d23cd2ed19f/out",
+      "-L",
+      "native=/home/runner/work/lustr/lustr/compiler/native/third_party/tcc/lib",
+      "-l",
+      "static=tcc",
+      "-l",
+      "dylib=dl",
+      "-l",
+      "dylib=pthread",
+      "-l",
+      "dylib=m"
+    ],
+    "profile_environment": {
+      "CARGO_PROFILE_RELEASE_OPT_LEVEL": "3",
+      "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": "1",
+      "CARGO_PROFILE_RELEASE_LTO": "thin",
+      "CARGO_PROFILE_RELEASE_DEBUG": "line-tables-only",
+      "CARGO_PROFILE_RELEASE_INCREMENTAL": "false",
+      "CARGO_INCREMENTAL": "0"
+    }
+  },
+  "binary": {
+    "path": "/home/runner/work/_temp/lustr-native-cargo/x86_64-unknown-linux-gnu/release/lustr-native",
+    "sha256": "293f940c6343a51d8b208809815549e5b4f6233c341966d736bce5f740b291f7",
+    "verbose_version": "lustr-native 0.1.0 (Lust 0.2.0, build b471a757620e224f)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false"
+  },
+  "log": {
+    "file": "native-cargo-build.cargo.log",
+    "sha256": "ba1c9ecccae10ffd3e4a99bacff69619f78a3ef60190b0f256387f88248ab019"
+  }
+}

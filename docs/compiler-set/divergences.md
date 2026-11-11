@@ -1,87 +1,100 @@
 # Fork ownership and divergences
 
-Lustr and BlueFe are projects with their own entry points, source maps and design
-decisions. Required upstream implementation remains where it is needed for a
-working compiler and for reliable updates. Inherited branding and historical
-research are identified rather than pasted into the primary project README.
+## Source baseline
 
-## Lustr
+Lustr's inherited compiler is the complete, unchanged Lust tree pinned in
+[`upstream/lust.pin`](../../upstream/lust.pin). The source restoration at
+[`82d77539`](https://github.com/glopyglerky/lustr/commit/82d77539680fec9cf822ca8231d1abb985069c48)
+made `compiler/native` identical to upstream revision
+`240e08d91d4aed0299639f6f11fd522912b248f9`. Its Cargo package is named `lust`,
+and its executables are `lust` and `lust-core`.
 
-The root Cargo workspace builds `crates/lustr`. It has no registry or C build
-dependencies and its Rust source forbids unsafe code. The native component lives
-in `compiler/native` with a separate workspace, fixtures, runtime assets and build
-helpers. This preserves the native compiler's relative-path contracts while
-removing those dependencies from the coordinator's default build.
+The root Cargo workspace excludes `compiler/native`; the native compiler keeps
+its upstream manifest, build recipe, dependencies, runtime, libraries, fixtures,
+documentation, research probes, and licenses. In particular,
+`compiler/native/spikes` is present as part of that unchanged upstream tree.
 
-`crates/lustr-semantic` remains independent because its rustc-private interface
-requires a different pinned development toolchain. It is not part of the normal
-BlueFe application build. The stock GitHub workflows remain at `.github` because
-GitHub discovers workflows there; native steps select their component directory.
+Lustr-owned expansion and qualification belong outside the protected tree.
+Every proposed Lust divergence requires both a reproducible necessity case and
+faster equivalent-workload evidence under the
+[upstream preservation policy](upstream-lust.md). No exception is admitted by
+this document. Source relocation, a correctness fix, or a passing benchmark of
+a different compiler configuration does not supply that evidence.
 
-The native package is named `lustr-native`. Its existing `lust`/`lust-core`
-commands and protocol names remain compatibility interfaces. The optional pinned
-ts-rust source is a native qualification fixture, not another product entry point.
-Upstream licenses and source history remain intact.
+## Lustr-owned implementation
 
-Current fork changes include explicit BlueFe selection; corrected Unix startup
-and variadic FFI; command-scoped backend selection; panic and bidirectional Rust
-ABI gates; Cargo build-script layout handling; native cache invalidation repairs;
-and performance evidence tied to exact tools and source. The verification record
-separates historical experiments from current qualifications.
+`crates/lustr-native` compiles the original native modules directly into a
+separate executable with a Lustr-owned Cargo entry point. Its explicit adapters
+supply the application crate name through the existing expansion and resolver
+input types. Native compilation runs in that process, with no compiler fallback.
+It emits real dependency records and rejects unsupported flags and artifact
+requests. The current scope includes native binary crates and separately
+compiled native libraries with scalar safe/unsafe function metadata under
+supported development settings. General metadata, procedural macros, tests
+and full coverage remain open. No copied or modified upstream implementation is hidden in this
+crate, and the original `lust` executable and its daemon path remain unchanged.
+
+`crates/lustr` retains the historical coordinator. It is not built or shipped by
+the native package; Cargo owns compiler and toolchain selection. Its own build has no registry or C
+build dependencies, and its Rust source forbids unsafe code. The automatic
+route uses Cargo/rustc; explicit Lust selection invokes a whole native target.
+Command-scoped backend settings, explicit BlueFe selection, and the compatibility
+qualification helpers are retained outside upstream Lust.
+
+`crates/lustr-semantic` remains an independent, pinned development tool. It
+inspects rustc's checked information while rustc produces every artifact. Its
+reports are neither executable native IR nor complete cache keys. It does not
+implement the missing native extension interface.
+
+The native package qualification fixtures under
+[`tests/native-qualification`](../../tests/native-qualification) run native Lust
+and the Rust oracle independently. Their report preserves native coverage gaps
+and does not count the compatibility compiler's acceptance as native support.
+
+Full native Rust support and general Rust artifact interoperability remain unfinished.
+The [native contract](native-contract.md) and
+[roadmap](roadmap.md) define those obligations. The coordinator and bounded
+qualification fixtures do not close them.
+
+## Historical Lust changes
+
+The source snapshot before restoration,
+[`fb4c4bc7`](https://github.com/glopyglerky/lustr/tree/fb4c4bc79a1d17f1c0f7cdcb47dced6d0f88c316),
+contains the earlier `lustr-native` package identity, startup and variadic FFI
+changes, Cargo build-script handling, cache invalidation repairs, and associated
+tests. Those differences are preserved in Git history and are not current
+upstream compiler changes. Their correctness evidence remains historical;
+restoring them would require the separate necessity and faster-results admission.
+
+The [verification record](verification.md) identifies historical native and
+compatibility experiments. Statements about a recorded run apply to that run's
+source and tool identities, not automatically to the current source baseline.
 
 ## BlueFe
 
-BlueFe retains the Rust compiler and bootstrap layout because the current
-compiler, standard libraries, platform support, release tools and upstream sync
-use those paths. That compiler source is the working BlueFe implementation.
-Removing it before a replacement exists would remove full Rust support.
+BlueFe preserves its pinned upstream Rust compiler, libraries, bootstrap, and
+stage0 inputs. At
+[`f0f00135`](https://github.com/glopyglerky/blueFe/commit/f0f00135a69fdf718ad73aaaecbddeacf36f2b74),
+the full `compiler/`, `library/`, `src/`, and `tests/` trees and bootstrap entry
+points match upstream `5b7b37aefcb5b2fba3c2392bc9065b9e4602d494`.
 
-BlueFe's owned integration is visible through its primary README, root Lustr
-submodule and bootstrap changes. It pins Lustr, uses the coordinator for ordinary
-Cargo build operations, updates stage0 through its native generator, and enables
-unwinding when explicitly building its in-tree Cranelift backend. Default LLVM
-compilation and specialized upstream tool launchers retain their tested roles.
+The earlier bootstrap coordinator injection, custom stage0 selection, compiler
+compatibility patches, and explicit Cranelift unwinding configuration are no
+longer active source changes. BlueFe's Lustr gitlink, project documentation, and
+source-preservation tooling remain separate integration material. Historical
+preview binaries retain their original provenance; source equality does not
+qualify a new compiler build or establish performance.
 
-## Iteration policy
-
-Make the working path usable before replacing compiler internals. Every inherited
-component needs an identified role, preserved license, version boundary and a
-reason to remain. Remove or replace it when equivalent functionality and focused
-qualification exist. Keep source movement separate from semantic changes in
-review and report any changed build or installation contracts.
-
-Full native Rust support, persistent full-Rust analysis, native rlib publishing,
-and migration toward memory-safe Rust remain future goals. TinyCC and LLVM are
-current external code-generation dependencies. Safe Rust at a command boundary
-does not prove their implementation safe. Track migrations and validate behavior
-as they land; do not use the future goal to block a working toolchain.
-
-The same ownership and evidence policy applies when working on the user's other
-forks. Public repositories can supply frozen performance workloads without
-changing their source, default branches, services or deployment state.
-
-## Retired native experiments
-
-The old `compiler/native/spikes` directory contained standalone C/FFI probes
-and their drivers. No active compiler, manifest, CI gate or qualification helper
-references that directory. These unneeded inherited experiments were removed
-from the default source tree. Their complete source and results remain in
-[the prior source snapshot](https://github.com/glopyglerky/lustr/tree/39349b63b976e76702ca14fbb5f19718eaf0ed2d/compiler/native/spikes).
-
-Required non-Rust code remains explicit: the current native compiler's C runtime
-and generation path, the TinyCC interface, C ABI qualification fixtures, and
-build/test/research helpers used by current development. Rust source, licenses
-and the relevant compiler fixtures are retained. These exceptions preserve the
-working toolchain while the native Rust migration remains future work.
-
-## Matched compiler configuration study
+## Retained performance research
 
 The [CGU16/ThinLTO study](measurements/2026-11-09-cgu16-thinlto-v3/README.md)
-compares stage2 compiler packages from the same source and Cargo. It changes
-compiler CGU256/off-LTO to CGU16/ThinLTO, retaining std CGU256 and project settings.
-Preparation and native build effects belong to the joint treatment. Lustr's
-default routing and frontend settings remain unchanged. The numerical decision
-passed for three metadata-only roots; stock Rust remained faster on those cases.
-Full-build performance and individual knob effects require separate experiments.
-The [study proofs](proofs/cgu16-thinlto.md) distinguish deterministic arithmetic
-properties from statistical assumptions and compiler-correctness evidence.
+compares rustc-based stage2 packages built from the same source and Cargo. It
+changes compiler CGU256/off-LTO to CGU16/ThinLTO, retaining std CGU256 and project
+settings. The numerical decision passed for three dependency-primed,
+metadata-only roots; stock Rust remained faster on those cases.
+
+That result does not isolate historical source patches, measure full application
+builds, establish native Lust/Lustr coverage, or prove preservation of Lust's
+fast path. The [study arguments](proofs/cgu16-thinlto.md) retain their mathematical
+and statistical assumptions. TinyCC and LLVM remain external code-generation
+dependencies; whole-toolchain memory safety remains separate future work.

@@ -1,0 +1,3 @@
+fixture: entering catch_unwind
+fixture: panic hook: qualification panic
+fixture: catch_unwind returned; caught=true drops=1

@@ -4,9 +4,16 @@ Status: native compiler requirement, following the user's clarification.
 
 ## Goal
 
-Keep upstream Lust unchanged and supply full Rust support through Lustr-owned native implementation while retaining and expanding Lust's fast compilation model. Every construct Lust already supports must use Lust. Lustr supplies the missing language, library and crate support through qualified interfaces. blueFe delivers the combined compiler. This includes Cargo workspaces, dependencies, build scripts, proc macros, tests and release builds. Application rewrites into the subset do not satisfy the goal.
+Keep upstream Lust unchanged and supply full Rust support through Lustr-owned native implementation while retaining and expanding Lust's fast compilation model. Every construct Lust already supports must use Lust. Lustr supplies the missing language, library and crate support through qualified interfaces. BlueFe holds unchanged Rust source and uses Lustr as its only Rust compiler. This includes Cargo workspaces, dependencies, build scripts, proc macros, tests and release builds. Application rewrites into the subset do not satisfy the goal.
 
 The [native compiler contract](native-contract.md) and [upstream preservation policy](upstream-lust.md) are authoritative. No Lust divergence is admitted without demonstrated necessity and faster results. The existing Cargo coordinator obtains compatibility through rustc and does not replace its frontend. Cranelift and rustc build tuning are compatibility research. They do not implement full native Lustr coverage, and their speed measurements cannot be transferred to the native compiler.
+
+Cargo already selects compilers and toolchains. The native package therefore
+contains no additional coordinator or stock Rust compatibility compiler.
+Cargo selects the actual Lustr compiler through `RUSTC` or toolchain
+configuration. Lustr must implement the rustc command-line and artifact
+contract itself. The coordinator sections below describe retained historical
+research, outside the current product build path.
 
 ## Decision
 
@@ -16,9 +23,9 @@ The required execution paths are:
 | --- | --- | --- | --- |
 | Existing Lust support | Native Lust frontend | Native C output and TinyCC | Retain accepted behavior and the fast edit path |
 | Lustr expansions | Lustr-owned native support outside the upstream baseline | Qualified native generation with the required Rust behavior | Add missing Rust features without rewriting applications or hiding Lust patches |
-| Explicit compatibility tools | rustc | Project-selected backend | Bootstrap, differential oracle and transitional compatibility; excluded from native coverage |
+| Separate reference tools | rustc | Project-selected backend | Bootstrap Lustr itself and compare behavior; excluded from the native product and BlueFe compilation |
 
-Lustr's extension interface remains unimplemented. It must preserve resolution, trait selection, borrow checking, const evaluation, layout, monomorphization and incremental invalidation as coverage grows. Mixed programs containing existing Lust features and Lustr expansions must compile and execute natively. The current native coverage remains incomplete; routing a program to rustc does not close a native implementation gap.
+The Lustr-owned native interface imports the unchanged compiler modules in process. Its Cargo entry point supplies the requested crate name through existing expansion and resolver input types and emits actual dependency records. Dependency-free binaries retain the original native driver. An additional owned interface emits real native library objects with typed metadata and imports safe scalar function signatures into binary consumers. Producer bodies remain in their separately compiled objects. This is bounded native crate support, not complete Rust metadata or ABI compatibility. Further interfaces must preserve resolution, trait selection, borrow checking, const evaluation, layout, monomorphization and incremental invalidation as coverage grows. Mixed programs containing existing Lust features and Lustr expansions must compile and execute natively. The current native coverage remains incomplete; routing a program to rustc does not close a native implementation gap.
 
 Do not create separate unsafe, async, generic, or proc-macro compilers. Those features overlap in the same functions and types. For example, a generic async function may hold a borrow across a suspension point, call an unsafe operation, and use a trait implementation emitted by a proc macro. Dividing that source by keywords would require the compilers to reconstruct the same global semantic decisions. It offers no demonstrated speed benefit.
 
@@ -38,7 +45,9 @@ These principles come from the [upstream README](https://github.com/t3dotgg/lust
 
 ## Why arbitrary Rust libraries cannot be mixed today
 
-The current Lust driver explicitly rejects building a library target because it has no rlib format. It can check a library and compile source dependencies within a selected binary's closure. That is different from producing a library that Cargo can supply to a rustc-dependent crate. See [`src/driver/compile.rs`](../../compiler/native/src/driver/compile.rs).
+The preserved Lust driver explicitly rejects building a library target because it has no rlib format. It can check a library and compile source dependencies within a selected binary's closure. Lustr's owned library interface now uses that real check result and the original native lowering/code generator to emit ELF objects. Its ar archive records typed safe scalar exports, crate identity, compiler/runtime identity and profile information. Binary consumers resolve bodyless signatures and link the producer's actual objects. See [`native_library.rs`](../../crates/lustr-native/src/native_library.rs), [`native_import.rs`](../../crates/lustr-native/src/native_import.rs) and [`native_codegen.rs`](../../crates/lustr-native/src/native_codegen.rs).
+
+Imported calls use typed native function-pointer bindings through the original backend's ABI. This adds no compiler-selection process, but call indirection can affect generated-program runtime and needs measurement. Public types, traits, generics, unsafe contracts, macros, transitive libraries and full metadata-only compilation remain unfinished. The required unsafe library fixture still fails. The safe-library diagnostic cannot replace that gate or qualify a complete compiler package.
 
 Rust libraries carry more than object code. Their metadata contains compiler identity, crate identities, exported types and traits, macros, and sometimes MIR. Cargo can use emitted metadata to start dependent compilation before object generation finishes. The metadata format and Rust ABI cannot be replaced by a C object file and an empty metadata file. See the [Rust compiler metadata guide](https://rustc-dev-guide.rust-lang.org/backend/libs-and-metadata.html).
 

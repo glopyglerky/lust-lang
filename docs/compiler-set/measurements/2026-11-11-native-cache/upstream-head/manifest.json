@@ -1,0 +1,23 @@
+{
+  "schema": "lustr.upstream-head-evidence.v1",
+  "source_parent": "5b98ffb63da0139d778ef4a26de28b1d38fd4a0e",
+  "compiler_qualification": false,
+  "files": {
+    "command.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "command.stdout": {
+      "bytes": 72,
+      "sha256": "1a40211d671472010fc250ba560591f92333bae97c0513a7c1c1d9eb4ee1acbb"
+    },
+    "pin.toml": {
+      "bytes": 249,
+      "sha256": "76aa7cc5a6283c05ccba58435056fb02f305219b55bca9e75caa935409d9418d"
+    },
+    "report.json": {
+      "bytes": 1403,
+      "sha256": "24e2a43808511bd9003c6e2d67c55a392584b085fa41fdec2b5827eac6908479"
+    }
+  }
+}

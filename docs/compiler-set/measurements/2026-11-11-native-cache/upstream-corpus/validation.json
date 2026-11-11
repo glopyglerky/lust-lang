@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "tools/test-native-upstream-corpus.py"
+  ],
+  "exit_code": 0,
+  "helper_sha256": "f6425e39dfa4626f5e3f61c9737967130759c050dd36ad53071d00d5086aa9dc",
+  "tests_sha256": "e68a95d86708e11e863d91ad4ad906774db642c0332399748d64c2c2baba5854",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "b7c239136b829841d42e958a096c36b25722ac7d2958306592944448a93f03df"
+}

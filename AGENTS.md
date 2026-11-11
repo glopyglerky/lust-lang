@@ -22,6 +22,41 @@ README, source map, decisions and divergence records about this fork's actual
 behavior. Preserve required upstream compatibility, licensing and source history.
 Do not claim complete native Rust or whole-toolchain memory safety prematurely.
 
+The user's speed floor is mandatory, with no regression allowance: every
+Lust-supported input must remain supported and compile at least as fast as
+upstream Lust, while the remaining Rust compiles natively at least as fast as
+the same stock Cargo/rustc build. Both must compose in the same Cargo graph and
+program. Use the simplest design that satisfies all three obligations. Cargo
+owns scheduling and parallelism; Lustr owns compilation in process. Do not add
+a dispatcher, race two compilers, retry through rustc, or duplicate source
+analysis to conceal a missing native implementation. See
+[the acceptance gate](docs/compiler-set/native-acceptance.md).
+
+The user permits redesigning Lustr from the ground up to meet those floors.
+Neither the current native adapter nor its process model is fixed. Both cold
+and warm performance are mandatory. Keep the pinned upstream tree as an honest
+reference while implementing and measuring redesigns in owned code. Time real
+release builds, not the upstream correctness-only gate profile, and retain the
+actual build invocation and all benchmark observations in automatic CI.
+
+Cargo already owns compiler and toolchain selection. The user's latest direction
+removes an additional coordinator from the native product path. Do not build or
+ship `lustr`, `cargo-lustr` or `cargo-lust` coordinator executables in the native
+package. Use direct Lust and Cargo's standard compiler selection. Implement the
+rustc command-line and artifact contract in the native compiler before selecting
+it as Cargo's full replacement; a launcher does not supply that missing support.
+
+`crates/lustr-native` is a separate experimental native compiler entry point.
+It imports the pinned modules directly and compiles in the same process. Its
+Lustr-owned input adapters supply Cargo's crate name through existing upstream
+interfaces. Keep those adapters scoped to the requested source root. Real
+dependency records and explicit rejection of unsupported arguments are part of
+the compiler contract. It supplies bounded native rlibs with real objects and
+typed scalar function metadata. General Rust artifact interoperability,
+procedural macros, test harnesses, full Rust coverage, and the upstream
+daemon's warm path remain unfinished. Its Cargo
+workspace is separate from the historical coordinator workspace.
+
 ## Product contract
 
 Follow [the native compiler contract](docs/compiler-set/native-contract.md).
@@ -35,7 +70,7 @@ disable required checks, or count a rustc fallback as native feature support.
 
 - Full Rust support currently comes from the installed Cargo/rustc toolchain. Name that dependency honestly. Do not claim that this fork independently implements all of Rust.
 - Never infer semantic compatibility from source keywords, a successful parser run, or a compiler accepting the source. Macros, traits, lifetimes, layouts, generics, drops, panic strategy, and crate metadata interact.
-- Lust currently has no Rust rlib format. Do not place its output in Cargo's artifact graph as a Rust library or forge metadata or dep-info. Whole-target Lust compilation and a future verified semantic-IR bridge are separate routes.
+- Upstream Lust's whole-target output is not a Rust library. Lustr's owned native `.rlib` format carries real objects and typed metadata for its documented interfaces; it is not rustc metadata or general Rust ABI interoperability. Never relabel a whole-target executable as a library, forge metadata or dep-info, or claim broader artifact compatibility than the actual implementation supports.
 - Preserve the project's source, features, target, profiles, Cargo flags, dependency versions, panic strategy, and build-script behavior. Adapter substitutions and reduced features require explicit qualification against the requested Cargo build.
 - Never turn compiler errors into success. Never retry an executed program or test automatically through another compiler. Do not change panic behavior to obtain a passing or faster result.
 - The stock rustup Cranelift preview failed the real panic-recovery gate. Build the pinned complement with its `unwinding` feature and use the matching compiler plus explicit backend path. A panic flag cannot supply backend code that was not compiled in. Preserve the recovery/drop gate.

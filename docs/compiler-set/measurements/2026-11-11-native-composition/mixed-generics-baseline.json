@@ -1,0 +1,1407 @@
+{
+  "schema": "lustr.native-mixed-generics-diagnostic.v1",
+  "success": false,
+  "qualified": false,
+  "full_native_rust": false,
+  "performance_claim": false,
+  "scope": "Local generic helpers with native unsafe contracts and scalar artifact imports",
+  "tools": {
+    "native": {
+      "path": "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+      "sha256": "7caf5e4762622849e28686145f153077e489c1b9783958ae309995bb60e5c485",
+      "version": "lustr-native 0.1.0 (Lust 0.2.0, build 407856ae2a573083)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n"
+    },
+    "oracle": {
+      "path": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    }
+  },
+  "runner_sha256": "910c5503b731edca472aa5c0e8175a0f47233595dcd7e81ae6b07999db2ffd9c",
+  "commands": [
+    {
+      "label": "oracle-identity",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "-vV"
+      ],
+      "exit_code": 0,
+      "stdout": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 43786155
+    },
+    {
+      "label": "native-identity",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "-vV"
+      ],
+      "exit_code": 0,
+      "stdout": "lustr-native 0.1.0 (Lust 0.2.0, build 407856ae2a573083)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 2679845
+    },
+    {
+      "label": "identity-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "identity",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/identity.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/identity-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 71459270
+    },
+    {
+      "label": "identity-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/identity-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1293379
+    },
+    {
+      "label": "identity-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "identity",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/identity.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/identity-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/identity.rs:1:4\n   | fn identity<T>(value: T) -> T { value }\n   |    ^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 5887540
+    },
+    {
+      "label": "where_copy-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "where_copy",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/where_copy.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/where_copy-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 89351687
+    },
+    {
+      "label": "where_copy-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/where_copy-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1860696
+    },
+    {
+      "label": "where_copy-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "where_copy",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/where_copy.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/where_copy-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/where_copy.rs:1:4\n   | fn duplicate<T>(value: T) -> (T, T) where T: Copy { (value, value) }\n   |    ^^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 5325039
+    },
+    {
+      "label": "const_parameter-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "const_parameter",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/const_parameter.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/const_parameter-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 83373239
+    },
+    {
+      "label": "const_parameter-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/const_parameter-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1398894
+    },
+    {
+      "label": "const_parameter-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "const_parameter",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/const_parameter.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/const_parameter-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/const_parameter.rs:1:4\n   | fn first<const N: usize>(values: [i32; N]) -> i32 { values[0] }\n   |    ^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3740591
+    },
+    {
+      "label": "lifetime_parameter-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "lifetime_parameter",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/lifetime_parameter.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/lifetime_parameter-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 49935571
+    },
+    {
+      "label": "lifetime_parameter-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/lifetime_parameter-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1300319
+    },
+    {
+      "label": "lifetime_parameter-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "lifetime_parameter",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/lifetime_parameter.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/lifetime_parameter-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/lifetime_parameter.rs:1:4\n   | fn identity<'a, T>(value: &'a T) -> &'a T { value }\n   |    ^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3204414
+    },
+    {
+      "label": "unsafe_generic_function-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_generic_function",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_function.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_function-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 58055732
+    },
+    {
+      "label": "unsafe_generic_function-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_function-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1463450
+    },
+    {
+      "label": "unsafe_generic_function-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unsafe_generic_function",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_function.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_function-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_function.rs:1:11\n   | unsafe fn identity<T>(value: T) -> T { value }\n   |           ^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3177089
+    },
+    {
+      "label": "multiple_instances-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "multiple_instances",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/multiple_instances.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/multiple_instances-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 52021029
+    },
+    {
+      "label": "multiple_instances-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/multiple_instances-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1661753
+    },
+    {
+      "label": "multiple_instances-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "multiple_instances",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/multiple_instances.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/multiple_instances-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/multiple_instances.rs:1:4\n   | fn identity<T>(value: T) -> T { value }\n   |    ^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 2752172
+    },
+    {
+      "label": "unused_safe_template-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unused_safe_template",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused variable: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template.rs:2:14\n  |\n2 | fn unused<T>(value: T) -> i32 { unsafe { add(41) } }\n  |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_value`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `add` is never used\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template.rs:1:11\n  |\n1 | unsafe fn add(value: i32) -> i32 { value + 1 }\n  |           ^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `unused` is never used\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template.rs:2:4\n  |\n2 | fn unused<T>(value: T) -> i32 { unsafe { add(41) } }\n  |    ^^^^^^\n\nwarning: 3 warnings emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 65695051
+    },
+    {
+      "label": "unused_safe_template-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1646410
+    },
+    {
+      "label": "unused_safe_template-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unused_safe_template",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_safe_template.rs:2:4\n   | fn unused<T>(value: T) -> i32 { unsafe { add(41) } }\n   |    ^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 2884828
+    },
+    {
+      "label": "generic_unsafe_pointer_parameter-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "generic_unsafe_pointer_parameter",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_unsafe_pointer_parameter.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_unsafe_pointer_parameter-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused variable: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_unsafe_pointer_parameter.rs:2:14\n  |\n2 | fn invoke<T>(value: T, call: unsafe fn(i32) -> i32) -> i32 { unsafe { call(41) } }\n  |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_value`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nwarning: 1 warning emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 70903884
+    },
+    {
+      "label": "generic_unsafe_pointer_parameter-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_unsafe_pointer_parameter-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1756853
+    },
+    {
+      "label": "generic_unsafe_pointer_parameter-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "generic_unsafe_pointer_parameter",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_unsafe_pointer_parameter.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_unsafe_pointer_parameter-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_unsafe_pointer_parameter.rs:2:4\n   | fn invoke<T>(value: T, call: unsafe fn(i32) -> i32) -> i32 { unsafe { call(41) } }\n   |    ^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 4344677
+    },
+    {
+      "label": "unused_unsafe_call-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unused_unsafe_call",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_unsafe_call.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_unsafe_call-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0133]: call to unsafe function `add` is unsafe and requires unsafe block\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_unsafe_call.rs:2:33\n  |\n2 | fn unused<T>(value: T) -> i32 { add(41) }\n  |                                 ^^^^^^^ call to unsafe function\n  |\n  = note: consult the function's documentation for information on how to avoid undefined behavior\n\nwarning: unused variable: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_unsafe_call.rs:2:14\n  |\n2 | fn unused<T>(value: T) -> i32 { add(41) }\n  |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_value`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\nFor more information about this error, try `rustc --explain E0133`.\n",
+      "timed_out": false,
+      "elapsed_ns": 29662581
+    },
+    {
+      "label": "unused_unsafe_call-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unused_unsafe_call",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_unsafe_call.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_unsafe_call-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_unsafe_call.rs:2:4\n   | fn unused<T>(value: T) -> i32 { add(41) }\n   |    ^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3947957
+    },
+    {
+      "label": "instantiated_unsafe_call-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "instantiated_unsafe_call",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/instantiated_unsafe_call.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/instantiated_unsafe_call-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0133]: call to unsafe function `add` is unsafe and requires unsafe block\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/instantiated_unsafe_call.rs:2:33\n  |\n2 | fn invoke<T>(value: T) -> i32 { add(41) }\n  |                                 ^^^^^^^ call to unsafe function\n  |\n  = note: consult the function's documentation for information on how to avoid undefined behavior\n\nwarning: unused variable: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/instantiated_unsafe_call.rs:2:14\n  |\n2 | fn invoke<T>(value: T) -> i32 { add(41) }\n  |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_value`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\nFor more information about this error, try `rustc --explain E0133`.\n",
+      "timed_out": false,
+      "elapsed_ns": 54273283
+    },
+    {
+      "label": "instantiated_unsafe_call-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "instantiated_unsafe_call",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/instantiated_unsafe_call.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/instantiated_unsafe_call-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/instantiated_unsafe_call.rs:2:4\n   | fn invoke<T>(value: T) -> i32 { add(41) }\n   |    ^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3272619
+    },
+    {
+      "label": "unsafe_generic_call_without_block-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_generic_call_without_block",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_call_without_block.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_call_without_block-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0133]: call to unsafe function `identity` is unsafe and requires unsafe block\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_call_without_block.rs:2:28\n  |\n2 | fn main() { println!(\"{}\", identity(42)); }\n  |                            ^^^^^^^^^^^^ call to unsafe function\n  |\n  = note: consult the function's documentation for information on how to avoid undefined behavior\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0133`.\n",
+      "timed_out": false,
+      "elapsed_ns": 29958287
+    },
+    {
+      "label": "unsafe_generic_call_without_block-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unsafe_generic_call_without_block",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_call_without_block.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_call_without_block-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_generic_call_without_block.rs:1:11\n   | unsafe fn identity<T>(value: T) -> T { value }\n   |           ^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3450813
+    },
+    {
+      "label": "generic_pointer_safety_erasure-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "generic_pointer_safety_erasure",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_pointer_safety_erasure.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_pointer_safety_erasure-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0308]: mismatched types\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_pointer_safety_erasure.rs:2:40\n  |\n2 | fn main() { let safe: fn(i32) -> i32 = identity::<i32>; println!(\"{}\", safe(42)); }\n  |                       --------------   ^^^^^^^^^^^^^^^ expected safe fn, found unsafe fn\n  |                       |\n  |                       expected due to this\n  |\n  = note: expected fn pointer `fn(_) -> _`\n                found fn item `unsafe fn(_) -> _ {identity::<i32>}`\n  = note: unsafe functions cannot be coerced into safe function pointers\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0308`.\n",
+      "timed_out": false,
+      "elapsed_ns": 47007991
+    },
+    {
+      "label": "generic_pointer_safety_erasure-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "generic_pointer_safety_erasure",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_pointer_safety_erasure.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_pointer_safety_erasure-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/generic_pointer_safety_erasure.rs:1:11\n   | unsafe fn identity<T>(value: T) -> T { value }\n   |           ^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3809102
+    },
+    {
+      "label": "unsafe_value_through_generic-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_value_through_generic",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_value_through_generic.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_value_through_generic-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0308]: mismatched types\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_value_through_generic.rs:3:49\n  |\n3 | fn main() { let safe: fn(i32) -> i32 = identity(add as unsafe fn(i32) -> i32); println!(\"{}\", safe(41)); }\n  |                                        -------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected safe fn, found unsafe fn\n  |                                        |\n  |                                        arguments to this function are incorrect\n  |\n  = note: expected fn pointer `fn(_) -> _`\n             found fn pointer `unsafe fn(_) -> _`\nhelp: the return type of this call is `unsafe fn(i32) -> i32` due to the type of the argument passed\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_value_through_generic.rs:3:40\n  |\n3 | fn main() { let safe: fn(i32) -> i32 = identity(add as unsafe fn(i32) -> i32); println!(\"{}\", safe(41)); }\n  |                                        ^^^^^^^^^----------------------------^\n  |                                                 |\n  |                                                 this argument influences the return type of `identity`\nnote: function defined here\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_value_through_generic.rs:1:4\n  |\n1 | fn identity<T>(value: T) -> T { value }\n  |    ^^^^^^^^    --------\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0308`.\n",
+      "timed_out": false,
+      "elapsed_ns": 36977026
+    },
+    {
+      "label": "unsafe_value_through_generic-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unsafe_value_through_generic",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_value_through_generic.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_value_through_generic-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unsafe_value_through_generic.rs:1:4\n   | fn identity<T>(value: T) -> T { value }\n   |    ^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3992252
+    },
+    {
+      "label": "unused_pointer_call-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unused_pointer_call",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_pointer_call.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_pointer_call-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0133]: call to unsafe function is unsafe and requires unsafe block\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_pointer_call.rs:2:62\n  |\n2 | fn unused<T>(value: T, call: unsafe fn(i32) -> i32) -> i32 { call(41) }\n  |                                                              ^^^^^^^^ call to unsafe function\n  |\n  = note: consult the function's documentation for information on how to avoid undefined behavior\n\nwarning: unused variable: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_pointer_call.rs:2:14\n  |\n2 | fn unused<T>(value: T, call: unsafe fn(i32) -> i32) -> i32 { call(41) }\n  |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_value`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\nFor more information about this error, try `rustc --explain E0133`.\n",
+      "timed_out": false,
+      "elapsed_ns": 19928984
+    },
+    {
+      "label": "unused_pointer_call-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unused_pointer_call",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_pointer_call.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_pointer_call-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_pointer_call.rs:2:4\n   | fn unused<T>(value: T, call: unsafe fn(i32) -> i32) -> i32 { call(41) }\n   |    ^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 4796088
+    },
+    {
+      "label": "unused_template_move-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unused_template_move",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_move.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_move-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0382]: use of moved value: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_move.rs:1:47\n  |\n1 | fn duplicate<T>(value: T) -> (T, T) { (value, value) }\n  |                 -----                  -----  ^^^^^ value used here after move\n  |                 |                      |\n  |                 |                      value moved here\n  |                 move occurs because `value` has type `T`, which does not implement the `Copy` trait\n  |\nhelp: if `T` implemented `Clone`, you could clone the value\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_move.rs:1:14\n  |\n1 | fn duplicate<T>(value: T) -> (T, T) { (value, value) }\n  |              ^                         ----- you could clone this value\n  |              |\n  |              consider constraining this type parameter with `Clone`\nhelp: consider restricting type parameter `T` with trait `Copy`\n  |\n1 | fn duplicate<T: Copy>(value: T) -> (T, T) { (value, value) }\n  |               ++++++\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0382`.\n",
+      "timed_out": false,
+      "elapsed_ns": 43820466
+    },
+    {
+      "label": "unused_template_move-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unused_template_move",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_move.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_move-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_move.rs:1:4\n   | fn duplicate<T>(value: T) -> (T, T) { (value, value) }\n   |    ^^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3764947
+    },
+    {
+      "label": "unused_template_type-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unused_template_type",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_type.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_type-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0308]: mismatched types\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_type.rs:1:30\n  |\n1 | fn wrong<T>(value: T) -> T { 42 }\n  |          -               -   ^^ expected type parameter `T`, found integer\n  |          |               |\n  |          |               expected `T` because of return type\n  |          expected this type parameter\n  |\n  = note: expected type parameter `T`\n                       found type `{integer}`\n  = note: the caller chooses a type for `T` which can be different from `i32`\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0308`.\n",
+      "timed_out": false,
+      "elapsed_ns": 160330837
+    },
+    {
+      "label": "unused_template_type-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unused_template_type",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_type.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_type-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_type.rs:1:4\n   | fn wrong<T>(value: T) -> T { 42 }\n   |    ^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 5479683
+    },
+    {
+      "label": "unused_template_borrow-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unused_template_borrow",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_borrow.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_borrow-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0515]: cannot return reference to function parameter `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_borrow.rs:1:40\n  |\n1 | fn escaped<'a, T>(value: T) -> &'a T { &value }\n  |                                        ^^^^^^ returns a reference to data owned by the current function\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0515`.\n",
+      "timed_out": false,
+      "elapsed_ns": 38664681
+    },
+    {
+      "label": "unused_template_borrow-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unused_template_borrow",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_borrow.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_borrow-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_borrow.rs:1:4\n   | fn escaped<'a, T>(value: T) -> &'a T { &value }\n   |    ^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 4265560
+    },
+    {
+      "label": "unused_template_lint-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unused_template_lint",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: usage of an `unsafe` block\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint.rs:3:33\n  |\n3 | fn unused<T>(value: T) -> i32 { unsafe { add(41) } }\n  |                                 ^^^^^^^^^^^^^^^^^^\n  |\nnote: the lint level is defined here\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint.rs:2:8\n  |\n2 | #[deny(unsafe_code)]\n  |        ^^^^^^^^^^^\n\nwarning: unused variable: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint.rs:3:14\n  |\n3 | fn unused<T>(value: T) -> i32 { unsafe { add(41) } }\n  |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_value`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `add` is never used\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint.rs:1:11\n  |\n1 | unsafe fn add(value: i32) -> i32 { value + 1 }\n  |           ^^^\n  |\n  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: function `unused` is never used\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint.rs:3:4\n  |\n3 | fn unused<T>(value: T) -> i32 { unsafe { add(41) } }\n  |    ^^^^^^\n\nerror: aborting due to 1 previous error; 3 warnings emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 22262764
+    },
+    {
+      "label": "unused_template_lint-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "unused_template_lint",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/unused_template_lint.rs:3:4\n   | fn unused<T>(value: T) -> i32 { unsafe { add(41) } }\n   |    ^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3191601
+    },
+    {
+      "label": "producer-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "component",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/producer.rs",
+        "--crate-type",
+        "rlib",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/libcomponent-oracle.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 27561890
+    },
+    {
+      "label": "producer-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/baseline-package/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lustr-native",
+        "--crate-name",
+        "component",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/producer.rs",
+        "--crate-type",
+        "rlib",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/libcomponent-native.rlib"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1000]: generic consumer functions with native artifact imports are not implemented yet\n  --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/producer.rs:1:4\n   | fn identity<T>(value: T) -> T { value }\n   |    ^^^^^^^^\n   = fix: This native artifact interface is not implemented yet.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 3641244
+    },
+    {
+      "label": "imported_unsafe_with_generic-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "imported_unsafe_with_generic",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_with_generic.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_with_generic-oracle.exe",
+        "--extern",
+        "component=/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/libcomponent-oracle.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 82130203
+    },
+    {
+      "label": "imported_unsafe_with_generic-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_with_generic-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1355731
+    },
+    {
+      "label": "imported_safe_with_generic-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "imported_safe_with_generic",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_safe_with_generic.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_safe_with_generic-oracle.exe",
+        "--extern",
+        "component=/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/libcomponent-oracle.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 80603149
+    },
+    {
+      "label": "imported_safe_with_generic-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_safe_with_generic-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1302152
+    },
+    {
+      "label": "imported_unsafe_unused_template-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "imported_unsafe_unused_template",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_unused_template.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_unused_template-oracle.exe",
+        "--extern",
+        "component=/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/libcomponent-oracle.rlib"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0133]: call to unsafe function `component::add` is unsafe and requires unsafe block\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_unused_template.rs:1:33\n  |\n1 | fn unused<T>(value: T) -> i32 { component::add(41) }\n  |                                 ^^^^^^^^^^^^^^^^^^ call to unsafe function\n  |\n  = note: consult the function's documentation for information on how to avoid undefined behavior\n\nwarning: unused variable: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_unused_template.rs:1:14\n  |\n1 | fn unused<T>(value: T) -> i32 { component::add(41) }\n  |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_value`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\nFor more information about this error, try `rustc --explain E0133`.\n",
+      "timed_out": false,
+      "elapsed_ns": 35882359
+    },
+    {
+      "label": "imported_unsafe_instantiated_template-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "imported_unsafe_instantiated_template",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_instantiated_template.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_instantiated_template-oracle.exe",
+        "--extern",
+        "component=/workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/libcomponent-oracle.rlib"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0133]: call to unsafe function `component::add` is unsafe and requires unsafe block\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_instantiated_template.rs:1:33\n  |\n1 | fn invoke<T>(value: T) -> i32 { component::add(41) }\n  |                                 ^^^^^^^^^^^^^^^^^^ call to unsafe function\n  |\n  = note: consult the function's documentation for information on how to avoid undefined behavior\n\nwarning: unused variable: `value`\n --> /workspace/scratch/92a35dfe3ee0/mixed-generics-baseline/imported_unsafe_instantiated_template.rs:1:14\n  |\n1 | fn invoke<T>(value: T) -> i32 { component::add(41) }\n  |              ^^^^^ help: if this is intentional, prefix it with an underscore: `_value`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\nFor more information about this error, try `rustc --explain E0133`.\n",
+      "timed_out": false,
+      "elapsed_ns": 31768199
+    }
+  ],
+  "cases": [
+    {
+      "name": "identity",
+      "valid_rust": true,
+      "source_sha256": "c889ffa68e05414c8038f449061d166969ed4046cdfd9d43396e62ef9cf02796",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "808820564f3a9789df2965221e0df8a354fe9d1d5894a4e47a5ac98271981c55"
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "where_copy",
+      "valid_rust": true,
+      "source_sha256": "f6c2695c5769b78fb89deead6a7f9705d68f03d90d5a4cc40c32e6e340df9a26",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "c64cbc70f89f8fc9928dd5a13cf5fdae06afe37ee10c4194c5ce14614352cc3f"
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "const_parameter",
+      "valid_rust": true,
+      "source_sha256": "74929e6fb72ac14e7169d46f0aa8fc6130ca34330345972df6deaaa8a9731765",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "dd0710cd55e8ee2912acb367cd1487a6fceee4c3e90997489aeac01b3bfe5733"
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "lifetime_parameter",
+      "valid_rust": true,
+      "source_sha256": "ac911acba691834e835b363e5ea6a75ac13641a2661ce5f3d86f12dcd8db1a99",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "dce9269ba9390a137d50234a1e127c2ad445d4f1396817fb81c4a4849e1f3ee4"
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unsafe_generic_function",
+      "valid_rust": true,
+      "source_sha256": "83253c24b0dd0fec51cf60fc85dc8662d68b41195aae21bd3446747ce90ff4cf",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "0726f1cb7456ed824e497da3604ab3feb75f8488734885d429b5a0976b407a9f"
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "multiple_instances",
+      "valid_rust": true,
+      "source_sha256": "7de3cfa5e6fc50ae55c87a4fdc4e7c8257ca0a0adb906c0ba91391d3bd8ae905",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "7d4917bf2ed84c017a031f06cbedcb250b9f96b91ac2ee54c2f792df08a2f5d6"
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unused_safe_template",
+      "valid_rust": true,
+      "source_sha256": "410ba4e28fa8b662a0ee2d9ba514e4d66da600ec9660663e486fa6951a2f5e4a",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "826ef2f4da490c3b18b50cac6b97d4518b955613800bcf4a1614550c341372b3"
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "generic_unsafe_pointer_parameter",
+      "valid_rust": true,
+      "source_sha256": "8cc8812236976fbbb9576752eee98d1cc1e8e85d9a64cc0c9f00932131caa1b4",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "1e967f345d06aaefff3c53cbab3fb6d991efa02cfd5c89a2578aabf3fa8f4df2"
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unused_unsafe_call",
+      "valid_rust": false,
+      "source_sha256": "eaa2bd0bff1d3450e76469ce5d5f40f2ae913d701deedc1f02b470e1fcb56123",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "instantiated_unsafe_call",
+      "valid_rust": false,
+      "source_sha256": "d70896d4b05b200253d4b55d9aee9a625315a270b110858ea3e87e1798e697c4",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unsafe_generic_call_without_block",
+      "valid_rust": false,
+      "source_sha256": "6a4cfe73798de375267445d043a7b44b4552dece6035ba8778b5e0503bdfddaa",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "generic_pointer_safety_erasure",
+      "valid_rust": false,
+      "source_sha256": "5f1608c26fb433c2551a6148731e79353724cfe081dfd62c94d36a2de35c85b7",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unsafe_value_through_generic",
+      "valid_rust": false,
+      "source_sha256": "a0f55d91595084e0af1e5f1fac62b6ee13b7cebab926fc173482a83bdbaad8e3",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unused_pointer_call",
+      "valid_rust": false,
+      "source_sha256": "8af0bd898efc1f710419d47abde314ad55683a4437f5e9b15d7535487b1474ca",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unused_template_move",
+      "valid_rust": false,
+      "source_sha256": "08b3e36e3682c9e1982ab375edcc1ad2146ce5d5472554d2ef6f406a3491add9",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unused_template_type",
+      "valid_rust": false,
+      "source_sha256": "77200e115acdc49acf8fcac1e5bc9e7be057cd9815f8e3b18a054b3e85c3e294",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unused_template_borrow",
+      "valid_rust": false,
+      "source_sha256": "6bbbf1be2cf85f92d27366f37b9d30a2621a6a4b06bd20c7e40e4a77868efbbf",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unused_template_lint",
+      "valid_rust": false,
+      "source_sha256": "cef2b76de2df42575cd373ac40cbad8959548006193c2c7b31ff01ef90ce8f0e",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "imported_unsafe_with_generic",
+      "valid_rust": true,
+      "source_sha256": "c434f230b636199ecfb676293a11b714c3910110bd6b104bb0099a7d3f653cad",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "d861791f290becdcd0beb5a26fb34026887377a8a1aa1a319af07ad31b2366ee"
+        }
+      }
+    },
+    {
+      "name": "imported_safe_with_generic",
+      "valid_rust": true,
+      "source_sha256": "c32fbd9f08f8fea3ac966677d32406c7fab3d849008fedb9287389b4cc1779bb",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "9e539465d0b86ac8d29e1f28d507857c3184c55202cc6f17598949a1bebbec0a"
+        }
+      }
+    },
+    {
+      "name": "imported_unsafe_unused_template",
+      "valid_rust": false,
+      "source_sha256": "cfd186faefda9998b1a66008c3413d63e12f42a3609a725c39f944943aa8cdf0",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "imported_unsafe_instantiated_template",
+      "valid_rust": false,
+      "source_sha256": "84ac20331933366bc2aaacdeecf2a4915a8096bd30eb1777bf8cdd4ffade50e9",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    }
+  ],
+  "failures": [
+    "identity: native acceptance differs from the required Rust result",
+    "where_copy: native acceptance differs from the required Rust result",
+    "const_parameter: native acceptance differs from the required Rust result",
+    "lifetime_parameter: native acceptance differs from the required Rust result",
+    "unsafe_generic_function: native acceptance differs from the required Rust result",
+    "multiple_instances: native acceptance differs from the required Rust result",
+    "unused_safe_template: native acceptance differs from the required Rust result",
+    "generic_unsafe_pointer_parameter: native acceptance differs from the required Rust result",
+    "producer: native rejected private generic helper",
+    "imported_unsafe_with_generic: missing native producer artifact",
+    "imported_safe_with_generic: missing native producer artifact",
+    "imported_unsafe_unused_template: missing native producer artifact",
+    "imported_unsafe_instantiated_template: missing native producer artifact"
+  ],
+  "producer_source_sha256": "7b476473aa258234baa59dc874a64e36c52970f2487ef57d50649be15f6fd89b",
+  "producer_artifacts": {
+    "oracle": {
+      "sha256": "78682aacec3ce3c248cb2c2359ac17ff0cd38a0a152569154f9252d8f774240c"
+    }
+  },
+  "producer_source_hidden": true
+}

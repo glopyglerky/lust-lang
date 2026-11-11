@@ -1,0 +1,1631 @@
+{
+  "schema": "lustr.native-unsafe-regression-diagnostic.v1",
+  "success": true,
+  "qualified": false,
+  "full_native_rust": false,
+  "scope": "Concrete unsafe syntax, lint precedence, callable escape and closure scope regressions",
+  "process_trace": false,
+  "performance_claim": false,
+  "tools": {
+    "native": {
+      "path": "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+      "sha256": "600086c4e7b0b22063376205f36d4a648f73423f5ec0cd30cf81dc2c83b59dbf",
+      "version": "lustr-native 0.1.0 (Lust 0.2.0, build 6761403b3ee6b5c7)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n"
+    },
+    "oracle": {
+      "path": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    }
+  },
+  "runner_sha256": "c2bd4f61ca238bff685acb76e5cea02b121a076c1fdc5eb0b7bb2c3524b74638",
+  "commands": [
+    {
+      "label": "oracle-identity",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "-vV"
+      ],
+      "exit_code": 0,
+      "stdout": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 26289555
+    },
+    {
+      "label": "native-identity",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "-vV"
+      ],
+      "exit_code": 0,
+      "stdout": "lustr-native 0.1.0 (Lust 0.2.0, build 6761403b3ee6b5c7)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 3948532
+    },
+    {
+      "label": "unsafe_main-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_main",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0580]: `main` function has wrong type\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main.rs:1:1\n  |\n1 | unsafe fn main() { println!(\"42\"); }\n  | ^^^^^^^^^^^^^^^^ expected safe fn, found unsafe fn\n  |\n  = note: expected signature `fn()`\n             found signature `unsafe fn()`\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0580`.\n",
+      "timed_out": false,
+      "elapsed_ns": 474275143
+    },
+    {
+      "label": "unsafe_main-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "unsafe_main",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L1001]: the main function must be safe\n  --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main.rs:1:11\n   | unsafe fn main() { println!(\"42\"); }\n   |           ^^^^\n   = fix: Keep the entry point safe and put individual unsafe operations in explicit unsafe blocks.\n\n",
+      "timed_out": false,
+      "elapsed_ns": 17418797
+    },
+    {
+      "label": "function_body_unsafe-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "function_body_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/function_body_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/function_body_unsafe-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: expected one of `->`, `where`, or `{`, found keyword `unsafe`\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/function_body_unsafe.rs:1:11\n  |\n1 | fn main() unsafe { println!(\"42\"); }\n  |           ^^^^^^ expected one of `->`, `where`, or `{`\n\nerror: aborting due to 1 previous error\n\n",
+      "timed_out": false,
+      "elapsed_ns": 19833319
+    },
+    {
+      "label": "function_body_unsafe-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "function_body_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/function_body_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/function_body_unsafe-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L0001]: expected `{`, found `unsafe`\n  --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/function_body_unsafe.rs:1:11\n   | fn main() unsafe { println!(\"42\"); }\n   |           ^^^^^^\n   = fix: Fix the syntax. Lust uses Rust syntax.\n\nerror: could not compile `/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/function_body_unsafe.rs` due to 1 previous error(s)\n",
+      "timed_out": false,
+      "elapsed_ns": 53384831
+    },
+    {
+      "label": "if_body_unsafe-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "if_body_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/if_body_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/if_body_unsafe-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: expected `{`, found keyword `unsafe`\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/if_body_unsafe.rs:1:21\n  |\n1 | fn main() { if true unsafe { println!(\"42\"); } }\n  |                     ^^^^^^ expected `{`\n  |\nnote: the `if` expression is missing a block after this condition\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/if_body_unsafe.rs:1:16\n  |\n1 | fn main() { if true unsafe { println!(\"42\"); } }\n  |                ^^^^\nhelp: you might have meant to write this as part of a block\n  |\n1 | fn main() { if true { unsafe { println!(\"42\"); } } }\n  |                     +                            +\n\nerror: aborting due to 1 previous error\n\n",
+      "timed_out": false,
+      "elapsed_ns": 524662821
+    },
+    {
+      "label": "if_body_unsafe-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "if_body_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/if_body_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/if_body_unsafe-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L0001]: expected `{`, found `unsafe`\n  --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/if_body_unsafe.rs:1:21\n   | fn main() { if true unsafe { println!(\"42\"); } }\n   |                     ^^^^^^\n   = fix: Fix the syntax. Lust uses Rust syntax.\n\nerror: could not compile `/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/if_body_unsafe.rs` due to 1 previous error(s)\n",
+      "timed_out": false,
+      "elapsed_ns": 7247198
+    },
+    {
+      "label": "loop_body_unsafe-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "loop_body_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/loop_body_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/loop_body_unsafe-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: expected `{`, found keyword `unsafe`\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/loop_body_unsafe.rs:1:18\n  |\n1 | fn main() { loop unsafe { println!(\"42\"); break; } }\n  |             ---- ^^^^^^ expected `{`\n  |             |\n  |             while parsing this `loop` expression\n  |\nhelp: you might have meant to write this as part of a block\n  |\n1 | fn main() { loop { unsafe { println!(\"42\"); break; } } }\n  |                  +                                   +\n\nerror: aborting due to 1 previous error\n\n",
+      "timed_out": false,
+      "elapsed_ns": 18590776
+    },
+    {
+      "label": "loop_body_unsafe-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "loop_body_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/loop_body_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/loop_body_unsafe-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L0001]: expected `{`, found `unsafe`\n  --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/loop_body_unsafe.rs:1:18\n   | fn main() { loop unsafe { println!(\"42\"); break; } }\n   |                  ^^^^^^\n   = fix: Fix the syntax. Lust uses Rust syntax.\n\nerror: could not compile `/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/loop_body_unsafe.rs` due to 1 previous error(s)\n",
+      "timed_out": false,
+      "elapsed_ns": 4688806
+    },
+    {
+      "label": "else_body_unsafe-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "else_body_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/else_body_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/else_body_unsafe-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: expected `{`, found keyword `unsafe`\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/else_body_unsafe.rs:1:30\n  |\n1 | fn main() { if false {} else unsafe { println!(\"42\"); } }\n  |                              ^^^^^^ expected `{`\n  |\nhelp: you might have meant to write this as part of a block\n  |\n1 | fn main() { if false {} else { unsafe { println!(\"42\"); } } }\n  |                              +                            +\n\nerror: aborting due to 1 previous error\n\n",
+      "timed_out": false,
+      "elapsed_ns": 24335757
+    },
+    {
+      "label": "else_body_unsafe-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "else_body_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/else_body_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/else_body_unsafe-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[L0001]: expected `{`, found `unsafe`\n  --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/else_body_unsafe.rs:1:30\n   | fn main() { if false {} else unsafe { println!(\"42\"); } }\n   |                              ^^^^^^\n   = fix: Fix the syntax. Lust uses Rust syntax.\n\nerror: could not compile `/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/else_body_unsafe.rs` due to 1 previous error(s)\n",
+      "timed_out": false,
+      "elapsed_ns": 9218160
+    },
+    {
+      "label": "unsafe_ref_parameter-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_ref_parameter",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_ref_parameter.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_ref_parameter-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0133]: call to unsafe function is unsafe and requires unsafe block\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_ref_parameter.rs:2:57\n  |\n2 | fn invoke(ref function: unsafe fn(i32) -> i32) -> i32 { function(41) }\n  |                                                         ^^^^^^^^^^^^ call to unsafe function\n  |\n  = note: consult the function's documentation for information on how to avoid undefined behavior\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0133`.\n",
+      "timed_out": false,
+      "elapsed_ns": 18209038
+    },
+    {
+      "label": "unsafe_ref_parameter-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "unsafe_ref_parameter",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_ref_parameter.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_ref_parameter-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: native imported binary: native library unsafe checking failed\n/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_ref_parameter.rs:2:57: L1001: calling this unsafe function requires an unsafe block\n",
+      "timed_out": false,
+      "elapsed_ns": 10618973
+    },
+    {
+      "label": "allow_then_deny-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "allow_then_deny",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/allow_then_deny.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/allow_then_deny-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: declaration of an `unsafe` function\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/allow_then_deny.rs:3:1\n  |\n3 | unsafe fn helper(value: i32) -> i32 { value + 1 }\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  |\nnote: the lint level is defined here\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/allow_then_deny.rs:2:8\n  |\n2 | #[deny(unsafe_code)]\n  |        ^^^^^^^^^^^\n\nerror: aborting due to 1 previous error\n\n",
+      "timed_out": false,
+      "elapsed_ns": 20878033
+    },
+    {
+      "label": "allow_then_deny-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "allow_then_deny",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/allow_then_deny.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/allow_then_deny-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: native imported binary: native library unsafe checking failed\n/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/allow_then_deny.rs:3:11: L1003: unsafe code is forbidden by the active unsafe_code lint\n",
+      "timed_out": false,
+      "elapsed_ns": 7546477
+    },
+    {
+      "label": "qualified_lint_override-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "qualified_lint_override",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/qualified_lint_override.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/qualified_lint_override-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: declaration of an `unsafe` function\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/qualified_lint_override.rs:3:1\n  |\n3 | unsafe fn helper(value: i32) -> i32 { value + 1 }\n  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  |\nnote: the lint level is defined here\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/qualified_lint_override.rs:1:8\n  |\n1 | #[deny(unsafe_code)]\n  |        ^^^^^^^^^^^\n\nerror: aborting due to 1 previous error\n\n",
+      "timed_out": false,
+      "elapsed_ns": 20029399
+    },
+    {
+      "label": "qualified_lint_override-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "qualified_lint_override",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/qualified_lint_override.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/qualified_lint_override-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: native imported binary: native library unsafe checking failed\n/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/qualified_lint_override.rs:3:11: L1003: unsafe code is forbidden by the active unsafe_code lint\n",
+      "timed_out": false,
+      "elapsed_ns": 7917095
+    },
+    {
+      "label": "closure_return_context-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "closure_return_context",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_return_context.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_return_context-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0308]: mismatched types\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_return_context.rs:3:32\n  |\n3 |     let safe: fn(i32) -> i32 = make();\n  |               --------------   ^^^^^^ expected safe fn, found unsafe fn\n  |               |\n  |               expected due to this\n  |\n  = note: expected fn pointer `fn(_) -> _`\n                found fn item `unsafe fn(_) -> _ {unsafe_helper}`\n  = note: unsafe functions cannot be coerced into safe function pointers\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0308`.\n",
+      "timed_out": false,
+      "elapsed_ns": 58474176
+    },
+    {
+      "label": "closure_return_context-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "closure_return_context",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_return_context.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_return_context-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: native imported binary: native library unsafe checking failed\n/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_return_context.rs:2:21: L1000: this use does not preserve the unsafe callable contract\n",
+      "timed_out": false,
+      "elapsed_ns": 9953799
+    },
+    {
+      "label": "unsafe_type_length-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_type_length",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: usage of an `unsafe` block\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length.rs:2:30\n  |\n2 | fn main() { let values: [u8; unsafe { 1 }] = [0]; println!(\"{}\", values[0] + 42); }\n  |                              ^^^^^^^^^^^^\n  |\nnote: the lint level is defined here\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length.rs:1:8\n  |\n1 | #[deny(unsafe_code)]\n  |        ^^^^^^^^^^^\n\nwarning: unnecessary `unsafe` block\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length.rs:2:30\n  |\n2 | fn main() { let values: [u8; unsafe { 1 }] = [0]; println!(\"{}\", values[0] + 42); }\n  |                              ^^^^^^ unnecessary `unsafe` block\n  |\n  = note: `#[warn(unused_unsafe)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 21920594
+    },
+    {
+      "label": "unsafe_type_length-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "unsafe_type_length",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: native imported binary: native library unsafe checking failed\n/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length.rs:2:30: L1003: unsafe code is forbidden by the active unsafe_code lint\n",
+      "timed_out": false,
+      "elapsed_ns": 7587061
+    },
+    {
+      "label": "unsafe_type_length_control-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_type_length_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length_control.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length_control-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unnecessary `unsafe` block\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length_control.rs:1:30\n  |\n1 | fn main() { let values: [u8; unsafe { 1 }] = [0]; println!(\"{}\", values[0] + 42); }\n  |                              ^^^^^^ unnecessary `unsafe` block\n  |\n  = note: `#[warn(unused_unsafe)]` (part of `#[warn(unused)]`) on by default\n\nwarning: 1 warning emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 68499375
+    },
+    {
+      "label": "unsafe_type_length_control-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length_control-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1166632
+    },
+    {
+      "label": "unsafe_type_length_control-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "unsafe_type_length_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length_control.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length_control-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 33740505
+    },
+    {
+      "label": "unsafe_type_length_control-native-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_type_length_control-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1529394
+    },
+    {
+      "label": "closure_outside_unsafe-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "closure_outside_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_outside_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_outside_unsafe-oracle.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error[E0133]: call to unsafe function `helper` is unsafe and requires unsafe block\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_outside_unsafe.rs:2:27\n  |\n2 | fn main() { let call = || helper(41); unsafe { println!(\"{}\", call()); } }\n  |                           ^^^^^^^^^^ call to unsafe function\n  |\n  = note: consult the function's documentation for information on how to avoid undefined behavior\n\nwarning: unnecessary `unsafe` block\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_outside_unsafe.rs:2:39\n  |\n2 | fn main() { let call = || helper(41); unsafe { println!(\"{}\", call()); } }\n  |                                       ^^^^^^ unnecessary `unsafe` block\n  |\n  = note: `#[warn(unused_unsafe)]` (part of `#[warn(unused)]`) on by default\n\nerror: aborting due to 1 previous error; 1 warning emitted\n\nFor more information about this error, try `rustc --explain E0133`.\n",
+      "timed_out": false,
+      "elapsed_ns": 27851336
+    },
+    {
+      "label": "closure_outside_unsafe-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "closure_outside_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_outside_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_outside_unsafe-native.exe"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "error: native imported binary: native library unsafe checking failed\n/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_outside_unsafe.rs:2:27: L1001: calling this unsafe function requires an unsafe block\n",
+      "timed_out": false,
+      "elapsed_ns": 7616781
+    },
+    {
+      "label": "closure_inside_unsafe-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "closure_inside_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_inside_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_inside_unsafe-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 63605931
+    },
+    {
+      "label": "closure_inside_unsafe-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_inside_unsafe-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1479317
+    },
+    {
+      "label": "closure_inside_unsafe-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "closure_inside_unsafe",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_inside_unsafe.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_inside_unsafe-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 33099157
+    },
+    {
+      "label": "closure_inside_unsafe-native-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/closure_inside_unsafe-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1056896
+    },
+    {
+      "label": "unsafe_call_control-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_call_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_call_control.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_call_control-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 58327726
+    },
+    {
+      "label": "unsafe_call_control-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_call_control-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1150840
+    },
+    {
+      "label": "unsafe_call_control-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "unsafe_call_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_call_control.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_call_control-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 32077312
+    },
+    {
+      "label": "unsafe_call_control-native-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_call_control-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1336998
+    },
+    {
+      "label": "unsafe_main_library_control-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_main_library_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main_library_control.rs",
+        "--crate-type",
+        "rlib",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/libunsafe_main_library_control_oracle.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 18136637
+    },
+    {
+      "label": "unsafe_main_library_control-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "unsafe_main_library_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main_library_control.rs",
+        "--crate-type",
+        "rlib",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/libunsafe_main_library_control_native.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 15371314
+    },
+    {
+      "label": "unsafe_main_library_control-oracle-source-hidden-consumer",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "unsafe_main_library_control_consumer",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main_library_control_consumer.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "--extern",
+        "component=/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/libunsafe_main_library_control_oracle.rlib",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main_library_control-oracle-consumer.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 61816334
+    },
+    {
+      "label": "unsafe_main_library_control-oracle-source-hidden-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main_library_control-oracle-consumer.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1478792
+    },
+    {
+      "label": "unsafe_main_library_control-native-source-hidden-consumer",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "unsafe_main_library_control_consumer",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main_library_control_consumer.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "--extern",
+        "component=/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/libunsafe_main_library_control_native.rlib",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main_library_control-native-consumer.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 38676861
+    },
+    {
+      "label": "unsafe_main_library_control-native-source-hidden-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/unsafe_main_library_control-native-consumer.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1368180
+    },
+    {
+      "label": "safe_main_library_control-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "safe_main_library_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/safe_main_library_control.rs",
+        "--crate-type",
+        "rlib",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/libsafe_main_library_control_oracle.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 17931323
+    },
+    {
+      "label": "safe_main_library_control-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "safe_main_library_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/safe_main_library_control.rs",
+        "--crate-type",
+        "rlib",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/libsafe_main_library_control_native.rlib"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 17299409
+    },
+    {
+      "label": "safe_main_library_control-oracle-source-hidden-consumer",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "safe_main_library_control_consumer",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/safe_main_library_control_consumer.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "--extern",
+        "component=/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/libsafe_main_library_control_oracle.rlib",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/safe_main_library_control-oracle-consumer.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 55657569
+    },
+    {
+      "label": "safe_main_library_control-oracle-source-hidden-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/safe_main_library_control-oracle-consumer.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1077684
+    },
+    {
+      "label": "safe_main_library_control-native-source-hidden-consumer",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "safe_main_library_control_consumer",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/safe_main_library_control_consumer.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "--extern",
+        "component=/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/libsafe_main_library_control_native.rlib",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/safe_main_library_control-native-consumer.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 31909635
+    },
+    {
+      "label": "safe_main_library_control-native-source-hidden-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/safe_main_library_control-native-consumer.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 5243324
+    },
+    {
+      "label": "extension_prefix_middle_suffix-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "extension_prefix_middle_suffix",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_prefix_middle_suffix.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_prefix_middle_suffix-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 59263826
+    },
+    {
+      "label": "extension_prefix_middle_suffix-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_prefix_middle_suffix-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1114332
+    },
+    {
+      "label": "extension_prefix_middle_suffix-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "extension_prefix_middle_suffix",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_prefix_middle_suffix.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_prefix_middle_suffix-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 39618753
+    },
+    {
+      "label": "extension_prefix_middle_suffix-native-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_prefix_middle_suffix-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1407201
+    },
+    {
+      "label": "extension_after_opaque_macro-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "extension_after_opaque_macro",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_after_opaque_macro.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_after_opaque_macro-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused macro definition: `ignored`\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_after_opaque_macro.rs:1:14\n  |\n1 | macro_rules! ignored { () => { unsafe extern \"C\" { fn never(); } }; }\n  |              ^^^^^^^\n  |\n  = note: `#[warn(unused_macros)]` (part of `#[warn(unused)]`) on by default\n\nwarning: 1 warning emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 55974616
+    },
+    {
+      "label": "extension_after_opaque_macro-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_after_opaque_macro-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1623649
+    },
+    {
+      "label": "extension_after_opaque_macro-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "extension_after_opaque_macro",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_after_opaque_macro.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_after_opaque_macro-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 33595627
+    },
+    {
+      "label": "extension_after_opaque_macro-native-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_after_opaque_macro-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1628946
+    },
+    {
+      "label": "opaque_macro_between_extensions-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "opaque_macro_between_extensions",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/opaque_macro_between_extensions.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/opaque_macro_between_extensions-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused macro definition: `ignored`\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/opaque_macro_between_extensions.rs:2:14\n  |\n2 | macro_rules! ignored { () => { unsafe extern \"C\" { fn never(); } }; }\n  |              ^^^^^^^\n  |\n  = note: `#[warn(unused_macros)]` (part of `#[warn(unused)]`) on by default\n\nwarning: 1 warning emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 56033760
+    },
+    {
+      "label": "opaque_macro_between_extensions-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/opaque_macro_between_extensions-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1076021
+    },
+    {
+      "label": "opaque_macro_between_extensions-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "opaque_macro_between_extensions",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/opaque_macro_between_extensions.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/opaque_macro_between_extensions-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 44224814
+    },
+    {
+      "label": "opaque_macro_between_extensions-native-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/opaque_macro_between_extensions-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1416865
+    },
+    {
+      "label": "extension_with_string_pool-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "extension_with_string_pool",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_with_string_pool.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_with_string_pool-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused variable: `text`\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_with_string_pool.rs:1:17\n  |\n1 | fn main() { let text = \"unsafe fn, unsafe {, unsafe impl\";\n  |                 ^^^^ help: if this is intentional, prefix it with an underscore: `_text`\n  |\n  = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default\n\nwarning: 1 warning emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 56971777
+    },
+    {
+      "label": "extension_with_string_pool-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_with_string_pool-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1198524
+    },
+    {
+      "label": "extension_with_string_pool-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "extension_with_string_pool",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_with_string_pool.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_with_string_pool-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 38576617
+    },
+    {
+      "label": "extension_with_string_pool-native-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/extension_with_string_pool-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1435689
+    },
+    {
+      "label": "plain_opaque_macro_control-oracle",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "--crate-name",
+        "plain_opaque_macro_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/plain_opaque_macro_control.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/plain_opaque_macro_control-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: unused macro definition: `ignored`\n --> /workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/plain_opaque_macro_control.rs:1:14\n  |\n1 | macro_rules! ignored { () => { unsafe extern \"C\" { fn never(); } }; }\n  |              ^^^^^^^\n  |\n  = note: `#[warn(unused_macros)]` (part of `#[warn(unused)]`) on by default\n\nwarning: 1 warning emitted\n\n",
+      "timed_out": false,
+      "elapsed_ns": 52638615
+    },
+    {
+      "label": "plain_opaque_macro_control-oracle-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/plain_opaque_macro_control-oracle.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1512712
+    },
+    {
+      "label": "plain_opaque_macro_control-native",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/native-diagnostic-build/gate/lustr-native",
+        "--crate-name",
+        "plain_opaque_macro_control",
+        "--edition=2024",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/plain_opaque_macro_control.rs",
+        "--crate-type",
+        "bin",
+        "--emit=link",
+        "-o",
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/plain_opaque_macro_control-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 62829693
+    },
+    {
+      "label": "plain_opaque_macro_control-native-runtime",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/92a35dfe3ee0/unsafe-final-diagnostic/plain_opaque_macro_control-native.exe"
+      ],
+      "exit_code": 0,
+      "stdout": "42\n",
+      "stderr": "",
+      "timed_out": false,
+      "elapsed_ns": 1138234
+    }
+  ],
+  "cases": [
+    {
+      "name": "unsafe_main",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "ec0d519174a9e8a384c4fae99ae610f19690239073188b774883e3314dcd0abf",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "function_body_unsafe",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "f57bce40a9138bdaa6549e6b1dd4e675d9b149d5a1f553a9263d1ca40a32222b",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "if_body_unsafe",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "8349f4ff5b40f7fd2f8c0be83c4dd2818cd905e58e60c09efee89d4fa27a7ce3",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "loop_body_unsafe",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "9f8886175f6f7dbba5ddfeb9f0ad88a0cd057af5dfac23f4533366fd1e01a4b5",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "else_body_unsafe",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "254cc41941bd8cf5f4b68a144fbd910b2be37f46f2a97af57fd02cd81cebf0c3",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unsafe_ref_parameter",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "0e9c350b16c0949834f0e1b62ffd7e38137ffcca7414b1f44523981907aee411",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "allow_then_deny",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "c143020d5448b43117a0b7f0ef7dcc59211db299344b1ece38851c003d3fcbb3",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "qualified_lint_override",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "785b52a2a6cb893a8f1db981aec6f5b9183e2cdcb56f2482fbc1deba47266084",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "closure_return_context",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "4534c672dc02c36f4c84e248804158626b3433f440cab25b18d70966072415e9",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unsafe_type_length",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "384740102fabd23ee9601948e29f1e3fe246c3ac8313c89c203cf1b29edcf18f",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "unsafe_type_length_control",
+      "crate_type": "bin",
+      "valid_rust": true,
+      "source_sha256": "9b363b8f6811504ec9a0d005d419ecc8591fbedf86cd33b87d67dba60a8985a5",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "166f464ec2c394efeb4ff78b010a199efabbc10fbdd6135219036dea6719eb5d"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "95897c37c758b5aa5e6cf1fe24ffebb94111d27ae58ba29b2a83efd7fcd2cf10"
+        }
+      }
+    },
+    {
+      "name": "closure_outside_unsafe",
+      "crate_type": "bin",
+      "valid_rust": false,
+      "source_sha256": "d85333731d304ddca9fa02d42038362bdabb42e01031b33ccfc9f10c63115073",
+      "lanes": {
+        "oracle": {
+          "exit_code": 1,
+          "artifact_exists": false
+        },
+        "native": {
+          "exit_code": 1,
+          "artifact_exists": false
+        }
+      }
+    },
+    {
+      "name": "closure_inside_unsafe",
+      "crate_type": "bin",
+      "valid_rust": true,
+      "source_sha256": "7abdcfcb13472f8e780942008c6fb329cc38481ff48aba2fdc5c9c720b946fe2",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "c373e3e8fcd73dec3d8bd2ec06f57db70901a7f01621d2382e2835c995fc7cdf"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "b0e124d74197c5eabe055b9843266fc01d574724d51dcdfaf2769e0d0374be29"
+        }
+      }
+    },
+    {
+      "name": "unsafe_call_control",
+      "crate_type": "bin",
+      "valid_rust": true,
+      "source_sha256": "3965bb969e3e201832542046cab4d7f26b9a06a2f219fcb63f43c661943948a9",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "9edb096246b37d28a329f5d3349fafbc027da2b3f894aa400c74636da4eb4ad1"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "22c3700d90d5c1856a3570ca3d5dc16789084adb5a2627ef9b21fd6875662927"
+        }
+      }
+    },
+    {
+      "name": "unsafe_main_library_control",
+      "crate_type": "rlib",
+      "valid_rust": true,
+      "source_sha256": "b72a0ec2144a84843afa085748203d35ebaed06b7c6e48c8465d68dd94db437a",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "a37536919407af36706f16a722271f6a44d36eaa337ae72b1669f28d86eb5d60"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "07f1fec59aa0841bba73539c0e9fead6ec7d050d5fe6dedcf308c7514317cb2b"
+        }
+      },
+      "producer_source_hidden": true,
+      "retained_producer_source": "unsafe_main_library_control.sealed-source",
+      "consumer_sha256": "08d933a56c39df9bc8fe6d4085b0d9d539a8e5d98c2803da0f459d75e4f15dc2"
+    },
+    {
+      "name": "safe_main_library_control",
+      "crate_type": "rlib",
+      "valid_rust": true,
+      "source_sha256": "a691ddc8a2b3bc4682b2f41e143f2b75a11aaab2e873356c94863e69d31e6685",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "b7f560caf714a1797c3e4af62a25e8ae491ffe941cd61154734bd2889ca3f9ba"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "3f7d71650f55e0be87f7ddba571ad59fdc24139640f3f95634b92a3a1463a403"
+        }
+      },
+      "producer_source_hidden": true,
+      "retained_producer_source": "safe_main_library_control.sealed-source",
+      "consumer_sha256": "1d015e5561c42f2213fa0447589d87d2ee0de335a009e38847f64d18f4a23998"
+    },
+    {
+      "name": "extension_prefix_middle_suffix",
+      "crate_type": "bin",
+      "valid_rust": true,
+      "source_sha256": "aaa88e1f5a4d2e8635ab90cc85f62429c440b6dc1210509c5f3d0b048a14b884",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "52f9858497700ee5b6ca6cbaa4663d0c198367a86ca9a8f327b99da668ae7aa1"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "1e66516e19d2cfa401219aa81e9c42a04597d8dfcce0bd30b5390a4bacce809c"
+        }
+      }
+    },
+    {
+      "name": "extension_after_opaque_macro",
+      "crate_type": "bin",
+      "valid_rust": true,
+      "source_sha256": "d8f814383420fcee03f269ef5f18f8678e50ee53b8b583d2ee3dcdc2508d9ba3",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "55cc5c6b5d175ff520874105b630cc31d6b6584733fa1fb9dc67714f77bfd122"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "b69693d9e2f60cb5a2eb59a0b170811d0186f62abeb242b2a1a4faf527c94adf"
+        }
+      }
+    },
+    {
+      "name": "opaque_macro_between_extensions",
+      "crate_type": "bin",
+      "valid_rust": true,
+      "source_sha256": "ef85b1bde3aa64d8602eee6150c43827c20da4fa42d55ff27f43e60519618325",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "a752c3dcedbd13f5f6bbacb452aae07049677202d942eae08248ee5318ecb6c5"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "86517dd2a9fe560a06d589e2e3fc58a73cb3c89680934757dfde541922647e30"
+        }
+      }
+    },
+    {
+      "name": "extension_with_string_pool",
+      "crate_type": "bin",
+      "valid_rust": true,
+      "source_sha256": "9313dd29088398d52d7213f7579be59d261d28952dbbbb5f74197fff87297e08",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "53be6f459c6c96748d6a09cf54c38a802e34c84f058496cc6bd2e7d18f9f9379"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "7641b75433b537ac9f43dc56a582c2118cdbf860b483847a92b0d08041e30587"
+        }
+      }
+    },
+    {
+      "name": "plain_opaque_macro_control",
+      "crate_type": "bin",
+      "valid_rust": true,
+      "source_sha256": "01578e1177c254e305517280c76c2d4efef8b592a22d8423b4a57b32e3b1ed17",
+      "lanes": {
+        "oracle": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "9dd29dacb9aca4fa2f39bfb7d73d90d92058024dda0567fb8fa8f9414952f313"
+        },
+        "native": {
+          "exit_code": 0,
+          "artifact_exists": true,
+          "artifact_sha256": "33e23cae83cce431f1426a29680168c328c647b989cb405740707e033e0e367d"
+        }
+      }
+    }
+  ],
+  "failures": [],
+  "accepted_invalid_cases": [],
+  "unsupported_valid_cases": []
+}

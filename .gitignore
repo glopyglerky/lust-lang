@@ -1,6 +1,7 @@
 /target/
 /crates/lustr/target/
 /crates/lustr-semantic/target/
+/crates/lustr-native/target/
 **/__pycache__/
 **/.lust-cache/
 **/.lust-daemon-*.sock*
