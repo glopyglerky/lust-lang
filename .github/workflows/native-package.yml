@@ -79,7 +79,6 @@ jobs:
     env:
       RUSTUP_TOOLCHAIN: 1.99.1
       PYTHONDONTWRITEBYTECODE: '1'
-      LUSTR_DIST: ${{ runner.temp }}/lustr-native-dist
     steps:
       - uses: actions/checkout@v4
         with:
@@ -142,7 +141,7 @@ jobs:
       - name: Assemble the relocatable package
         run: |
           python3 tools/package-toolchain.py \
-            --output "$LUSTR_DIST/lustr-native-preview-x86_64-unknown-linux-gnu" \
+            --output "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu" \
             --native-bin compiler/native/target/release \
             --native-cargo-bin "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
             --native-cargo-receipt "$RUNNER_TEMP/native-cargo-build.json" \
@@ -153,16 +152,16 @@ jobs:
       - name: Verify relocation, actual engines, and retained native path
         run: |
           python3 tools/qualify-package.py \
-            --package "$LUSTR_DIST/lustr-native-preview-x86_64-unknown-linux-gnu" \
+            --package "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu" \
             --baseline-native compiler/native/target/release/lust \
             --oracle-rustc "$(rustup which rustc)" \
-            --output "$LUSTR_DIST/package-qualification.json"
+            --output "$RUNNER_TEMP/lustr-native-dist/package-qualification.json"
       - name: Record actual native coverage and remaining gaps
         run: |
           python3 tools/native-qualification.py \
-            --lust "$LUSTR_DIST/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust" \
+            --lust "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu/bin/lust" \
             --rustc "$(rustup which rustc)" \
-            --output "$LUSTR_DIST/native-qualification"
+            --output "$RUNNER_TEMP/lustr-native-dist/native-qualification"
       - name: Enforce native compatibility, concurrency and zero-regression speed
         run: |
           python3 tools/qualify-native-speed.py \
@@ -180,16 +179,16 @@ jobs:
         run: |
           tar --sort=name --owner=0 --group=0 --numeric-owner \
             --mtime="@$(git show -s --format=%ct HEAD)" \
-            -C "$LUSTR_DIST" -cf - lustr-native-preview-x86_64-unknown-linux-gnu \
-            | gzip -n -6 > "$LUSTR_DIST/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz"
-          cd "$LUSTR_DIST"
+            -C "$RUNNER_TEMP/lustr-native-dist" -cf - lustr-native-preview-x86_64-unknown-linux-gnu \
+            | gzip -n -6 > "$RUNNER_TEMP/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz"
+          cd "$RUNNER_TEMP/lustr-native-dist"
           sha256sum lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: lustr-native-preview-linux-x86_64-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
-            ${{ env.LUSTR_DIST }}/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
-            ${{ env.LUSTR_DIST }}/SHA256SUMS
+            ${{ runner.temp }}/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
+            ${{ runner.temp }}/lustr-native-dist/SHA256SUMS
           if-no-files-found: error
           compression-level: 0
       - uses: actions/upload-artifact@v4
@@ -197,15 +196,15 @@ jobs:
         with:
           name: lustr-package-evidence-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
-            ${{ env.LUSTR_DIST }}/package-qualification.json
-            ${{ env.LUSTR_DIST }}/package-qualification-native-library
+            ${{ runner.temp }}/lustr-native-dist/package-qualification.json
+            ${{ runner.temp }}/lustr-native-dist/package-qualification-native-library
             ${{ runner.temp }}/native-library-safe-evidence
             ${{ runner.temp }}/native-protocol-evidence
             ${{ runner.temp }}/native-unsafe-regression-evidence
             ${{ runner.temp }}/native-mixed-generics-evidence
             ${{ runner.temp }}/native-speed-evidence
-            ${{ env.LUSTR_DIST }}/native-qualification
-            ${{ env.LUSTR_DIST }}/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
+            ${{ runner.temp }}/lustr-native-dist/native-qualification
+            ${{ runner.temp }}/lustr-native-dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
             ${{ runner.temp }}/native-cargo-build.json
             ${{ runner.temp }}/native-cargo-build.cargo.log
           if-no-files-found: warn
