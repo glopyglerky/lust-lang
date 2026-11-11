@@ -34,7 +34,7 @@ concurrency:
 jobs:
   upstream-lust:
     name: Unchanged upstream Lust source
-    runs-on: ubuntu-24.04
+    runs-on: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER_ROUTES || '{}')['ubuntu-24.04'] || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
@@ -50,7 +50,7 @@ jobs:
 
   semantic:
     name: Checked rustc semantic inspection
-    runs-on: ubuntu-24.04
+    runs-on: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER_ROUTES || '{}')['ubuntu-24.04'] || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install pinned compiler development libraries
@@ -68,7 +68,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, macos-15, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER_ROUTES || '{}')[matrix.os] || matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
@@ -82,7 +82,7 @@ jobs:
 
   minimum-rust:
     name: Coordinator minimum Rust
-    runs-on: ubuntu-24.04
+    runs-on: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER_ROUTES || '{}')['ubuntu-24.04'] || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install minimum supported Rust
@@ -92,7 +92,7 @@ jobs:
 
   lust:
     name: Actual Lust subset qualification
-    runs-on: ubuntu-24.04
+    runs-on: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER_ROUTES || '{}')['ubuntu-24.04'] || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
@@ -108,7 +108,7 @@ jobs:
 
   cranelift:
     name: Cranelift with unwinding qualification
-    runs-on: ubuntu-24.04
+    runs-on: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNNER_ROUTES || '{}')['ubuntu-24.04'] || 'ubuntu-24.04' }}
     env:
       RUSTUP_TOOLCHAIN: nightly-2026-11-05
     steps:

@@ -2,6 +2,7 @@
 //! Cargo owns the dependency graph and all Rust artefacts. This module chooses an
 //! entire invocation, never pieces of source or incompatible library formats.
 mod doctor;
+mod native_cache;
 mod toolchain;
 
 use std::ffi::{OsStr, OsString};
@@ -61,6 +62,10 @@ This discards inherited CARGO and cannot be combined with LUST_CARGO.
 LUST_CRANELIFT_BACKEND is required only when the Cranelift dev/test route is used.
 Its path must be valid UTF-8 for Cargo's command-scoped TOML configuration.
 Choosing a backend path does not certify its features, ABI, or program correctness.
+For native check/build/run execution, untracked external-input macro names force
+a fresh Lust process with its cache disabled. Unreadable, oversized or ambiguous
+source inputs also recompute. This guard preserves source, arguments and errors;
+it does not select another compiler. Plans do not read source or apply the guard.
 The lustr, cargo-lustr, and cargo-lust executables use the same coordinator.
 --bluefe-root selects bin/cargo, bin/rustc and bin/rustdoc for this invocation.
 It preserves arguments, flags, profiles and compiler wrappers, installs nothing,
@@ -472,6 +477,9 @@ impl Plan {
             command.env_remove(key);
         }
         command.args(&self.args).envs(self.environment.iter().map(|(key, value)| (key, value)));
+        if self.selected_engine == Engine::Lust {
+            native_cache::protect(&mut command, &self.args);
+        }
         command
     }
 }
