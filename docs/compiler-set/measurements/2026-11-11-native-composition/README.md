@@ -64,3 +64,10 @@ traced library, relocation and strict native acceptance gates.
 Full Rust compilation, complete upstream accepted-input coverage, general
 artifact interoperability and both required speed floors remain unfinished.
 No source fixture was reduced to make the full-Rust requirement pass.
+
+## Subsequent optimized CI
+
+The [optimized CI record](optimized-ci/README.md) preserves the results for
+`c3d57f630cb4d2909e9217ae0fa074225376f76a`. Optimized correctness, relocation
+and bounded Cargo concurrency checks passed. Strict speed and full Rust
+acceptance failed, so that run produced no installable package archive.
