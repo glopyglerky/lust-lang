@@ -136,6 +136,18 @@ def main() -> None:
                 else:
                     require(digest(path) == entry["sha256"], f"payload mismatch: {entry['path']}")
             report["checks"].append("complete payload hashes after relocation")
+            provenance = manifest["native_cargo"]["build_provenance"]
+            receipt_path = package / provenance["receipt"]
+            require(receipt_path.resolve().is_relative_to(package), "native build receipt escapes package")
+            require(digest(receipt_path) == provenance["receipt_sha256"], "native build receipt hash differs")
+            native_build = json.loads(receipt_path.read_text())
+            require(native_build["source"]["commit"] == report["source_revision"]
+                    and native_build["binary"]["sha256"] == digest(package / "bin/lustr-native")
+                    and native_build["build"]["profile"] == manifest["native_cargo"]["build_profile"]
+                    and native_build["build"]["settings"] == manifest["native_cargo"]["build_settings"],
+                    "native build evidence differs from the delivered source, executable or settings")
+            report["native_cargo_build"] = native_build
+            report["checks"].append("native Cargo build receipt binds the measured executable, source and build settings")
             for name in ("lust", "lust-core"):
                 require(digest(package / "bin" / name) == digest(baseline.with_name(name)), "native compiler differs from pristine build")
             report["checks"].append("packaged native executables identical to pristine release build")
@@ -286,8 +298,8 @@ def main() -> None:
             report["failure"] = f"{type(error).__name__}: {error}"
             raise
         finally:
-            if native_cargo_evidence.exists():
-                report["native_cargo_qualification"] = json.loads(native_cargo_evidence.read_text())
+            # Restore owned paths and stop owned processes before inspecting
+            # evidence, which may be incomplete after an interrupted write.
             for original_source, hidden_source in reversed(hidden_sources):
                 hidden_source.rename(original_source)
             if hidden_package is not None and hidden_package.exists() and not original.exists():
@@ -302,11 +314,21 @@ def main() -> None:
                         daemon.wait()
             for log in log_streams:
                 log.close()
+            evidence_error = None
+            if native_cargo_evidence.exists():
+                try:
+                    report["native_cargo_qualification"] = json.loads(native_cargo_evidence.read_text())
+                except (OSError, ValueError) as error:
+                    evidence_error = error
+                    report["success"] = False
+                    report["native_cargo_evidence_error"] = f"{type(error).__name__}: {error}"
             report["daemon_logs"] = {
                 path.name: path.read_text(errors="replace")
                 for path in scratch.glob("*.log")
             }
             args.output.write_text(json.dumps(report, indent=2) + "\n")
+            if evidence_error is not None and "failure" not in report:
+                raise RuntimeError("native Cargo evidence could not be read; owned package/source paths were restored") from evidence_error
     print(json.dumps({"success": report["success"], "checks": report["checks"], "native_full_rust": False}))
 
 

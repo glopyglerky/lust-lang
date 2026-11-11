@@ -34,6 +34,8 @@ struct Args {
     target: Option<String>,
     json: bool,
     artifacts: bool,
+    unused_externs_silent: bool,
+    force_warn_unused_dependencies: bool,
     version: bool,
     verbose: bool,
     debug: bool,
@@ -93,6 +95,7 @@ fn parse(args: Vec<OsString>) -> Result<Args, String> {
                     match option {
                         "diagnostic-rendered-ansi" | "future-incompat" => {},
                         "artifacts" => out.artifacts = true,
+                        "unused-externs-silent" => out.unused_externs_silent = true,
                         v => return Err(format!("unsupported JSON option `{v}`")),
                     }
                 }
@@ -105,6 +108,10 @@ fn parse(args: Vec<OsString>) -> Result<Args, String> {
                 out.features.push(f.to_string());
             }
             "--check-cfg" => out.check_cfg.push(next()?),
+            "--force-warn" => match next()?.as_str() {
+                "unused_crate_dependencies" => out.force_warn_unused_dependencies = true,
+                value => return Err(format!("native forced lint `{value}` is not implemented")),
+            },
             "-L" => {
                 let path = next()?;
                 if !path.starts_with("dependency=") { return Err("native library search paths are not implemented".into()); }
@@ -263,6 +270,9 @@ fn diagnostics(text: &str, json: bool) {
 }
 
 fn compile(args: &Args) -> Result<i32, String> {
+    if args.unused_externs_silent && (!args.json || !args.force_warn_unused_dependencies) {
+        return Err("unused-externs-silent currently requires --error-format=json and --force-warn=unused_crate_dependencies".into());
+    }
     let native_env: BTreeMap<String, Option<String>> = NATIVE_ENV_INPUTS.iter()
         .map(|&name| (name.to_string(), std::env::var(name).ok())).collect();
     // Capture the calling environment before choosing internal cache storage.
@@ -356,6 +366,13 @@ fn compile(args: &Args) -> Result<i32, String> {
         let _ = std::fs::remove_file(&output);
         if args.emits.iter().any(|v| v == "dep-info") { let _ = std::fs::remove_file(&dep); }
         return Err(error);
+    }
+    if response.code == 0 && args.unused_externs_silent {
+        // Cargo requests this report even for dependency-free crates. rustc's
+        // unused dependency set comes from explicit --extern options, all of
+        // which this entry point rejects. The empty set is therefore complete;
+        // this does not implement other lint levels or external crate support.
+        eprintln!("{{\"$message_type\":\"unused_extern\",\"lint_level\":\"force-warn\",\"unused_extern_names\":[]}}");
     }
     if response.code == 0 && args.artifacts {
         eprintln!("{{\"$message_type\":\"artifact\",\"artifact\":{},\"emit\":\"link\"}}", crate::diag::json_str(output.to_str().ok_or("non-UTF-8 output path")?));

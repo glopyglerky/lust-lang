@@ -29,6 +29,13 @@ version can reject it. That limitation must not be hidden by a false version.
 crate types as unsupported, using Cargo's documented probe convention. No rlib
 or metadata file is created. Unknown output and code-generation requests fail.
 
+Newer Cargo versions also request silent JSON reporting for the forced
+`unused_crate_dependencies` lint. This entry point accepts that exact request
+and reports an empty unused-dependency set after successful compilation. All
+explicit `--extern` inputs are rejected, so this is the complete set for the
+supported dependency-free contract. It does not enable arbitrary forced lints
+or external Rust library artifacts.
+
 The native profile maps panic strategy, overflow checking, debug assertions,
 feature cfg values and debug information to upstream Request/Session inputs.
 Only optimization level zero is supported. Cargo's incremental directory, when
@@ -67,20 +74,50 @@ environment variable names. It rejects a non-UTF-8 value instead of changing an
 
 ## Build
 
-Build the matching TinyCC runtime as described by the upstream native package,
-then run this separate Cargo workspace:
+Build the matching TinyCC runtime as described by the upstream native package.
+Commit the source and build helper, then build with a receipt. Use new target
+and receipt paths outside the checkout:
 
 ```sh
-LUST_TCC_HOME=/absolute/path/to/native/third_party/tcc \
-  cargo build --profile gate --locked -j1 --manifest-path crates/lustr-native/Cargo.toml
+python3 tools/build-native-cargo.py \
+  --cargo "$(rustup which cargo)" \
+  --rustc "$(rustup which rustc)" \
+  --tcc-root "$PWD/compiler/native/third_party/tcc" \
+  --target-dir /absolute/new/native-cargo-target \
+  --receipt /absolute/new/native-cargo-build.json
 ```
 
-The result is `crates/lustr-native/target/gate/lustr-native`. This explicit
-profile matches upstream's correctness profile, using optimization level 3,
+The result is `native-cargo-target/x86_64-unknown-linux-gnu/gate/lustr-native`.
+The helper selects the actual bootstrap executable and verifies Cargo's verbose
+compiler invocation. It requires optimization level 3,
 16 code generation units, ThinLTO, no debug information and incremental compiler
-builds. Qualification records that build profile; it does not transfer results
-from the separate release profile. The local one-unit release build exceeded
-available memory, so the preview uses this declared lower-memory profile.
+builds, matching upstream's gate profile. The receipt binds the resulting
+executable hash and version to the source commit, unchanged native tree, helper,
+bootstrap version, TinyCC inputs and observed compiler command. Its adjacent
+`.cargo.log` retains the build output with command environment assignments
+removed. Packaging requires both files:
+
+```sh
+python3 tools/package-toolchain.py \
+  --output dist/lustr-native-preview-x86_64-unknown-linux-gnu \
+  --native-bin compiler/native/target/release \
+  --native-cargo-bin /absolute/new/native-cargo-target/x86_64-unknown-linux-gnu/gate/lustr-native \
+  --native-cargo-receipt /absolute/new/native-cargo-build.json \
+  --rust-root "$(rustc --print sysroot)" \
+  --vendor-dir /absolute/path/to/native-vendor
+```
+
+The packager verifies the receipt against the supplied executable, current
+source and TinyCC files. It copies the receipt and log into the package.
+An independently built binary cannot acquire a gate-profile claim from its
+filename or the packaging command. Qualification applies to the recorded
+executable and settings.
+
+Local attempts with the release and gate profiles received SIGKILL. The cause
+was not established. A separate local compiler with optimization level 1
+passed correctness probes, but that artifact does not satisfy the package
+build requirements. The exact gate profile subsequently built successfully
+in CI.
 
 Its runtime
 layout matches the existing native package's `lib/lust` tree. The build recipe

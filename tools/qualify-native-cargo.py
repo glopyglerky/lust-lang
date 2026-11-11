@@ -30,6 +30,20 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def clear_source_cache(project: Path, scratch: Path) -> dict:
+    """Remove only a fixture project's owned, source-adjacent native cache."""
+    require(project.resolve().is_relative_to(scratch.resolve()), "cache reset requires an owned temporary project")
+    cache = project / "src/.lust-cache"
+    require(not cache.is_symlink() and cache.resolve().is_relative_to(project.resolve()),
+            "native source cache must stay within its owned temporary project")
+    existed = cache.exists()
+    if existed:
+        require(cache.is_dir(), "native source cache is not a directory")
+        shutil.rmtree(cache)
+    require(not cache.exists(), "native source cache remains after reset")
+    return {"path": str(cache), "existed_before": existed, "empty_before_compile": True}
+
+
 def environment(scratch: Path, compiler: Path, sentinel: Path) -> dict[str, str]:
     result = dict(os.environ)
     for name in list(result):
@@ -81,7 +95,15 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
         "full_native_speed_qualified": False,
         "runtime_coordinator": False,
         "scope": "Dependency-free native binary crate, Cargo dep-info and supported development profile. No native rlib, test harness, or full Rust claim.",
-        "timing_scope": "Paired Cargo builds of the same fixture and profile; fresh targets, unchanged inputs, body and signature edits, and invalid inputs. No daemon latency equivalence is claimed.",
+        "timing_scope": "Paired Cargo builds of the same fixture and profile; fresh targets and native unit caches, unchanged inputs, body and signature edits, and cold invalid inputs. No daemon latency equivalence is claimed.",
+        "cache_policy": {
+            "fresh-target": "New Cargo target and removal of only the owned source-adjacent .lust-cache before every sample; reset time excluded.",
+            "cold-invalid": "New Cargo target and empty native unit cache before each invalid input; no preceding valid build, so this measures cold rejection.",
+            "no-change": "Existing Cargo target and native unit cache; Cargo must report its artifact fresh without invoking the compiler.",
+            "body-edit": "Existing Cargo target and native unit cache after a valid warmup; each changed body must rebuild.",
+            "signature-edit": "Existing Cargo target and native unit cache after a valid warmup; each changed signature must rebuild.",
+            "system_state": "OS page caches are not flushed; fresh refers to compiler artifact caches, not a cold host.",
+        },
         "tools": {name: {"path": str(path), "sha256": digest(path)}
                   for name, path in (("native", native), ("cargo", cargo), ("oracle", oracle))},
         "fixture_sha256": {path.relative_to(fixture).as_posix(): digest(path)
@@ -128,9 +150,11 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
             return result
 
         def build(label: str, lane: str, target: Path, wanted: bytes | None,
-                  flags: tuple[str, ...] = (), fresh: bool | None = None) -> tuple[int, int | None]:
+                  flags: tuple[str, ...] = (), fresh: bool | None = None,
+                  project: Path | None = None) -> tuple[int, int | None]:
+            work_project = projects[lane] if project is None else project
             result = execute(label, [cargo, "build", "--offline", "--locked", "--message-format=json",
-                                     "--target-dir", target, *flags], environments[lane], projects[lane],
+                                     "--target-dir", target, *flags], environments[lane], work_project,
                              0 if wanted is not None else 101)
             command_index = len(report["commands"]) - 1
             artifact = target / "debug/lustr_native_contract"
@@ -145,12 +169,14 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                     label + ": Cargo did not report the real executable")
             if fresh is not None:
                 require(artifacts[0]["fresh"] is fresh, label + ": incorrect Cargo freshness")
-            run = execute(label + "-runtime", [artifact], environments[lane], projects[lane])
+            run = execute(label + "-runtime", [artifact], environments[lane], work_project)
             runtime_index = len(report["commands"]) - 1
             require(run.stdout == wanted, f"{label}: wrong output {run.stdout!r}, expected {wanted!r}")
             return command_index, runtime_index
 
         try:
+            cargo_identity = execute("cargo-identity", [cargo, "-Vv"], environments["native"], projects["native"])
+            report["tools"]["cargo"]["version"] = cargo_identity.stdout.decode().strip()
             for name, compiler in (("native", native), ("oracle", oracle)):
                 result = execute(name + "-identity", [compiler, "-vV"], environments[name], projects[name])
                 report["tools"][name]["version"] = result.stdout.decode().strip()
@@ -171,12 +197,100 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                 build(lane + "-env-unset", lane, targets[lane], expected_output(43, "second"), fresh=False)
                 build(lane + "-feature-on", lane, targets[lane], expected_output(43, "second", feature=True),
                       ("--features", "special"), fresh=False)
-                build(lane + "-feature-off", lane, targets[lane], expected_output(43, "second"), fresh=False)
+                # Cargo retains distinct feature/profile variants. Returning to
+                # an already built variant should reuse its valid artifact.
+                build(lane + "-feature-off", lane, targets[lane], expected_output(43, "second"), fresh=True)
+                environments[lane]["CARGO_INCREMENTAL"] = "1"
+                build(lane + "-incremental-enabled", lane, targets[lane], expected_output(43, "second"), fresh=False)
+                build(lane + "-incremental-fresh", lane, targets[lane], expected_output(43, "second"), fresh=True)
+                environments[lane].pop("CARGO_INCREMENTAL")
+                build(lane + "-incremental-disabled", lane, targets[lane], expected_output(43, "second"), fresh=True)
             report["checks"].extend([
                 "Cargo selects the in-process native compiler directly",
                 "real executables match the Rust oracle, including crate name, nested module_path and file",
-                "unchanged Cargo build is fresh; module, included-file, environment set/change/unset and feature edits invalidate correctly",
+                "unchanged Cargo build is fresh; module, included-file and environment set/change/unset edits invalidate; a new feature variant builds and the previous variant remains reusable",
+                "Cargo incremental selection stays fresh without exposing the compiler's internal cache directory to application macros",
             ])
+
+            manifest_text = (fixture / "Cargo.toml").read_text()
+            default_manifest, separator, profile_tail = manifest_text.partition("\n[profile.dev]\n")
+            require(bool(separator) and not any(line.lstrip().startswith("[") for line in profile_tail.splitlines()),
+                    "default-profile fixture requires the known final profile.dev table")
+            default_manifest += "\n"
+            report["default_development_profile"] = {"manifest": default_manifest, "lanes": {}}
+            for lane in projects:
+                default_project = scratch / (lane + " default development profile")
+                shutil.copytree(fixture, default_project)
+                (default_project / "Cargo.toml").write_text(default_manifest)
+                default_target = scratch / (lane + " default development target")
+                build_index, runtime_index = build(lane + "-default-dev-build", lane, default_target,
+                                                   expected_output(), fresh=False, project=default_project)
+                events = [json.loads(line) for line in report["commands"][build_index]["stdout"].splitlines()
+                          if line.strip()]
+                profile = next(event["profile"] for event in events if event.get("reason") == "compiler-artifact")
+                require(profile["opt_level"] == "0" and profile["debuginfo"] == 2
+                        and profile["debug_assertions"] and profile["overflow_checks"],
+                        lane + ": Cargo did not use its ordinary development profile")
+                fresh_index, _ = build(lane + "-default-dev-fresh", lane, default_target,
+                                       expected_output(), fresh=True, project=default_project)
+                incremental = default_target / "debug/incremental"
+                require(incremental.is_dir() and any(incremental.iterdir()),
+                        lane + ": default development build did not create its incremental cache")
+                report["default_development_profile"]["lanes"][lane] = {
+                    "build_command_index": build_index, "runtime_command_index": runtime_index,
+                    "fresh_command_index": fresh_index, "cargo_profile": profile,
+                    "incremental_directory": str(incremental),
+                }
+            report["checks"].append("ordinary Cargo development defaults compile and run correctly with Cargo's debuginfo=2 request and incremental caching, then remain fresh")
+
+            profile_root = scratch / "native profile contracts"
+            profile_root.mkdir()
+            profile_source = profile_root / "profile.rs"
+            profile_text = (
+                "fn next(x: u8) -> u8 { x + 1 }\n"
+                'fn main() { println!("debug={} abort={} next={}", cfg!(debug_assertions), '
+                'cfg!(panic = "abort"), next(255)); }\n'
+            )
+            profile_source.write_text(profile_text)
+            report["profile_contract"] = {
+                "source": profile_text, "source_sha256": digest(profile_source), "cases": [],
+            }
+            for label, flags, expected_exit, expected_stdout in (
+                ("debug-off-default-overflow", ["-C", "debug-assertions=no"],
+                 0, b"debug=false abort=false next=0\n"),
+                ("abort-overflow-off", ["-C", "panic=abort", "-C", "overflow-checks=no"],
+                 0, b"debug=true abort=true next=0\n"),
+                ("unwind-overflow-on", ["-C", "panic=unwind", "-C", "overflow-checks=yes"],
+                 101, b""),
+                ("abort-overflow-on", ["-C", "panic=abort", "-C", "overflow-checks=yes"],
+                 -signal.SIGABRT, b""),
+            ):
+                observations = {}
+                for lane, compiler in (("native", native), ("oracle", oracle)):
+                    artifact = profile_root / (label + "-" + lane)
+                    execute("profile-" + label + "-" + lane + "-build",
+                            [compiler, "--crate-name", "profile", "--edition=2024", profile_source,
+                             "--emit=link", "-o", artifact, *flags], environments[lane], profile_root)
+                    build_index = len(report["commands"]) - 1
+                    runtime = execute("profile-" + label + "-" + lane + "-runtime", [artifact],
+                                      environments[lane], profile_root, expected_exit)
+                    require(runtime.stdout == expected_stdout, label + "-" + lane + ": wrong profile output")
+                    if expected_exit != 0:
+                        require(b"attempt to add with overflow" in runtime.stderr,
+                                label + "-" + lane + ": runtime failed for a reason other than checked overflow")
+                    observations[lane] = {
+                        "build_command_index": build_index,
+                        "runtime_command_index": len(report["commands"]) - 1,
+                        "exit_code": runtime.returncode, "stdout": runtime.stdout.decode(),
+                    }
+                require(observations["native"]["exit_code"] == observations["oracle"]["exit_code"]
+                        and observations["native"]["stdout"] == observations["oracle"]["stdout"],
+                        label + ": native profile behavior differs from the Rust oracle")
+                report["profile_contract"]["cases"].append({
+                    "name": label, "flags": flags, "expected_exit": expected_exit,
+                    "expected_stdout": expected_stdout.decode(), "observations": observations,
+                })
+            report["checks"].append("native debug assertions, overflow defaults/overrides and panic unwind/abort match the Rust oracle, including exit 101 and SIGABRT")
 
             # These invocations must fail, without publishing pretend library or metadata artifacts.
             reject_root = scratch / "unsupported requests"
@@ -210,7 +324,7 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
             report["checks"].append("type, move and aliasing errors remain compilation failures in both compilers")
 
             original_main = (fixture / "src/main.rs").read_text()
-            for mode in ("fresh-target", "no-change", "body-edit", "signature-edit", "invalid-edit"):
+            for mode in ("fresh-target", "no-change", "body-edit", "signature-edit", "cold-invalid"):
                 mode_targets = {lane: scratch / (lane + " " + mode) for lane in projects}
                 for lane, project in projects.items():
                     (project / "src/main.rs").write_text(original_main)
@@ -226,13 +340,16 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                         if mode in ("body-edit", "signature-edit"):
                             kind = "u64" if mode == "signature-edit" and sample % 2 == 0 else "u32"
                             (project / "src/value.rs").write_text(module_source(answer, kind))
-                        if mode == "invalid-edit":
+                        if mode == "cold-invalid":
                             (project / "src/main.rs").write_text(
                                 f'fn main() {{ let value: u32 = "invalid-{sample}"; println!("{{}}", value); }}\n')
                         target = mode_targets[lane]
-                        if mode in ("fresh-target", "invalid-edit"):
+                        cache_reset = None
+                        if mode in ("fresh-target", "cold-invalid"):
                             target = target / str(sample)
-                        wanted = None if mode == "invalid-edit" else expected_output(answer)
+                            require(not target.exists(), "cold timing target must not already exist")
+                            cache_reset = clear_source_cache(project, scratch)
+                        wanted = None if mode == "cold-invalid" else expected_output(answer)
                         command_index, runtime_index = build(
                             mode + "-" + lane + "-" + str(sample), lane, target, wanted,
                             fresh=True if mode == "no-change" else False if wanted is not None else None)
@@ -241,12 +358,13 @@ def qualify(native: Path, cargo: Path, oracle: Path, fixture: Path, output: Path
                             "mode": mode, "lane": lane, "sample": sample,
                             "elapsed_ns": record["elapsed_ns"], "command_index": command_index,
                             "runtime_command_index": runtime_index,
+                            "source_cache_reset": cache_reset,
                             "compile_plus_run_ns": record["elapsed_ns"] + report["commands"][runtime_index]["elapsed_ns"]
                             if runtime_index is not None else None,
                             "source_sha256": {name: digest(project / name)
                                               for name in ("src/main.rs", "src/value.rs", "data.txt", "Cargo.toml")},
                         })
-            report["checks"].append("balanced paired Cargo timings retain correct outputs, signature/body rebuilds and invalid-program rejection")
+            report["checks"].append("balanced paired Cargo timings retain correct outputs, signature/body rebuilds, empty-cache fresh compilation and cold invalid-program rejection")
             for lane in projects:
                 require(not (scratch / lane / "unexpected-compiler").exists(),
                         lane + ": unexpected compiler fallback or wrapper invocation")

@@ -85,7 +85,7 @@ repeats runtime and relocation qualification on the combined package.
 crates. It compiles the unchanged upstream modules into the same executable and
 calls the native driver directly. Its input adapters pass Cargo's crate name to
 the existing expansion and resolver interfaces. It does not invoke another
-compiler process, select an engine, or retry a failure through rustc.
+Rust compiler process, select an engine, or retry a failure through rustc.
 
 For a dependency-free binary crate using the supported development settings:
 
@@ -109,7 +109,9 @@ Compiler-name sentinels check for unintended executable fallback.
 
 This entry point does not implement native Rust library metadata, rlibs,
 procedural macros or the Rust test harness. Unsupported settings and artifact
-requests fail explicitly. Its one-process Cargo path does not reuse the upstream
+requests fail explicitly. It identifies itself as `lustr-native 0.1.0`; a
+manifest requiring a higher Rust version can reject that experimental identity.
+Its one-process Cargo path does not reuse the upstream
 daemon or whole-request response cache. It retains native per-unit object caching
 and does not claim the daemon's warm-edit latency. The original `bin/lust` path
 remains available with its unchanged implementation and behavior.
@@ -117,8 +119,12 @@ remains available with its unchanged implementation and behavior.
 The new executable uses the upstream-style `gate` compiler-build profile:
 optimization level three, 16 codegen units, ThinLTO and no compiler debug
 information. The single-codegen-unit release build was killed in the development
-environment. This choice is recorded in the manifest and timing evidence; it
-does not change application profiles or the pristine Lust release binaries.
+environment with SIGKILL; the cause was not established. The package build helper
+records the actual Rust compiler invocation and binds it to the produced
+executable's hash, version, source revision and bootstrap identity. Packaging
+requires that receipt and retains it with the qualification evidence. It cannot
+label an arbitrary supplied binary as having those settings. These settings do
+not change application profiles or the pristine Lust release binaries.
 
 ## Known native cache limitation
 
@@ -169,8 +175,12 @@ covers a workspace, generated source, a procedural macro, async code, generics,
 panic catching and exactly-one destructor execution, tests and doctests.
 The native Cargo binary fixture is qualified independently while the original
 package and native runtime/library paths are unavailable. Its complete command
-records and paired fresh, unchanged, body-edit, signature-edit and invalid-edit
+records and paired fresh, unchanged, body-edit, signature-edit and cold-invalid
 timings are embedded as `native_cargo_qualification` in the package evidence.
+Fresh-target and cold-invalid samples start with new Cargo targets and empty
+native unit caches. Cold-invalid measures rejection without a preceding valid
+build. The OS page cache is not flushed, so these are compiler-cache states,
+not measurements of a cold machine.
 
 The separate evidence artifact retains all qualification commands, outputs,
 binary identities, coverage observations and timing samples. Known native

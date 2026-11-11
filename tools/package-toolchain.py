@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import runpy
 import shutil
 import subprocess
 import tarfile
@@ -109,6 +110,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--native-bin", type=Path, required=True)
     parser.add_argument("--native-cargo-bin", type=Path, required=True)
+    parser.add_argument("--native-cargo-receipt", type=Path, required=True)
     parser.add_argument("--rust-root", type=Path, required=True)
     parser.add_argument("--vendor-dir", type=Path, required=True)
     parser.add_argument("--tcc-root", type=Path)
@@ -126,6 +128,7 @@ def main() -> None:
     if output.exists():
         parser.error("output must be a new directory")
     input_roots = [rust_root, args.native_bin.resolve(), args.native_cargo_bin.resolve(),
+                   args.native_cargo_receipt.resolve(),
                    args.vendor_dir.resolve(), tcc, tinycc, native, repository / ".git"]
     if any(output.is_relative_to(path) or path.is_relative_to(output) for path in input_roots):
         parser.error("output must not overlap an input or protected source directory")
@@ -152,6 +155,10 @@ def main() -> None:
     native_cargo_version = run([args.native_cargo_bin.resolve(), "--version", "--verbose"])
     if not native_cargo_version.startswith("lustr-native ") or "native-full-rust: false" not in native_cargo_version:
         raise ValueError("--native-cargo-bin must be the explicit experimental native compiler")
+    receipt_path = args.native_cargo_receipt.resolve()
+    verify_native_build = runpy.run_path(str(repository / "tools/build-native-cargo.py"))["verify_receipt"]
+    native_build = verify_native_build(receipt_path, repository, args.native_cargo_bin.resolve(), tcc)
+    receipt_hash = sha256(receipt_path)
     upstream_lock = tomllib.loads((native / "Cargo.lock").read_text())
     entry_lock = tomllib.loads((repository / "crates/lustr-native/Cargo.lock").read_text())
     dependency_id = lambda package: (package["name"], package["version"], package.get("source"), package.get("checksum"))
@@ -170,6 +177,8 @@ def main() -> None:
     for name in ("lust", "lust-core"):
         copy_executable(args.native_bin / name, output / "bin" / name)
     copy_executable(args.native_cargo_bin, output / "bin/lustr-native")
+    if sha256(output / "bin/lustr-native") != native_build["binary"]["sha256"]:
+        raise ValueError("native Cargo executable changed while copying the package")
     support = output / "lib/lust"
     (support / "tcc/lib").mkdir(parents=True)
     copy_executable(tcc / "bin/tcc", support / "tcc/bin/tcc")
@@ -190,6 +199,14 @@ def main() -> None:
     archive_git(repository, revision, source / "lustr.tar.gz")
     archive_git(tinycc, tcc_revision, source / "tinycc.tar.gz")
     archive_directory(args.vendor_dir, source / "vendor.tar.gz")
+    build_evidence = output / "share/lustr/build/native-cargo"
+    build_evidence.mkdir(parents=True)
+    shutil.copy2(receipt_path, build_evidence / receipt_path.name)
+    log_path = receipt_path.parent / native_build["log"]["file"]
+    shutil.copy2(log_path, build_evidence / log_path.name)
+    if (sha256(build_evidence / receipt_path.name) != receipt_hash
+            or sha256(build_evidence / log_path.name) != native_build["log"]["sha256"]):
+        raise ValueError("native Cargo build evidence changed while copying the package")
     shutil.copy2(repository / "docs/compiler-set/native-package.md", output / "LUSTR-README.md")
     check_symlinks(output)
     system_requirements = [
@@ -228,8 +245,15 @@ def main() -> None:
             "executable": "bin/lustr-native",
             "implementation": "same-process compilation from pinned upstream Lust modules",
             "verbose_version": native_cargo_version,
-            "build_profile": "gate",
-            "build_settings": {"opt_level": 3, "codegen_units": 16, "lto": "thin", "debug": False},
+            "build_profile": native_build["build"]["profile"],
+            "build_settings": native_build["build"]["settings"],
+            "build_provenance": {
+                "receipt": str((build_evidence / receipt_path.name).relative_to(output)),
+                "receipt_sha256": receipt_hash,
+                "log": str((build_evidence / log_path.name).relative_to(output)),
+                "log_sha256": native_build["log"]["sha256"],
+                "bootstrap": native_build["bootstrap"],
+            },
             "native_full_rust": False,
             "native_rlib": False,
             "proc_macros": False,

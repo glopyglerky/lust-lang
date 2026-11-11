@@ -9,6 +9,7 @@ on:
       - 'compiler/native/**'
       - 'upstream/lust.pin'
       - 'tools/package-toolchain.py'
+      - 'tools/build-native-cargo.py'
       - 'tools/qualify-package.py'
       - 'tools/qualify-native-cargo.py'
       - 'tools/native-qualification.py'
@@ -23,6 +24,7 @@ on:
       - 'compiler/native/**'
       - 'upstream/lust.pin'
       - 'tools/package-toolchain.py'
+      - 'tools/build-native-cargo.py'
       - 'tools/qualify-package.py'
       - 'tools/qualify-native-cargo.py'
       - 'tools/native-qualification.py'
@@ -36,7 +38,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # A branch push and its PR share a group without skipping either event's
+  # qualification gate. Include the head repository to distinguish forks.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -46,19 +50,28 @@ jobs:
     timeout-minutes: 45
     env:
       RUSTUP_TOOLCHAIN: 1.99.1
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Install the pinned bootstrap and compatibility compiler
         run: rustup toolchain install 1.99.1 --profile minimal
       - name: Verify unchanged Lust source
         run: |
           rustc --edition=2024 tools/lust-upstream-check.rs -o "$RUNNER_TEMP/lust-upstream-check"
           "$RUNNER_TEMP/lust-upstream-check"
-      - name: Build the upstream native compiler and runtime
+      - name: Build the native compilers and runtime
         run: |
           compiler/native/scripts/build-tcc.sh
           cargo build --manifest-path compiler/native/Cargo.toml --release --locked
-          cargo build --manifest-path crates/lustr-native/Cargo.toml --profile gate --locked -j1
+          python3 tools/build-native-cargo.py \
+            --repository "$GITHUB_WORKSPACE" \
+            --cargo "$(rustup which cargo)" \
+            --rustc "$(rustup which rustc)" \
+            --tcc-root "$GITHUB_WORKSPACE/compiler/native/third_party/tcc" \
+            --target-dir "$RUNNER_TEMP/lustr-native-cargo" \
+            --receipt "$RUNNER_TEMP/native-cargo-build.json"
       - name: Retain native dependency sources
         run: cargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"
       - name: Assemble the relocatable package
@@ -66,7 +79,8 @@ jobs:
           python3 tools/package-toolchain.py \
             --output dist/lustr-native-preview-x86_64-unknown-linux-gnu \
             --native-bin compiler/native/target/release \
-            --native-cargo-bin crates/lustr-native/target/gate/lustr-native \
+            --native-cargo-bin "$RUNNER_TEMP/lustr-native-cargo/x86_64-unknown-linux-gnu/gate/lustr-native" \
+            --native-cargo-receipt "$RUNNER_TEMP/native-cargo-build.json" \
             --rust-root "$(rustc --print sysroot)" \
             --vendor-dir "$RUNNER_TEMP/native-vendor" \
             --compatibility-origin upstream-rust
@@ -94,7 +108,7 @@ jobs:
           sha256sum lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz > SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: lustr-native-preview-linux-x86_64-${{ github.sha }}
+          name: lustr-native-preview-linux-x86_64-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             dist/lustr-native-preview-x86_64-unknown-linux-gnu.tar.gz
             dist/SHA256SUMS
@@ -103,10 +117,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: lustr-package-evidence-${{ github.sha }}
+          name: lustr-package-evidence-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             dist/package-qualification.json
             dist/native-qualification
             dist/lustr-native-preview-x86_64-unknown-linux-gnu/lustr-toolchain.json
+            ${{ runner.temp }}/native-cargo-build.json
+            ${{ runner.temp }}/native-cargo-build.cargo.log
           if-no-files-found: warn
 
