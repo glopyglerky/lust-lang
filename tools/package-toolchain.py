@@ -108,6 +108,7 @@ def main() -> None:
     parser.add_argument("--repository", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--native-bin", type=Path, required=True)
+    parser.add_argument("--native-cargo-bin", type=Path, required=True)
     parser.add_argument("--rust-root", type=Path, required=True)
     parser.add_argument("--vendor-dir", type=Path, required=True)
     parser.add_argument("--tcc-root", type=Path)
@@ -124,7 +125,8 @@ def main() -> None:
     tinycc = (args.tinycc_source or native / "third_party/tinycc").resolve()
     if output.exists():
         parser.error("output must be a new directory")
-    input_roots = [rust_root, args.native_bin.resolve(), args.vendor_dir.resolve(), tcc, tinycc, native, repository / ".git"]
+    input_roots = [rust_root, args.native_bin.resolve(), args.native_cargo_bin.resolve(),
+                   args.vendor_dir.resolve(), tcc, tinycc, native, repository / ".git"]
     if any(output.is_relative_to(path) or path.is_relative_to(output) for path in input_roots):
         parser.error("output must not overlap an input or protected source directory")
     if output.is_relative_to(repository) and output.relative_to(repository).parts[0] != "dist":
@@ -147,6 +149,16 @@ def main() -> None:
     compiler_version = run([rust_root / "bin/rustc", "-vV"])
     cargo_version = run([rust_root / "bin/cargo", "-Vv"])
     compatibility = compatibility_provenance(args.compatibility_origin, rust_root, compiler_version, cargo_version)
+    native_cargo_version = run([args.native_cargo_bin.resolve(), "--version", "--verbose"])
+    if not native_cargo_version.startswith("lustr-native ") or "native-full-rust: false" not in native_cargo_version:
+        raise ValueError("--native-cargo-bin must be the explicit experimental native compiler")
+    upstream_lock = tomllib.loads((native / "Cargo.lock").read_text())
+    entry_lock = tomllib.loads((repository / "crates/lustr-native/Cargo.lock").read_text())
+    dependency_id = lambda package: (package["name"], package["version"], package.get("source"), package.get("checksum"))
+    available_dependencies = {dependency_id(package) for package in upstream_lock["package"] if "source" in package}
+    entry_dependencies = {dependency_id(package) for package in entry_lock["package"] if "source" in package}
+    if not entry_dependencies.issubset(available_dependencies):
+        raise ValueError("native Cargo dependencies are missing from the retained upstream vendor sources")
     tcc_revision = run(["git", "rev-parse", "HEAD"], tinycc)
     if tcc_revision != run(["git", "rev-parse", "43c7708"], tinycc):
         raise ValueError("TinyCC does not match the upstream Lust build recipe")
@@ -157,6 +169,7 @@ def main() -> None:
     shutil.copytree(rust_root, output, symlinks=True)
     for name in ("lust", "lust-core"):
         copy_executable(args.native_bin / name, output / "bin" / name)
+    copy_executable(args.native_cargo_bin, output / "bin/lustr-native")
     support = output / "lib/lust"
     (support / "tcc/lib").mkdir(parents=True)
     copy_executable(tcc / "bin/tcc", support / "tcc/bin/tcc")
@@ -210,6 +223,20 @@ def main() -> None:
         "tinycc_revision": tcc_revision,
         "native_version": run([output / "bin/lust", "--version"]),
         "native_profile": "release",
+        "native_cargo": {
+            "status": "experimental-binary-crates",
+            "executable": "bin/lustr-native",
+            "implementation": "same-process compilation from pinned upstream Lust modules",
+            "verbose_version": native_cargo_version,
+            "build_profile": "gate",
+            "build_settings": {"opt_level": 3, "codegen_units": 16, "lto": "thin", "debug": False},
+            "native_full_rust": False,
+            "native_rlib": False,
+            "proc_macros": False,
+            "test_harness": False,
+            "daemon_reuse": False,
+            "qualification": "embedded native_cargo_qualification in package-qualification.json",
+        },
         "qualification": "separate package-qualification.json and native-qualification evidence",
         "system_requirements": system_requirements,
         "known_limitations": [{

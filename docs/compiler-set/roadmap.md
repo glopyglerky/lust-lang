@@ -17,13 +17,13 @@ contract must be implemented in the native compiler.
 
 | Area | Status |
 | --- | --- |
-| Native compiler | Exact upstream Lust baseline in `compiler/native`. Full Rust coverage and the Lustr-owned extension interface remain incomplete. |
+| Native compiler | Exact upstream Lust baseline in `compiler/native`, plus an in-process Lustr-owned Cargo entry point in `crates/lustr-native`. Full native Rust coverage remains incomplete. |
 | Native frontend | Existing parser, expansion, resolution, trait/type checking, borrow checking and monomorphization. Remaining language gaps must be reproduced and implemented here. |
 | Native libraries and generation | Existing source libraries, adapters and C/TinyCC generation. Missing APIs and semantic support remain native implementation work. |
 | Fast edit path | Existing daemon, query reads, retained state and caches. Every expansion needs warm/cold and edit invalidation checks. |
-| Cargo/crate support | Partial native resolver and whole-target compilation. Native Rust rlib emission and general artifact interoperability remain open. |
+| Cargo/crate support | The experimental native Cargo compiler accepts bounded binary invocations and emits real dependency records. Native Rust rlib/metadata, proc macros, test harnesses and general artifact interoperability remain open. |
 | Full Rust compatibility | Supplied by the complete Rust compiler selected directly through Cargo. This is not native Lust coverage. |
-| Packaged previews | The current recipe packages pristine Lust and its matching runtime alongside a complete Rust toolchain, with no coordinator executable. Full native coverage and rustc command/artifact compatibility remain open. Earlier packages at `595cdc4` included a coordinator; `preview-2026.11.09-2` contained no native Lust. |
+| Packaged previews | The current recipe packages pristine Lust, its matching runtime, the experimental in-process native Cargo compiler and a complete Rust toolchain, with no coordinator executable. Full native coverage and rustc command/artifact compatibility remain open. Earlier packages at `595cdc4` included a coordinator; `preview-2026.11.09-2` contained no native Lust. |
 
 ## 1. Reproduce native coverage gaps
 

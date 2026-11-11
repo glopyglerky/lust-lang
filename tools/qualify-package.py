@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -81,6 +82,7 @@ def main() -> None:
     hidden_package: Path | None = None
     with tempfile.TemporaryDirectory(prefix="lustr-package-") as temporary:
         scratch = Path(temporary)
+        native_cargo_evidence = scratch / "native-cargo-qualification.json"
         package = scratch / "relocated package"
         shutil.copytree(original, package, symlinks=True)
         environment = clean_environment(package, scratch)
@@ -119,6 +121,9 @@ def main() -> None:
             require(manifest["schema"] == "lustr.toolchain-package" and manifest["schema_version"] == 1, "unsupported package schema")
             require(manifest["native_lust"] is True and manifest["native_full_rust"] is False, "incorrect package coverage claims")
             require(manifest.get("runtime_coordinator") is False, "package must use Cargo selection without a coordinator")
+            require(manifest.get("native_cargo", {}).get("executable") == "bin/lustr-native"
+                    and manifest["native_cargo"].get("native_full_rust") is False,
+                    "package must identify the bounded in-process native compiler")
             for name in ("lustr", "cargo-lustr", "cargo-lust"):
                 path = package / "bin" / name
                 require(not path.exists() and not path.is_symlink(), "unexpected coordinator in package: " + name)
@@ -145,7 +150,7 @@ def main() -> None:
                 path.rename(hidden)
                 hidden_sources.append((path, hidden))
             report["compiler_identities"] = {}
-            for name in ("rustc", "rustdoc", "cargo", "lust"):
+            for name in ("rustc", "rustdoc", "cargo", "lust", "lustr-native"):
                 version = execute(f"{name}-identity", [package / "bin" / name, "--version"])
                 report["compiler_identities"][name] = version.stdout.decode().strip()
             reported_root = execute("relocated-sysroot", [package / "bin/rustc", "--print", "sysroot"])
@@ -201,6 +206,14 @@ def main() -> None:
                              compatibility_environment, expected=None, cwd=invalid_full)
             require(result.returncode == 101 and b"E0502" in result.stderr, "compatibility borrow error did not reject cleanly")
             report["checks"].append("offline full-Rust compatibility workspace, proc macro, build script, panic/drop, tests, doctests and borrow rejection")
+            native_cargo_runner = repository / "tools/qualify-native-cargo.py"
+            spec = importlib.util.spec_from_file_location("qualify_native_cargo", native_cargo_runner)
+            require(spec is not None and spec.loader is not None, "cannot load native Cargo qualification")
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            module.qualify(package / "bin/lustr-native", package / "bin/cargo", package / "bin/rustc",
+                           repository / "tests/native-cargo", native_cargo_evidence)
+            report["checks"].append("relocated in-process native Cargo binary compiler, real dep-info, external-input invalidation and explicit unsupported-artifact rejection")
             for original_source, hidden_source in reversed(hidden_sources):
                 hidden_source.rename(original_source)
             hidden_sources.clear()
@@ -273,6 +286,8 @@ def main() -> None:
             report["failure"] = f"{type(error).__name__}: {error}"
             raise
         finally:
+            if native_cargo_evidence.exists():
+                report["native_cargo_qualification"] = json.loads(native_cargo_evidence.read_text())
             for original_source, hidden_source in reversed(hidden_sources):
                 hidden_source.rename(original_source)
             if hidden_package is not None and hidden_package.exists() and not original.exists():

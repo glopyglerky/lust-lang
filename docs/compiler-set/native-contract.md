@@ -22,15 +22,19 @@ equivalent-workload speed are both requirements. Neither follows from a
 wrapper, a successful parse, an optimized rustc build, or a few fixtures.
 
 The integration must compose existing Lust-supported code and Lustr's additions
-in the same program. Its native extension interface is not implemented yet.
+in the same program. A bounded Cargo entry point now calls the native driver in
+process, with explicit adapters for the requested crate identity and real
+dependency records. This does not implement the remaining language features or
+Rust library artifacts.
 Do not replace that work with source keyword guesses, a rustc wrapper, or an
 unproved edit to the upstream compiler.
 
 Cargo owns compiler and toolchain selection. The native product must not add a
 coordinator process around it. Implement the required rustc command-line,
-metadata and artifact behavior in Lustr itself. Until that exists, native Lust
-remains a direct whole-target command and full Rust compatibility uses Cargo
-with the selected complete Rust compiler.
+metadata and artifact behavior in Lustr itself. The experimental `lustr-native`
+command supports a bounded native binary-crate contract. Upstream Lust remains
+a direct whole-target command, and full Rust compatibility uses Cargo with the
+selected complete Rust compiler.
 
 ## Transitional components
 

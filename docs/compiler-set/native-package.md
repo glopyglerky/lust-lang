@@ -1,8 +1,9 @@
 # Native toolchain preview package
 
 This package contains the unchanged upstream Lust compiler, its matching TinyCC
-runtime and source libraries, and a pinned complete Rust toolchain for explicit
-compatibility. Native compilation calls Lust directly. Cargo uses the selected
+runtime and source libraries, an experimental in-process native Cargo compiler,
+and a pinned complete Rust toolchain for explicit compatibility. Native
+compilation calls Lust directly. Cargo uses the selected
 Rust compiler directly. The archive contains no Lustr coordinator executables.
 Native Rust coverage remains incomplete. Unsupported native input stays rejected;
 full Rust compatibility uses the packaged rustc.
@@ -78,9 +79,51 @@ The combined package's source-built BlueFe compiler is distinct from the Rust
 BlueFe's recorded versions and tool hashes against the actual component, then
 repeats runtime and relocation qualification on the combined package.
 
+## Experimental native Cargo builds
+
+`bin/lustr-native` implements a bounded rustc-style interface for native binary
+crates. It compiles the unchanged upstream modules into the same executable and
+calls the native driver directly. Its input adapters pass Cargo's crate name to
+the existing expansion and resolver interfaces. It does not invoke another
+compiler process, select an engine, or retry a failure through rustc.
+
+For a dependency-free binary crate using the supported development settings:
+
+```sh
+RUSTC="$LUSTR_ROOT/bin/lustr-native" \
+  "$LUSTR_ROOT/bin/cargo" build --locked
+```
+
+The [native entry-point guide](../../crates/lustr-native/README.md) records its
+accepted flags and explicit exclusions. The qualification fixture under
+`tests/native-cargo` supplies a reproducible manifest and source. Its dev profile
+uses optimization level zero, no debug information, no Cargo incremental
+directory, overflow checks, debug assertions and unwinding. The Rust oracle
+uses exactly the same profile and sources.
+
+The compiler emits dependency information from the files and external inputs
+observed by native compilation. Cargo owns freshness checks between invocations.
+The package gate checks unchanged builds and rebuilds after module, included-file,
+environment and feature changes, and compares actual output with the Rust oracle.
+Compiler-name sentinels check for unintended executable fallback.
+
+This entry point does not implement native Rust library metadata, rlibs,
+procedural macros or the Rust test harness. Unsupported settings and artifact
+requests fail explicitly. Its one-process Cargo path does not reuse the upstream
+daemon or whole-request response cache. It retains native per-unit object caching
+and does not claim the daemon's warm-edit latency. The original `bin/lust` path
+remains available with its unchanged implementation and behavior.
+
+The new executable uses the upstream-style `gate` compiler-build profile:
+optimization level three, 16 codegen units, ThinLTO and no compiler debug
+information. The single-codegen-unit release build was killed in the development
+environment. This choice is recorded in the manifest and timing evidence; it
+does not change application profiles or the pristine Lust release binaries.
+
 ## Known native cache limitation
 
-The pinned upstream Lust whole-request cache has a confirmed invalidation bug.
+The pinned upstream Lust whole-request cache used by `bin/lust` has a confirmed
+invalidation bug.
 Its [external-input guard](https://github.com/t3dotgg/lust-lang/blob/240e08d91d4aed0299639f6f11fd522912b248f9/src/driver/cache.rs)
 matches literal macro spellings such as `env!` and `include_str!`. Whitespace or
 comments before `!`, as in `env !("VALUE")` or
@@ -109,6 +152,7 @@ latency. The ordinary direct commands above retain the upstream fast path.
 ## Layout and evidence
 
 - bin/lust and bin/lust-core are pristine native Lust.
+- bin/lustr-native is the Lustr-owned experimental native Cargo entry point.
 - bin/cargo, bin/rustc, bin/rustdoc and lib/rustlib are the compatibility toolchain.
 - lib/lust contains the pinned TinyCC binary/runtime and Lust source libraries.
 - lustr-toolchain.json records component identities and hashes. Its marker
@@ -123,6 +167,10 @@ native compile/run, explicit unsupported-input rejection,
 relocation, and offline compatibility tests pass. The compatibility fixture
 covers a workspace, generated source, a procedural macro, async code, generics,
 panic catching and exactly-one destructor execution, tests and doctests.
+The native Cargo binary fixture is qualified independently while the original
+package and native runtime/library paths are unavailable. Its complete command
+records and paired fresh, unchanged, body-edit, signature-edit and invalid-edit
+timings are embedded as `native_cargo_qualification` in the package evidence.
 
 The separate evidence artifact retains all qualification commands, outputs,
 binary identities, coverage observations and timing samples. Known native
@@ -184,6 +232,9 @@ Then build compiler/native/Cargo.toml with --release --locked --offline and
 LUST_TCC_HOME pointing at the rebuilt TinyCC installation. No upstream source
 patch is applied. To replace TinyCC in an installed package, rebuild lust-core
 against that library as well as replacing the matching runtime assets.
+Build `crates/lustr-native/Cargo.toml` with `--profile gate --locked --offline -j1`
+and the same TinyCC path to rebuild the Cargo-facing native executable. Its
+locked registry dependencies match those retained for upstream Lust.
 
 The package does not supply system libc headers or link libraries. Native
 release-mode operations may invoke external tools according to upstream Lust's

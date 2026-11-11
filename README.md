@@ -9,7 +9,9 @@ the missing Rust language, library and crate support in its own code. Full, unch
 projects with measured fast compilation are the requirement. Forwarding them to
 rustc does not satisfy it. See the [native compiler contract](docs/compiler-set/native-contract.md).
 
-Full native Rust coverage and the Lustr expansion interface are incomplete.
+Full native Rust coverage remains incomplete. The experimental
+[`lustr-native`](crates/lustr-native/README.md) entry point now reuses the native
+pipeline in process and implements a bounded Cargo binary-crate interface.
 `compiler/native` is the unchanged upstream Lust source, pinned by
 [`upstream/lust.pin`](upstream/lust.pin). Lustr-owned expansion belongs outside
 that baseline. No Lust divergence is admitted. Any exception must demonstrate
@@ -32,7 +34,8 @@ LUST_TCC_HOME=/absolute/tcc CARGO_TARGET_DIR=/absolute/lustr-native-build \
 ## Native and compatibility package
 
 The package recipe supplies pristine `lust` and `lust-core`, matching TinyCC
-runtime assets and source libraries, and a complete Rust toolchain. It does not
+runtime assets and source libraries, the experimental `lustr-native` compiler,
+and a complete Rust toolchain. It does not
 ship `lustr`, `cargo-lustr`, or `cargo-lust` coordinator executables. Full Rust
 compatibility uses Cargo's existing `RUSTC` and `RUSTDOC` selection.
 
@@ -58,9 +61,20 @@ RUSTC="$LUSTR_ROOT/bin/rustc" RUSTDOC="$LUSTR_ROOT/bin/rustdoc" \
   "$LUSTR_ROOT/bin/cargo" test --workspace --locked
 ```
 
-Do not set `RUSTC` to `lust`: the current native compiler does not implement
-rustc's command-line, Rust metadata or native rlib contract. Those belong in the
-Lustr native implementation. A forwarding coordinator cannot supply them.
+For a dependency-free binary crate using the supported development settings,
+Cargo can select the experimental native compiler directly:
+
+```sh
+RUSTC="$LUSTR_ROOT/bin/lustr-native" \
+  "$LUSTR_ROOT/bin/cargo" build --locked
+```
+
+Read its [supported options and limits](crates/lustr-native/README.md) first.
+Compilation calls the native pipeline in the same process. It does not start
+another Rust compiler or fall back after a failure. Unsupported invocations
+fail explicitly. Cargo libraries, native rlib/metadata, procedural macros, test
+harnesses and full-language support remain incomplete. Do not select the
+upstream `lust` command as `RUSTC`; its CLI remains unchanged.
 
 The native compiler also has a reproduced external-input cache defect for macro
 names separated from `!` by whitespace or comments. The package guide records
@@ -84,14 +98,16 @@ without adding another dispatch layer.
 | Path | Responsibility |
 | --- | --- |
 | `compiler/native` | Exact pinned upstream Lust source, including its native compiler, libraries, TinyCC integration and differential fixtures. No Lustr-owned edits are admitted here. |
+| `crates/lustr-native` | Experimental in-process native compiler, Cargo argument handling, exact-root input adapters and real dependency records. |
 | `crates/lustr` | Historical compatibility coordinator and reusable Rust fixtures. Its coordinator is not built or shipped in the native package. |
 | `upstream/lust.pin` and `tools/lust-upstream-check.rs` | Upstream revision/tree identity and the Rust source-preservation guard. |
 | `crates/lustr-semantic` | Optional version-pinned rustc inspection. It exports inspection data, not executable MIR. |
 | `crates/lustr-bench` | Standalone paired benchmark runner and correctness gates. It is outside the coordinator workspace. |
 | `docs/compiler-set` | Current design, decisions, divergence records, measured evidence and future work. |
 
-The native component has its own Cargo workspace. Packaging builds that compiler
-and its runtime directly; the root coordinator workspace is not a package build
+The native component and its new Cargo entry point have separate Cargo
+workspaces. Packaging builds both native executables and the matching runtime;
+the root coordinator workspace is not a package build
 dependency. Earlier coordinator aliases remain in source history and research
 code, outside the native product path.
 

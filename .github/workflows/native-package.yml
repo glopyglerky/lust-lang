@@ -5,23 +5,29 @@ on:
     branches: [next, 'build/lustr-native-package*']
     paths:
       - 'crates/lustr/fixtures/**'
+      - 'crates/lustr-native/**'
       - 'compiler/native/**'
       - 'upstream/lust.pin'
       - 'tools/package-toolchain.py'
       - 'tools/qualify-package.py'
+      - 'tools/qualify-native-cargo.py'
       - 'tools/native-qualification.py'
       - 'tests/native-qualification/**'
+      - 'tests/native-cargo/**'
       - 'docs/compiler-set/native-package.md'
       - '.github/workflows/native-package.yml'
   pull_request:
     paths:
       - 'crates/lustr/fixtures/**'
+      - 'crates/lustr-native/**'
       - 'compiler/native/**'
       - 'upstream/lust.pin'
       - 'tools/package-toolchain.py'
       - 'tools/qualify-package.py'
+      - 'tools/qualify-native-cargo.py'
       - 'tools/native-qualification.py'
       - 'tests/native-qualification/**'
+      - 'tests/native-cargo/**'
       - 'docs/compiler-set/native-package.md'
       - '.github/workflows/native-package.yml'
   workflow_dispatch:
@@ -52,6 +58,7 @@ jobs:
         run: |
           compiler/native/scripts/build-tcc.sh
           cargo build --manifest-path compiler/native/Cargo.toml --release --locked
+          cargo build --manifest-path crates/lustr-native/Cargo.toml --profile gate --locked -j1
       - name: Retain native dependency sources
         run: cargo vendor --manifest-path compiler/native/Cargo.toml --locked --offline "$RUNNER_TEMP/native-vendor" > "$RUNNER_TEMP/native-vendor-config.toml"
       - name: Assemble the relocatable package
@@ -59,6 +66,7 @@ jobs:
           python3 tools/package-toolchain.py \
             --output dist/lustr-native-preview-x86_64-unknown-linux-gnu \
             --native-bin compiler/native/target/release \
+            --native-cargo-bin crates/lustr-native/target/gate/lustr-native \
             --rust-root "$(rustc --print sysroot)" \
             --vendor-dir "$RUNNER_TEMP/native-vendor" \
             --compatibility-origin upstream-rust

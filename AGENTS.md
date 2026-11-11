@@ -29,6 +29,15 @@ package. Use direct Lust and Cargo's standard compiler selection. Implement the
 rustc command-line and artifact contract in the native compiler before selecting
 it as Cargo's full replacement; a launcher does not supply that missing support.
 
+`crates/lustr-native` is a separate experimental native compiler entry point.
+It imports the pinned modules directly and compiles in the same process. Its
+Lustr-owned input adapters supply Cargo's crate name through existing upstream
+interfaces. Keep those adapters scoped to the requested source root. Real
+dependency records and explicit rejection of unsupported arguments are part of
+the compiler contract. It does not yet supply rlibs, procedural macros, test
+harnesses, full Rust coverage, or the upstream daemon's warm path. Its Cargo
+workspace is separate from the historical coordinator workspace.
+
 ## Product contract
 
 Follow [the native compiler contract](docs/compiler-set/native-contract.md).
