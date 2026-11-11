@@ -1,0 +1,335 @@
+{
+  "base": "f1c4bf2c6a22baa2ea146bb270804be547c15473",
+  "files": [
+    {
+      "path": ".github/workflows/native-package.yml",
+      "sha256": "b482250810c186c507da01694f7dfb58fc22cefb408327a0591b66f33d9d5eb0",
+      "bytes": 6997
+    },
+    {
+      "path": "tests/native-library-safe/Cargo.lock",
+      "sha256": "5c8207ceef2ac1a40e781f2bb5e98ac9ad3620aa4728b4e2c2675c9f3cab31f8",
+      "bytes": 341
+    },
+    {
+      "path": "tests/native-library-safe/Cargo.toml",
+      "sha256": "dd5f75b145578007dc9c65868ecc07f0a483869832093ab23fab42e82098fedb",
+      "bytes": 196
+    },
+    {
+      "path": "tests/native-library-safe/README.md",
+      "sha256": "01007000a2414200b97fba4b2f0cfab943b66d4297fce4f14ba06f2444ff81a9",
+      "bytes": 757
+    },
+    {
+      "path": "tests/native-library-safe/app/Cargo.toml",
+      "sha256": "aeedd7f297d2407e3ece2d0a79f464b07ecb31dd4d8718d5d9968bbab33383d9",
+      "bytes": 221
+    },
+    {
+      "path": "tests/native-library-safe/app/src/main.rs",
+      "sha256": "1eecaa5a323ee47706fd01471c63b56eff662b3c6250a9947cd64b6df6d60583",
+      "bytes": 161
+    },
+    {
+      "path": "tests/native-library-safe/cases/arity_mismatch.rs",
+      "sha256": "1a82a5f9b7ead480cb0a15aa481a76807e58320fa9cb85fc1c86351444a50097",
+      "bytes": 52
+    },
+    {
+      "path": "tests/native-library-safe/cases/conditional_consumer.rs",
+      "sha256": "778536986b686948d36f7564f7a5488f5892d6f867eb995d6292e76629d3d647",
+      "bytes": 204
+    },
+    {
+      "path": "tests/native-library-safe/cases/function_imports.rs",
+      "sha256": "a5ee20588441806cdd07b0306b2be8051492983eca5d48e96dcc81462f0edbcf",
+      "bytes": 138
+    },
+    {
+      "path": "tests/native-library-safe/cases/imported_overflow.rs",
+      "sha256": "50c60e31063d1f4b0cf76019c7df7e4461d8b89fc09f4ec6c65da595989d3fed",
+      "bytes": 64
+    },
+    {
+      "path": "tests/native-library-safe/cases/primitive_abi.rs",
+      "sha256": "c103919a056d2d52065d531f5595be2b54172fd5794e3a1dd5ff8ad4b93629ac",
+      "bytes": 1087
+    },
+    {
+      "path": "tests/native-library-safe/cases/private.rs",
+      "sha256": "7b9ec30e2c76af78ddfb5c59fa3cc4d1a5af403d9a8a8e7a35ac1da7616933e9",
+      "bytes": 51
+    },
+    {
+      "path": "tests/native-library-safe/cases/private_module_helper_consumer.rs",
+      "sha256": "3bb33a5f131e2a5c4d9e07ab687760e7871b2689b52d57b7e6a625af0b52a856",
+      "bytes": 66
+    },
+    {
+      "path": "tests/native-library-safe/cases/private_module_helper_library.rs",
+      "sha256": "6cfff75596d05f708026d8bdd1be0bc5ef0d7025868ede7bf528ba881456de40",
+      "bytes": 127
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_const.rs",
+      "sha256": "97497d5ae6f45aa987c2de4711ad85b660e3292cc9265e8cc6dabff163572d48",
+      "bytes": 63
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_deprecated.rs",
+      "sha256": "8bd300edfbeadf456a489cd7ce9c57304b09751c53eee61bc0d280c465399639",
+      "bytes": 48
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_deprecated_crate.rs",
+      "sha256": "00845d60774244956e6b19fd216908f286bea2c49e4c4eaa85a6dae54707b74c",
+      "bytes": 75
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_deprecated_module.rs",
+      "sha256": "74bde42cae3a06d68ac293fe145d5fa688149f9fd47f9e8b7c8c8183b77382d1",
+      "bytes": 90
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_deprecated_reexport.rs",
+      "sha256": "3ecf8167ea5ba80e0a82973909cea86affbc8dfd6e92de2ac03815eb7dc1292b",
+      "bytes": 129
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_generic.rs",
+      "sha256": "6fafb9193c5a2ad02e021cdbb8d3095bc195e05d1f081dff099e5dfe295ca087",
+      "bytes": 48
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_macro.rs",
+      "sha256": "c5a14fb886ecaed7613febb4a24b98d80755fb998bb71243b99f18dc0bb041c7",
+      "bytes": 114
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_must_use.rs",
+      "sha256": "5e185d4b82953e378106866478d1babac9c2c36c66b7239be315ddd98e40739f",
+      "bytes": 46
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_no_mangle.rs",
+      "sha256": "5dc1e42d701d01508ee571f3a475e6baad9004c9110ee956eea1244a75a1c853",
+      "bytes": 55
+    },
+    {
+      "path": "tests/native-library-safe/cases/public_type.rs",
+      "sha256": "a8e95f821b81d2c7bfb6b83a3e6d976abde08d4ab60816b24dee86459fc26cd2",
+      "bytes": 78
+    },
+    {
+      "path": "tests/native-library-safe/cases/result_mismatch.rs",
+      "sha256": "a90128a37c797abcf851ec720d31ec846c9450618c4e897662bc15370528d42c",
+      "bytes": 85
+    },
+    {
+      "path": "tests/native-library-safe/cases/type_mismatch.rs",
+      "sha256": "5598feabd99c38393ff98097e3839c81a099853ef6f01ad340679b2bc83accbd",
+      "bytes": 58
+    },
+    {
+      "path": "tests/native-library-safe/left/Cargo.toml",
+      "sha256": "bb68f402fb1d3470cb7b33813bfa88bb2806bd36e21f8a86fdb7f25074676b06",
+      "bytes": 97
+    },
+    {
+      "path": "tests/native-library-safe/left/src/lib.rs",
+      "sha256": "c01f3926d7bf0d5f4174fec1f766d772bb2f0f1a4cf5ad8cc86f61645b86c41e",
+      "bytes": 565
+    },
+    {
+      "path": "tests/native-library-safe/right/Cargo.toml",
+      "sha256": "9896d28321756a9bddfeebab4f1e7a275da802cae1d0a5726c443721462e2522",
+      "bytes": 97
+    },
+    {
+      "path": "tests/native-library-safe/right/src/lib.rs",
+      "sha256": "cc8d30f8d566a163e38ba4887d4f0b10aa85c8d73b2d5bd543970a2bd9b0a7bd",
+      "bytes": 128
+    },
+    {
+      "path": "tests/native-library/Cargo.lock",
+      "sha256": "5c8207ceef2ac1a40e781f2bb5e98ac9ad3620aa4728b4e2c2675c9f3cab31f8",
+      "bytes": 341
+    },
+    {
+      "path": "tests/native-library/Cargo.toml",
+      "sha256": "dd5f75b145578007dc9c65868ecc07f0a483869832093ab23fab42e82098fedb",
+      "bytes": 196
+    },
+    {
+      "path": "tests/native-library/README.md",
+      "sha256": "e9897ffd7bf93f1da3383d206590f31be676d043defc679a65fde1268d75849f",
+      "bytes": 2370
+    },
+    {
+      "path": "tests/native-library/app/Cargo.toml",
+      "sha256": "aeedd7f297d2407e3ece2d0a79f464b07ecb31dd4d8718d5d9968bbab33383d9",
+      "bytes": 221
+    },
+    {
+      "path": "tests/native-library/app/src/main.rs",
+      "sha256": "1eecaa5a323ee47706fd01471c63b56eff662b3c6250a9947cd64b6df6d60583",
+      "bytes": 161
+    },
+    {
+      "path": "tests/native-library/cases/arity_mismatch.rs",
+      "sha256": "1a82a5f9b7ead480cb0a15aa481a76807e58320fa9cb85fc1c86351444a50097",
+      "bytes": 52
+    },
+    {
+      "path": "tests/native-library/cases/conditional_consumer.rs",
+      "sha256": "778536986b686948d36f7564f7a5488f5892d6f867eb995d6292e76629d3d647",
+      "bytes": 204
+    },
+    {
+      "path": "tests/native-library/cases/function_imports.rs",
+      "sha256": "a5ee20588441806cdd07b0306b2be8051492983eca5d48e96dcc81462f0edbcf",
+      "bytes": 138
+    },
+    {
+      "path": "tests/native-library/cases/imported_overflow.rs",
+      "sha256": "50c60e31063d1f4b0cf76019c7df7e4461d8b89fc09f4ec6c65da595989d3fed",
+      "bytes": 64
+    },
+    {
+      "path": "tests/native-library/cases/primitive_abi.rs",
+      "sha256": "c103919a056d2d52065d531f5595be2b54172fd5794e3a1dd5ff8ad4b93629ac",
+      "bytes": 1087
+    },
+    {
+      "path": "tests/native-library/cases/private.rs",
+      "sha256": "7b9ec30e2c76af78ddfb5c59fa3cc4d1a5af403d9a8a8e7a35ac1da7616933e9",
+      "bytes": 51
+    },
+    {
+      "path": "tests/native-library/cases/private_module_helper_consumer.rs",
+      "sha256": "3bb33a5f131e2a5c4d9e07ab687760e7871b2689b52d57b7e6a625af0b52a856",
+      "bytes": 66
+    },
+    {
+      "path": "tests/native-library/cases/private_module_helper_library.rs",
+      "sha256": "6cfff75596d05f708026d8bdd1be0bc5ef0d7025868ede7bf528ba881456de40",
+      "bytes": 127
+    },
+    {
+      "path": "tests/native-library/cases/public_const.rs",
+      "sha256": "97497d5ae6f45aa987c2de4711ad85b660e3292cc9265e8cc6dabff163572d48",
+      "bytes": 63
+    },
+    {
+      "path": "tests/native-library/cases/public_deprecated.rs",
+      "sha256": "8bd300edfbeadf456a489cd7ce9c57304b09751c53eee61bc0d280c465399639",
+      "bytes": 48
+    },
+    {
+      "path": "tests/native-library/cases/public_deprecated_crate.rs",
+      "sha256": "00845d60774244956e6b19fd216908f286bea2c49e4c4eaa85a6dae54707b74c",
+      "bytes": 75
+    },
+    {
+      "path": "tests/native-library/cases/public_deprecated_module.rs",
+      "sha256": "74bde42cae3a06d68ac293fe145d5fa688149f9fd47f9e8b7c8c8183b77382d1",
+      "bytes": 90
+    },
+    {
+      "path": "tests/native-library/cases/public_deprecated_reexport.rs",
+      "sha256": "3ecf8167ea5ba80e0a82973909cea86affbc8dfd6e92de2ac03815eb7dc1292b",
+      "bytes": 129
+    },
+    {
+      "path": "tests/native-library/cases/public_generic.rs",
+      "sha256": "6fafb9193c5a2ad02e021cdbb8d3095bc195e05d1f081dff099e5dfe295ca087",
+      "bytes": 48
+    },
+    {
+      "path": "tests/native-library/cases/public_macro.rs",
+      "sha256": "c5a14fb886ecaed7613febb4a24b98d80755fb998bb71243b99f18dc0bb041c7",
+      "bytes": 114
+    },
+    {
+      "path": "tests/native-library/cases/public_must_use.rs",
+      "sha256": "5e185d4b82953e378106866478d1babac9c2c36c66b7239be315ddd98e40739f",
+      "bytes": 46
+    },
+    {
+      "path": "tests/native-library/cases/public_no_mangle.rs",
+      "sha256": "5dc1e42d701d01508ee571f3a475e6baad9004c9110ee956eea1244a75a1c853",
+      "bytes": 55
+    },
+    {
+      "path": "tests/native-library/cases/public_type.rs",
+      "sha256": "a8e95f821b81d2c7bfb6b83a3e6d976abde08d4ab60816b24dee86459fc26cd2",
+      "bytes": 78
+    },
+    {
+      "path": "tests/native-library/cases/result_mismatch.rs",
+      "sha256": "a90128a37c797abcf851ec720d31ec846c9450618c4e897662bc15370528d42c",
+      "bytes": 85
+    },
+    {
+      "path": "tests/native-library/cases/type_mismatch.rs",
+      "sha256": "5598feabd99c38393ff98097e3839c81a099853ef6f01ad340679b2bc83accbd",
+      "bytes": 58
+    },
+    {
+      "path": "tests/native-library/cases/unsafe_allowed.rs",
+      "sha256": "2f64eb28e5106d2d18ca78493907bbb24cce86f5b3731e8a8421807076200bfe",
+      "bytes": 77
+    },
+    {
+      "path": "tests/native-library/cases/unsafe_forbidden.rs",
+      "sha256": "1381f89f42fc8e18eb5c0986d3bb808e67de42114aea4cd8807912cdc3b6ccab",
+      "bytes": 66
+    },
+    {
+      "path": "tests/native-library/left/Cargo.toml",
+      "sha256": "bb68f402fb1d3470cb7b33813bfa88bb2806bd36e21f8a86fdb7f25074676b06",
+      "bytes": 97
+    },
+    {
+      "path": "tests/native-library/left/src/lib.rs",
+      "sha256": "45f65e286bc134e70937ecd5559928ec315d5ab646a9a625d1bd34f397894aff",
+      "bytes": 632
+    },
+    {
+      "path": "tests/native-library/right/Cargo.toml",
+      "sha256": "9896d28321756a9bddfeebab4f1e7a275da802cae1d0a5726c443721462e2522",
+      "bytes": 97
+    },
+    {
+      "path": "tests/native-library/right/src/lib.rs",
+      "sha256": "cc8d30f8d566a163e38ba4887d4f0b10aa85c8d73b2d5bd543970a2bd9b0a7bd",
+      "bytes": 128
+    },
+    {
+      "path": "tools/diagnose-native-library-safe.py",
+      "sha256": "58cf349a00afadd8e491f798844e17283da386af7ff4798ed3ac764c161ffcf6",
+      "bytes": 1821
+    },
+    {
+      "path": "tools/package-toolchain.py",
+      "sha256": "36ef94dfe4d45a6e0f0e2bf96364104a2ad5909f8566ae62f7d82a7cddb2485b",
+      "bytes": 19727
+    },
+    {
+      "path": "tools/qualify-native-cargo.py",
+      "sha256": "2c69bba425724a1807966706364e2531846a58bc03d6c01254f340c181de142d",
+      "bytes": 28600
+    },
+    {
+      "path": "tools/qualify-native-library.py",
+      "sha256": "49cda5ad835edba3f20df7800a5a8e93527c497115366b564ee5b12e894c4549",
+      "bytes": 33676
+    },
+    {
+      "path": "tools/qualify-package.py",
+      "sha256": "19eee856d8c46806a9e88171d86740e2faf9a715f5b28facef5e120272646d01",
+      "bytes": 26215
+    }
+  ]
+}

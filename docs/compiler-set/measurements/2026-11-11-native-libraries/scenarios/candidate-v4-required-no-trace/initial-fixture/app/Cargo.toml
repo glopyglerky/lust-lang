@@ -1,0 +1,9 @@
+[package]
+name = "lustr_library_contract"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+left = { package = "shared_symbol", path = "../left" }
+right = { package = "shared_symbol", path = "../right" }

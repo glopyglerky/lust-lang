@@ -1,0 +1,26 @@
+[package]
+name = "lustr-native"
+version = "0.1.0"
+edition = "2024"
+description = "Experimental in-process Cargo entry point for the unchanged native Lust compiler"
+publish = false
+
+[workspace]
+
+[dependencies]
+mimalloc = { version = "=0.1.52", default-features = false }
+libmimalloc-sys = { version = "=0.1.49", default-features = false }
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "thin"
+debug = "line-tables-only"
+
+# Match upstream's lower-memory correctness build. Keep this distinct from the
+# release profile and record the actual binary/profile in qualification.
+[profile.gate]
+inherits = "release"
+codegen-units = 16
+debug = false
+incremental = true

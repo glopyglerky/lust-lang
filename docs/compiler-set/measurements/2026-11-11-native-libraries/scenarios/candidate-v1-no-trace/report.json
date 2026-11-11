@@ -1,0 +1,573 @@
+{
+  "schema": "lustr.native-library-qualification.v1",
+  "success": false,
+  "qualified": false,
+  "no_trace_qualification": true,
+  "scope": "Two independently compiled native libraries with typed scalar free-function exports, private helpers, unsafe-call checks and distinct crate disambiguators, consumed through real Cargo --extern arguments.",
+  "full_native_rust": false,
+  "complete_library_metadata": false,
+  "runtime_rustc_fallback": false,
+  "unimplemented_followups": [
+    "public structs/enums and layout",
+    "references/ownership and cross-crate drops",
+    "generic/type/trait metadata and downstream monomorphization",
+    "transitive dependencies and re-exports",
+    "macros and procedural macros",
+    "metadata-only cargo check and pipelining",
+    "profile/target permutations"
+  ],
+  "timing_scope": "Elapsed times are diagnostic only; no performance claim.",
+  "process_evidence": "Cargo argv and compiler sentinels only; exec tracing unavailable and qualification disabled",
+  "runner_sha256": "064d4510b3bef0fa51fe9b1feca9c5b07ad8749c98af90ca1a6e8aaa41464ff5",
+  "fixture_sha256": {
+    "Cargo.lock": "5c8207ceef2ac1a40e781f2bb5e98ac9ad3620aa4728b4e2c2675c9f3cab31f8",
+    "Cargo.toml": "dd5f75b145578007dc9c65868ecc07f0a483869832093ab23fab42e82098fedb",
+    "README.md": "b60cca3dab033e0436e38013ea196b407a28de959612d4ebd9daf582be93be04",
+    "app/Cargo.toml": "aeedd7f297d2407e3ece2d0a79f464b07ecb31dd4d8718d5d9968bbab33383d9",
+    "app/src/main.rs": "1eecaa5a323ee47706fd01471c63b56eff662b3c6250a9947cd64b6df6d60583",
+    "cases/arity_mismatch.rs": "1a82a5f9b7ead480cb0a15aa481a76807e58320fa9cb85fc1c86351444a50097",
+    "cases/conditional_consumer.rs": "778536986b686948d36f7564f7a5488f5892d6f867eb995d6292e76629d3d647",
+    "cases/imported_overflow.rs": "50c60e31063d1f4b0cf76019c7df7e4461d8b89fc09f4ec6c65da595989d3fed",
+    "cases/primitive_abi.rs": "c103919a056d2d52065d531f5595be2b54172fd5794e3a1dd5ff8ad4b93629ac",
+    "cases/private.rs": "7b9ec30e2c76af78ddfb5c59fa3cc4d1a5af403d9a8a8e7a35ac1da7616933e9",
+    "cases/public_const.rs": "97497d5ae6f45aa987c2de4711ad85b660e3292cc9265e8cc6dabff163572d48",
+    "cases/public_deprecated.rs": "8bd300edfbeadf456a489cd7ce9c57304b09751c53eee61bc0d280c465399639",
+    "cases/public_generic.rs": "6fafb9193c5a2ad02e021cdbb8d3095bc195e05d1f081dff099e5dfe295ca087",
+    "cases/public_macro.rs": "c5a14fb886ecaed7613febb4a24b98d80755fb998bb71243b99f18dc0bb041c7",
+    "cases/public_must_use.rs": "5e185d4b82953e378106866478d1babac9c2c36c66b7239be315ddd98e40739f",
+    "cases/public_no_mangle.rs": "5dc1e42d701d01508ee571f3a475e6baad9004c9110ee956eea1244a75a1c853",
+    "cases/public_type.rs": "a8e95f821b81d2c7bfb6b83a3e6d976abde08d4ab60816b24dee86459fc26cd2",
+    "cases/result_mismatch.rs": "a90128a37c797abcf851ec720d31ec846c9450618c4e897662bc15370528d42c",
+    "cases/type_mismatch.rs": "5598feabd99c38393ff98097e3839c81a099853ef6f01ad340679b2bc83accbd",
+    "cases/unsafe_allowed.rs": "2f64eb28e5106d2d18ca78493907bbb24cce86f5b3731e8a8421807076200bfe",
+    "cases/unsafe_forbidden.rs": "1381f89f42fc8e18eb5c0986d3bb808e67de42114aea4cd8807912cdc3b6ccab",
+    "left/Cargo.toml": "bb68f402fb1d3470cb7b33813bfa88bb2806bd36e21f8a86fdb7f25074676b06",
+    "left/src/lib.rs": "45f65e286bc134e70937ecd5559928ec315d5ab646a9a625d1bd34f397894aff",
+    "right/Cargo.toml": "9896d28321756a9bddfeebab4f1e7a275da802cae1d0a5726c443721462e2522",
+    "right/src/lib.rs": "cc8d30f8d566a163e38ba4887d4f0b10aa85c8d73b2d5bd543970a2bd9b0a7bd"
+  },
+  "tools": {
+    "native": {
+      "path": "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+      "sha256": "1a2073c5b24975a960e1475002e143a9d32a987aeb60076e0cbbb5066c633aa0",
+      "version": "lustr-native 0.1.0 (Lust 0.2.0, build 97bc596a532b4e81)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n"
+    },
+    "cargo": {
+      "path": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af"
+    },
+    "oracle": {
+      "path": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    }
+  },
+  "commands": [
+    {
+      "label": "oracle-identity",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "-vV"
+      ],
+      "cwd": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces",
+      "exit_code": 0,
+      "elapsed_ns": 23345560,
+      "timed_out": false,
+      "stdout": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+      "stderr": "",
+      "trace": null
+    },
+    {
+      "label": "native-identity",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+        "-vV"
+      ],
+      "cwd": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces",
+      "exit_code": 0,
+      "elapsed_ns": 2760307,
+      "timed_out": false,
+      "stdout": "lustr-native 0.1.0 (Lust 0.2.0, build 97bc596a532b4e81)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n",
+      "stderr": "",
+      "trace": null
+    },
+    {
+      "label": "oracle-initial",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "build",
+        "--offline",
+        "--locked",
+        "-vv",
+        "--message-format=json",
+        "--target-dir",
+        "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target",
+        "-p",
+        "lustr_library_contract"
+      ],
+      "cwd": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces",
+      "exit_code": 0,
+      "elapsed_ns": 183834988,
+      "timed_out": false,
+      "stdout": "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle%20project%20with%20spaces/right#shared_symbol@0.2.0\",\"manifest_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"shared_symbol\",\"src_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rlib\",\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rmeta\"],\"executable\":null,\"fresh\":false}\n{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle%20project%20with%20spaces/left#shared_symbol@0.1.0\",\"manifest_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"shared_symbol\",\"src_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rlib\",\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rmeta\"],\"executable\":null,\"fresh\":false}\n{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle%20project%20with%20spaces/app#lustr_library_contract@0.0.0\",\"manifest_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app/Cargo.toml\",\"target\":{\"kind\":[\"bin\"],\"crate_types\":[\"bin\"],\"name\":\"lustr_library_contract\",\"src_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app/src/main.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":false,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/lustr_library_contract\"],\"executable\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/lustr_library_contract\",\"fresh\":false}\n{\"reason\":\"build-finished\",\"success\":true}\n",
+      "stderr": "   Compiling shared_symbol v0.2.0 (/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right)\n   Compiling shared_symbol v0.1.0 (/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left)\n     Running `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.2.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=2 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps' /workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name shared_symbol --edition=2024 right/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=8bc3e5188ff97615 -C extra-filename=-92bb0eb317c82557 --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps'`\n     Running `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps' /workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=4bbf73fb57afd463 -C extra-filename=-d388c68fb6e01570 --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps'`\n   Compiling lustr_library_contract v0.0.0 (/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app)\n     Running `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_BIN_NAME=lustr_library_contract CARGO_CRATE_NAME=lustr_library_contract CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=lustr_library_contract CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.0.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=0 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' CARGO_PRIMARY_PACKAGE=1 LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps' /workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name lustr_library_contract --edition=2024 app/src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=2e49147f9037b6f6 -C extra-filename=-a37c421970c7e546 --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps' --extern 'left=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rlib' --extern 'right=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rlib'`\n    Finished `dev` profile [unoptimized] target(s) in 0.17s\n",
+      "trace": null
+    },
+    {
+      "label": "oracle-initial-runtime",
+      "lane": "oracle",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/lustr_library_contract"
+      ],
+      "cwd": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces",
+      "exit_code": 0,
+      "elapsed_ns": 5279706,
+      "timed_out": false,
+      "stdout": "left=31 right=109 local=21\n",
+      "stderr": "",
+      "trace": null
+    },
+    {
+      "label": "native-initial",
+      "lane": "native",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "build",
+        "--offline",
+        "--locked",
+        "-vv",
+        "--message-format=json",
+        "--target-dir",
+        "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target",
+        "-p",
+        "lustr_library_contract"
+      ],
+      "cwd": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces",
+      "exit_code": 101,
+      "elapsed_ns": 44496745,
+      "timed_out": false,
+      "stdout": "{\"reason\":\"compiler-message\",\"package_id\":\"path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native%20project%20with%20spaces/left#shared_symbol@0.1.0\",\"manifest_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"shared_symbol\",\"src_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"message\":{\"rendered\":\"error[L0404]: `unsafe` is not supported\\n  --> /workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/src/lib.rs:9:1\\n   | pub unsafe fn unchecked_add(value: i32) -> i32 {\\n   | ^^^\\n   = fix: Remove the unsafe code.\\n\\nerror: could not compile `/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/src/lib.rs` due to 1 previous error(s)\\n\",\"$message_type\":\"diagnostic\",\"children\":[],\"level\":\"error\",\"message\":\"error[L0404]: `unsafe` is not supported\\n  --> /workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/src/lib.rs:9:1\\n   | pub unsafe fn unchecked_add(value: i32) -> i32 {\\n   | ^^^\\n   = fix: Remove the unsafe code.\\n\\nerror: could not compile `/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/src/lib.rs` due to 1 previous error(s)\\n\",\"spans\":[],\"code\":null}}\n{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native%20project%20with%20spaces/right#shared_symbol@0.2.0\",\"manifest_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"shared_symbol\",\"src_path\":\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right/src/lib.rs\",\"edition\":\"2024\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":0,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps/libshared_symbol-45c8ae9ee3a409f9.rlib\",\"/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps/libshared_symbol-45c8ae9ee3a409f9.rmeta\"],\"executable\":null,\"fresh\":false}\n{\"reason\":\"build-finished\",\"success\":false}\n",
+      "stderr": "   Compiling shared_symbol v0.2.0 (/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right)\n   Compiling shared_symbol v0.1.0 (/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left)\n     Running `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' /workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=af1c3dd881f52834 -C extra-filename=-2865a8f248d6414d --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps'`\n     Running `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.2.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=2 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' /workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native --crate-name shared_symbol --edition=2024 right/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=85973a9e6d1c3f33 -C extra-filename=-45c8ae9ee3a409f9 --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps'`\nerror: could not compile `shared_symbol` (lib) due to 1 previous error\n\nCaused by:\n  process didn't exit successfully: `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' /workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=af1c3dd881f52834 -C extra-filename=-2865a8f248d6414d --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps'` (exit status: 1)\nwarning: build failed, waiting for other jobs to finish...\n",
+      "trace": null
+    }
+  ],
+  "checks": [],
+  "artifacts": {},
+  "blocked": [
+    "Unreached library gates remain unqualified; failure is not a native completion result."
+  ],
+  "cargo_builds": [
+    {
+      "label": "oracle-initial",
+      "lane": "oracle",
+      "artifacts": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle%20project%20with%20spaces/right#shared_symbol@0.2.0",
+          "manifest_path": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right/Cargo.toml",
+          "target": {
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "name": "shared_symbol",
+            "src_path": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right/src/lib.rs",
+            "edition": "2024",
+            "doc": true,
+            "doctest": true,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "features": [],
+          "filenames": [
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rlib",
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rmeta"
+          ],
+          "executable": null,
+          "fresh": false
+        },
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle%20project%20with%20spaces/left#shared_symbol@0.1.0",
+          "manifest_path": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left/Cargo.toml",
+          "target": {
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "name": "shared_symbol",
+            "src_path": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left/src/lib.rs",
+            "edition": "2024",
+            "doc": true,
+            "doctest": true,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "features": [],
+          "filenames": [
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rlib",
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rmeta"
+          ],
+          "executable": null,
+          "fresh": false
+        },
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle%20project%20with%20spaces/app#lustr_library_contract@0.0.0",
+          "manifest_path": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app/Cargo.toml",
+          "target": {
+            "kind": [
+              "bin"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "name": "lustr_library_contract",
+            "src_path": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app/src/main.rs",
+            "edition": "2024",
+            "doc": true,
+            "doctest": false,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "features": [],
+          "filenames": [
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/lustr_library_contract"
+          ],
+          "executable": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/lustr_library_contract",
+          "fresh": false
+        }
+      ],
+      "compiler_invocations": [
+        {
+          "argv": [
+            "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+            "--crate-name",
+            "shared_symbol",
+            "--edition=2024",
+            "right/src/lib.rs",
+            "--error-format=json",
+            "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+            "--crate-type",
+            "lib",
+            "--emit=dep-info,metadata,link",
+            "-C",
+            "embed-bitcode=no",
+            "--check-cfg",
+            "cfg(docsrs,test)",
+            "--check-cfg",
+            "cfg(feature, values())",
+            "-C",
+            "metadata=8bc3e5188ff97615",
+            "-C",
+            "extra-filename=-92bb0eb317c82557",
+            "--out-dir",
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps",
+            "-C",
+            "strip=debuginfo",
+            "-L",
+            "dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps"
+          ],
+          "environment": {
+            "CARGO": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "CARGO_CRATE_NAME": "shared_symbol",
+            "CARGO_MANIFEST_DIR": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right",
+            "CARGO_MANIFEST_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/right/Cargo.toml",
+            "CARGO_PKG_AUTHORS": "",
+            "CARGO_PKG_DESCRIPTION": "",
+            "CARGO_PKG_HOMEPAGE": "",
+            "CARGO_PKG_LICENSE": "",
+            "CARGO_PKG_LICENSE_FILE": "",
+            "CARGO_PKG_NAME": "shared_symbol",
+            "CARGO_PKG_README": "",
+            "CARGO_PKG_REPOSITORY": "",
+            "CARGO_PKG_RUST_VERSION": "",
+            "CARGO_PKG_VERSION": "0.2.0",
+            "CARGO_PKG_VERSION_MAJOR": "0",
+            "CARGO_PKG_VERSION_MINOR": "2",
+            "CARGO_PKG_VERSION_PATCH": "0",
+            "CARGO_PKG_VERSION_PRE": "",
+            "LD_LIBRARY_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps"
+          }
+        },
+        {
+          "argv": [
+            "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+            "--crate-name",
+            "shared_symbol",
+            "--edition=2024",
+            "left/src/lib.rs",
+            "--error-format=json",
+            "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+            "--crate-type",
+            "lib",
+            "--emit=dep-info,metadata,link",
+            "-C",
+            "embed-bitcode=no",
+            "--check-cfg",
+            "cfg(docsrs,test)",
+            "--check-cfg",
+            "cfg(feature, values())",
+            "-C",
+            "metadata=4bbf73fb57afd463",
+            "-C",
+            "extra-filename=-d388c68fb6e01570",
+            "--out-dir",
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps",
+            "-C",
+            "strip=debuginfo",
+            "-L",
+            "dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps"
+          ],
+          "environment": {
+            "CARGO": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "CARGO_CRATE_NAME": "shared_symbol",
+            "CARGO_MANIFEST_DIR": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left",
+            "CARGO_MANIFEST_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/left/Cargo.toml",
+            "CARGO_PKG_AUTHORS": "",
+            "CARGO_PKG_DESCRIPTION": "",
+            "CARGO_PKG_HOMEPAGE": "",
+            "CARGO_PKG_LICENSE": "",
+            "CARGO_PKG_LICENSE_FILE": "",
+            "CARGO_PKG_NAME": "shared_symbol",
+            "CARGO_PKG_README": "",
+            "CARGO_PKG_REPOSITORY": "",
+            "CARGO_PKG_RUST_VERSION": "",
+            "CARGO_PKG_VERSION": "0.1.0",
+            "CARGO_PKG_VERSION_MAJOR": "0",
+            "CARGO_PKG_VERSION_MINOR": "1",
+            "CARGO_PKG_VERSION_PATCH": "0",
+            "CARGO_PKG_VERSION_PRE": "",
+            "LD_LIBRARY_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps"
+          }
+        },
+        {
+          "argv": [
+            "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+            "--crate-name",
+            "lustr_library_contract",
+            "--edition=2024",
+            "app/src/main.rs",
+            "--error-format=json",
+            "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+            "--crate-type",
+            "bin",
+            "--emit=dep-info,link",
+            "-C",
+            "embed-bitcode=no",
+            "--check-cfg",
+            "cfg(docsrs,test)",
+            "--check-cfg",
+            "cfg(feature, values())",
+            "-C",
+            "metadata=2e49147f9037b6f6",
+            "-C",
+            "extra-filename=-a37c421970c7e546",
+            "--out-dir",
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps",
+            "-C",
+            "strip=debuginfo",
+            "-L",
+            "dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps",
+            "--extern",
+            "left=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-d388c68fb6e01570.rlib",
+            "--extern",
+            "right=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps/libshared_symbol-92bb0eb317c82557.rlib"
+          ],
+          "environment": {
+            "CARGO": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "CARGO_BIN_NAME": "lustr_library_contract",
+            "CARGO_CRATE_NAME": "lustr_library_contract",
+            "CARGO_MANIFEST_DIR": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app",
+            "CARGO_MANIFEST_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle project with spaces/app/Cargo.toml",
+            "CARGO_PKG_AUTHORS": "",
+            "CARGO_PKG_DESCRIPTION": "",
+            "CARGO_PKG_HOMEPAGE": "",
+            "CARGO_PKG_LICENSE": "",
+            "CARGO_PKG_LICENSE_FILE": "",
+            "CARGO_PKG_NAME": "lustr_library_contract",
+            "CARGO_PKG_README": "",
+            "CARGO_PKG_REPOSITORY": "",
+            "CARGO_PKG_RUST_VERSION": "",
+            "CARGO_PKG_VERSION": "0.0.0",
+            "CARGO_PKG_VERSION_MAJOR": "0",
+            "CARGO_PKG_VERSION_MINOR": "0",
+            "CARGO_PKG_VERSION_PATCH": "0",
+            "CARGO_PKG_VERSION_PRE": "",
+            "CARGO_PRIMARY_PACKAGE": "1",
+            "LD_LIBRARY_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/oracle target/debug/deps"
+          }
+        }
+      ]
+    },
+    {
+      "label": "native-initial",
+      "lane": "native",
+      "artifacts": [
+        {
+          "reason": "compiler-artifact",
+          "package_id": "path+file:///workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native%20project%20with%20spaces/right#shared_symbol@0.2.0",
+          "manifest_path": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right/Cargo.toml",
+          "target": {
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "name": "shared_symbol",
+            "src_path": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right/src/lib.rs",
+            "edition": "2024",
+            "doc": true,
+            "doctest": true,
+            "test": true
+          },
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 0,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "features": [],
+          "filenames": [
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps/libshared_symbol-45c8ae9ee3a409f9.rlib",
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps/libshared_symbol-45c8ae9ee3a409f9.rmeta"
+          ],
+          "executable": null,
+          "fresh": false
+        }
+      ],
+      "compiler_invocations": [
+        {
+          "argv": [
+            "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+            "--crate-name",
+            "shared_symbol",
+            "--edition=2024",
+            "left/src/lib.rs",
+            "--error-format=json",
+            "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+            "--crate-type",
+            "lib",
+            "--emit=dep-info,metadata,link",
+            "-C",
+            "embed-bitcode=no",
+            "--check-cfg",
+            "cfg(docsrs,test)",
+            "--check-cfg",
+            "cfg(feature, values())",
+            "-C",
+            "metadata=af1c3dd881f52834",
+            "-C",
+            "extra-filename=-2865a8f248d6414d",
+            "--out-dir",
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps",
+            "-C",
+            "strip=debuginfo",
+            "-L",
+            "dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps"
+          ],
+          "environment": {
+            "CARGO": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "CARGO_CRATE_NAME": "shared_symbol",
+            "CARGO_MANIFEST_DIR": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left",
+            "CARGO_MANIFEST_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/Cargo.toml",
+            "CARGO_PKG_AUTHORS": "",
+            "CARGO_PKG_DESCRIPTION": "",
+            "CARGO_PKG_HOMEPAGE": "",
+            "CARGO_PKG_LICENSE": "",
+            "CARGO_PKG_LICENSE_FILE": "",
+            "CARGO_PKG_NAME": "shared_symbol",
+            "CARGO_PKG_README": "",
+            "CARGO_PKG_REPOSITORY": "",
+            "CARGO_PKG_RUST_VERSION": "",
+            "CARGO_PKG_VERSION": "0.1.0",
+            "CARGO_PKG_VERSION_MAJOR": "0",
+            "CARGO_PKG_VERSION_MINOR": "1",
+            "CARGO_PKG_VERSION_PATCH": "0",
+            "CARGO_PKG_VERSION_PRE": "",
+            "LD_LIBRARY_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps"
+          }
+        },
+        {
+          "argv": [
+            "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+            "--crate-name",
+            "shared_symbol",
+            "--edition=2024",
+            "right/src/lib.rs",
+            "--error-format=json",
+            "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+            "--crate-type",
+            "lib",
+            "--emit=dep-info,metadata,link",
+            "-C",
+            "embed-bitcode=no",
+            "--check-cfg",
+            "cfg(docsrs,test)",
+            "--check-cfg",
+            "cfg(feature, values())",
+            "-C",
+            "metadata=85973a9e6d1c3f33",
+            "-C",
+            "extra-filename=-45c8ae9ee3a409f9",
+            "--out-dir",
+            "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps",
+            "-C",
+            "strip=debuginfo",
+            "-L",
+            "dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps"
+          ],
+          "environment": {
+            "CARGO": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "CARGO_CRATE_NAME": "shared_symbol",
+            "CARGO_MANIFEST_DIR": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right",
+            "CARGO_MANIFEST_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right/Cargo.toml",
+            "CARGO_PKG_AUTHORS": "",
+            "CARGO_PKG_DESCRIPTION": "",
+            "CARGO_PKG_HOMEPAGE": "",
+            "CARGO_PKG_LICENSE": "",
+            "CARGO_PKG_LICENSE_FILE": "",
+            "CARGO_PKG_NAME": "shared_symbol",
+            "CARGO_PKG_README": "",
+            "CARGO_PKG_REPOSITORY": "",
+            "CARGO_PKG_RUST_VERSION": "",
+            "CARGO_PKG_VERSION": "0.2.0",
+            "CARGO_PKG_VERSION_MAJOR": "0",
+            "CARGO_PKG_VERSION_MINOR": "2",
+            "CARGO_PKG_VERSION_PATCH": "0",
+            "CARGO_PKG_VERSION_PRE": "",
+            "LD_LIBRARY_PATH": "/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps"
+          }
+        }
+      ]
+    }
+  ],
+  "failure": "ValueError: native-initial: Cargo exited 101, expected 0:    Compiling shared_symbol v0.2.0 (/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right)\n   Compiling shared_symbol v0.1.0 (/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left)\n     Running `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' /workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=af1c3dd881f52834 -C extra-filename=-2865a8f248d6414d --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps'`\n     Running `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/right/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.2.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=2 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' /workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native --crate-name shared_symbol --edition=2024 right/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=85973a9e6d1c3f33 -C extra-filename=-45c8ae9ee3a409f9 --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps'`\nerror: could not compile `shared_symbol` (lib) due to 1 previous error\n\nCaused by:\n  process didn't exit successfully: `CARGO=/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo CARGO_CRATE_NAME=shared_symbol CARGO_MANIFEST_DIR='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left' CARGO_MANIFEST_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native project with spaces/left/Cargo.toml' CARGO_PKG_AUTHORS='' CARGO_PKG_DESCRIPTION='' CARGO_PKG_HOMEPAGE='' CARGO_PKG_LICENSE='' CARGO_PKG_LICENSE_FILE='' CARGO_PKG_NAME=shared_symbol CARGO_PKG_README='' CARGO_PKG_REPOSITORY='' CARGO_PKG_RUST_VERSION='' CARGO_PKG_VERSION=0.1.0 CARGO_PKG_VERSION_MAJOR=0 CARGO_PKG_VERSION_MINOR=1 CARGO_PKG_VERSION_PATCH=0 CARGO_PKG_VERSION_PRE='' LD_LIBRARY_PATH='/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' /workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native --crate-name shared_symbol --edition=2024 left/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=af1c3dd881f52834 -C extra-filename=-2865a8f248d6414d --out-dir '/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps' -C strip=debuginfo -L 'dependency=/workspace/scratch/0fa08655b84f/lustr-library-tests-work-evidence/candidate-v1-no-trace/native target/debug/deps'` (exit status: 1)\nwarning: build failed, waiting for other jobs to finish...\n"
+}

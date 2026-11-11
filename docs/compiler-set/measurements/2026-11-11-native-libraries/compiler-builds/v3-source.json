@@ -1,0 +1,136 @@
+{
+  "scope": "diagnostic opt1/LTOoff native build, correctness only; not a package receipt",
+  "source_head": "f1c4bf2c6a22baa2ea146bb270804be547c15473",
+  "native_tree": "0ab1b09815802894e6078de0af59273cbdf46cb0",
+  "native_diff_empty": true,
+  "source_sha256": {
+    "crates/lustr-native/src/cargo_cli.rs": "ca36c564cf1a2cfce024a41d6fec29e4937e02a89226da907ecfea1843b01905",
+    "crates/lustr-native/src/main.rs": "dd885a0ea20043ada088a9574398b550f8230113efc7c9d7e89720deb2330e92",
+    "crates/lustr-native/src/native_artifact.rs": "52746cc031a120fef77cacc71911e09b679deca678ee561bd68b3c3f2068d4d2",
+    "crates/lustr-native/src/native_codegen.rs": "0c5e4885acb4104f8f9355026207777841a3253b87c86630837e7b408a80a89e",
+    "crates/lustr-native/src/native_expand.rs": "3acc5fbbe5a786250a6a9ac653776ce4164ae6a8a36f8a35a463b2e6f10de336",
+    "crates/lustr-native/src/native_import.rs": "e9288a83584be8c0b2940bfa8ce4eb2ff992b4c6fa4ae4b948a232eb2d5ef435",
+    "crates/lustr-native/src/native_library.rs": "952684982fe9f7e07507b4a108db31572edd290d34e6e27ef9b379b01db1e55e",
+    "crates/lustr-native/src/native_resolve.rs": "ba892ae74538155d14a0f838b9eaef24307ba151ed0ba0789c64ad2e06bb9f45",
+    "crates/lustr-native/Cargo.toml": "ee24bb8c8522bbd408a91e82e4dc8184ff64069a72590f5b65aafc29d2e395bb",
+    "crates/lustr-native/Cargo.lock": "f4dbdf0517eeebb2be9fb24315190ae21e5425296073fc606c62e79123d587da",
+    "crates/lustr-native/build.rs": "3ed7ae8a5efc65305a4dd49c364538ffd39d9b28fe8b99686c9547d7d774ecd2"
+  },
+  "cargo_command": [
+    "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "build",
+    "--manifest-path",
+    "crates/lustr-native/Cargo.toml",
+    "--target-dir",
+    "/workspace/scratch/0fa08655b84f/lustr-library-correctness",
+    "--profile",
+    "gate",
+    "--locked",
+    "--offline",
+    "-j1",
+    "-vv",
+    "--message-format=json"
+  ],
+  "explicit_environment": {
+    "PATH": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin:/usr/bin:/bin",
+    "RUSTUP_HOME": "/workspace/scratch/0fa08655b84f/build-tools/rustup",
+    "CARGO_HOME": "/workspace/scratch/0fa08655b84f/build-tools/cargo",
+    "RUSTUP_TOOLCHAIN": "1.99.1",
+    "RUSTC": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+    "LUST_TCC_HOME": "/workspace/scratch/0fa08655b84f/lustr-package-work/build/compiler/native/third_party/tcc",
+    "CARGO_PROFILE_GATE_OPT_LEVEL": "1",
+    "CARGO_PROFILE_GATE_LTO": "false"
+  },
+  "cwd": "/workspace/scratch/0fa08655b84f/lustr-library-cli-work",
+  "rustc_invocations": [
+    [
+      "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "--crate-name",
+      "lustr_native",
+      "--edition=2024",
+      "src/main.rs",
+      "--error-format=json",
+      "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+      "--crate-type",
+      "bin",
+      "--emit=dep-info,link",
+      "-C",
+      "opt-level=1",
+      "-C",
+      "embed-bitcode=no",
+      "-C",
+      "codegen-units=16",
+      "--check-cfg",
+      "cfg(docsrs,test)",
+      "--check-cfg",
+      "cfg(feature, values())",
+      "-C",
+      "metadata=316d6a225e23b88e",
+      "-C",
+      "extra-filename=-6cd512214d70bfc9",
+      "--out-dir",
+      "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/deps",
+      "-C",
+      "incremental=/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/incremental",
+      "-C",
+      "strip=debuginfo",
+      "-L",
+      "dependency=/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/deps",
+      "--extern",
+      "libmimalloc_sys=/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/deps/liblibmimalloc_sys-265d111a20da67da.rlib",
+      "--extern",
+      "mimalloc=/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/deps/libmimalloc-41097f965a8361e2.rlib",
+      "-L",
+      "native=/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/build/libmimalloc-sys-c2dbb7e2ed3748a6/out",
+      "-L",
+      "native=/workspace/scratch/0fa08655b84f/lustr-package-work/build/compiler/native/third_party/tcc/lib",
+      "-l",
+      "static=tcc",
+      "-l",
+      "dylib=dl",
+      "-l",
+      "dylib=pthread",
+      "-l",
+      "dylib=m"
+    ]
+  ],
+  "compiler_artifacts": [
+    {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///workspace/scratch/0fa08655b84f/lustr-library-cli-work/crates/lustr-native#0.1.0",
+      "manifest_path": "/workspace/scratch/0fa08655b84f/lustr-library-cli-work/crates/lustr-native/Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "lustr-native",
+        "src_path": "/workspace/scratch/0fa08655b84f/lustr-library-cli-work/crates/lustr-native/src/main.rs",
+        "edition": "2024",
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "1",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [],
+      "filenames": [
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native"
+      ],
+      "executable": "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+      "fresh": false
+    }
+  ],
+  "bootstrap_version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+  "build_exit": 0,
+  "binary_sha256": "a1897476004ab9793fe0b57ac2e89cdcaa3d3b1f036c52335389e0801a282db0",
+  "binary_version": "lustr-native 0.1.0 (Lust 0.2.0, build fc67b2bb8044aea0)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n",
+  "rustc_argv_observed": true
+}

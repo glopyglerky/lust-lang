@@ -1,0 +1,53 @@
+[
+  {
+    "case": "deprecated_reexport",
+    "argv": [
+      "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "--crate-type=lib",
+      "--edition=2024",
+      "--emit=metadata",
+      "--crate-name",
+      "deprecated_reexport",
+      "/workspace/scratch/0fa08655b84f/lustr-upstream-audit-work/export-attribute-counterexamples/deprecated_reexport.rs",
+      "-o",
+      "/workspace/scratch/0fa08655b84f/lustr-upstream-audit-work/export-attribute-counterexamples/deprecated_reexport.rmeta"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "case": "deprecated_module",
+    "argv": [
+      "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "--crate-type=lib",
+      "--edition=2024",
+      "--emit=metadata",
+      "--crate-name",
+      "deprecated_module",
+      "/workspace/scratch/0fa08655b84f/lustr-upstream-audit-work/export-attribute-counterexamples/deprecated_module.rs",
+      "-o",
+      "/workspace/scratch/0fa08655b84f/lustr-upstream-audit-work/export-attribute-counterexamples/deprecated_module.rmeta"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "case": "deprecated_crate",
+    "argv": [
+      "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "--crate-type=lib",
+      "--edition=2024",
+      "--emit=metadata",
+      "--crate-name",
+      "deprecated_crate",
+      "/workspace/scratch/0fa08655b84f/lustr-upstream-audit-work/export-attribute-counterexamples/deprecated_crate.rs",
+      "-o",
+      "/workspace/scratch/0fa08655b84f/lustr-upstream-audit-work/export-attribute-counterexamples/deprecated_crate.rmeta"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

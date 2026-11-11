@@ -1,0 +1,20 @@
+Building bootstrap
+running: /workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo build --jobs=2 --manifest-path /workspace/scratch/0fa08655b84f/bluefe-native-only-work/src/bootstrap/Cargo.toml -Zroot-dir=/workspace/scratch/0fa08655b84f/bluefe-native-only-work --verbose --locked
+error: failed to run `rustc` to learn about target-specific information
+
+Caused by:
+  process didn't exit successfully: `/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native - --crate-name ___ --print=file-names -Zallow-features= -Wrust_2018_idioms -Wunused_lifetimes --crate-type bin --crate-type rlib --crate-type dylib --crate-type cdylib --crate-type staticlib --crate-type proc-macro --print=sysroot --print=split-debuginfo --print=crate-name --print=cfg -Wwarnings` (exit status: 2)
+  --- stderr
+  error: lustr-native: unsupported native rustc option `-Zallow-features=`
+Traceback (most recent call last):
+  File "/workspace/scratch/0fa08655b84f/bluefe-native-only-work/x.py", line 53, in <module>
+    bootstrap.main()
+  File "/workspace/scratch/0fa08655b84f/bluefe-native-only-work/src/bootstrap/bootstrap.py", line 1456, in main
+    bootstrap(args)
+  File "/workspace/scratch/0fa08655b84f/bluefe-native-only-work/src/bootstrap/bootstrap.py", line 1406, in bootstrap
+    build.build_bootstrap()
+  File "/workspace/scratch/0fa08655b84f/bluefe-native-only-work/src/bootstrap/bootstrap.py", line 1062, in build_bootstrap
+    run(args, env=env, verbose=self.verbose, cwd=self.rust_root)
+  File "/workspace/scratch/0fa08655b84f/bluefe-native-only-work/src/bootstrap/bootstrap.py", line 237, in run
+    raise RuntimeError(err)
+RuntimeError: failed to run: /workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo build --jobs=2 --manifest-path /workspace/scratch/0fa08655b84f/bluefe-native-only-work/src/bootstrap/Cargo.toml -Zroot-dir=/workspace/scratch/0fa08655b84f/bluefe-native-only-work --verbose --locked

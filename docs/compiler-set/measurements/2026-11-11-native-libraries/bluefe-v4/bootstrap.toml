@@ -1,0 +1,19 @@
+change-id = "ignore"
+[build]
+build = "x86_64-unknown-linux-gnu"
+host = ["x86_64-unknown-linux-gnu"]
+target = ["x86_64-unknown-linux-gnu"]
+rustc = "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native"
+cargo = "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo"
+rustdoc = "/workspace/scratch/0fa08655b84f/bluefe-native-v4-diagnostic/blocked-bin/rustdoc"
+build-dir = "/workspace/scratch/0fa08655b84f/bluefe-native-v4-diagnostic/build"
+build-stage = 0
+jobs = 2
+docs = false
+submodules = false
+locked-deps = true
+[llvm]
+download-ci-llvm = true
+[rust]
+download-rustc = false
+deny-warnings = false

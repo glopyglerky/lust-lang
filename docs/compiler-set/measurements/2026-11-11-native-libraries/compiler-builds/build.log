@@ -1,0 +1,458 @@
+   Compiling libmimalloc-sys v0.1.49
+   Compiling lustr-native v0.1.0 (/workspace/scratch/0fa08655b84f/lustr-library-cli-work/crates/lustr-native)
+   Compiling mimalloc v0.1.52
+warning: unused imports: `Pat` and `Stmt`
+    --> src/../../../compiler/native/src/check/collect.rs:2145:35
+     |
+2145 |     use crate::ast::{BinOp, Expr, Pat, Stmt};
+     |                                   ^^^  ^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `IterKind as K`
+   --> src/../../../compiler/native/src/check/iter.rs:834:13
+    |
+834 |         use IterKind as K;
+    |             ^^^^^^^^^^^^^
+
+warning: unused imports: `ItemKind` and `self`
+  --> src/../../../compiler/native/src/check/variance.rs:12:18
+   |
+12 | use crate::ast::{self, ItemKind};
+   |                  ^^^^  ^^^^^^^^
+
+warning: unused import: `crate::check::sync::SyncOp`
+    --> src/../../../compiler/native/src/check/mod.rs:4183:17
+     |
+4183 |             use crate::check::sync::SyncOp;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::ty::sync::SyncTy`
+    --> src/../../../compiler/native/src/check/mod.rs:4184:17
+     |
+4184 |             use crate::ty::sync::SyncTy;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::intern::FxMap`
+  --> src/../../../compiler/native/src/driver/kept_delta.rs:50:5
+   |
+50 | use crate::intern::FxMap;
+   |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `defer_cc` and `parked_cc_result`
+  --> src/../../../compiler/native/src/driver/mod.rs:29:27
+   |
+29 | pub use compile::{Stamps, defer_cc, drop_parked_cc, finish_parked_cc, parked_cc_result, release_bases, sweep_bases};
+   |                           ^^^^^^^^                                    ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `capabilities`, `daemon`, and `testrun`
+  --> src/main.rs:38:42
+   |
+38 | ...k, capabilities, cc, cgen, check, colwidth, daemon, def, diag, driver, explain, image, intern, ir, lexer, lower, mono, parser, pool, protocol, scan, stdload, stdloc, stdmods, tcc, testrun, t...
+   |       ^^^^^^^^^^^^                             ^^^^^^                                                                                                                                  ^^^^^^^
+
+warning: unused import: `crate::ty::TyIntern`
+    --> src/../../../compiler/native/src/check/collect.rs:7298:9
+     |
+7298 |     use crate::ty::TyIntern;
+     |         ^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `dt`
+    --> src/../../../compiler/native/src/borrowck/regions.rs:6096:57
+     |
+6096 |     fn call_from_ref(&mut self, avs: &[(Ty, Vec<u32>)], dt: Ty, dv: &[u32]) -> bool {
+     |                                                         ^^ help: if this is intentional, prefix it with an underscore: `_dt`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/../../../compiler/native/src/cgen/kconst.rs:643:9
+    |
+643 |     let mut bytes = |at: usize, val: u128, n: usize, b: &mut [u8], cls: &mut [u8]| {
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `variants`
+    --> src/../../../compiler/native/src/cgen.rs:1437:30
+     |
+1437 | fn enum_is_exact(l: &Layout, variants: usize) -> bool {
+     |                              ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_variants`
+
+warning: variable does not need to be mutable
+   --> src/../../../compiler/native/src/check/any.rs:722:9
+    |
+722 |     let mut one = |p: &Program, tys: &mut _, path: &str| Some(tn_apply(path, vec![tn_first(p, tys, t, open, in_sig)?]));
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/../../../compiler/native/src/check/any.rs:859:9
+    |
+859 |     let mut arg = |tys: &mut _, i: usize| tn_arg(p, tys, *args.get(i)?, open, in_sig);
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `def`
+    --> src/../../../compiler/native/src/check/closure.rs:2333:33
+     |
+2333 |                 TyKind::Closure(def, _) => {
+     |                                 ^^^ help: if this is intentional, prefix it with an underscore: `_def`
+
+warning: unused variable: `x`
+    --> src/../../../compiler/native/src/check/collect.rs:2433:20
+     |
+2433 |         (SVal::Int(x, None), SVal::Int(_, Some(it))) if !matches!(op, BinOp::Shl | BinOp::Shr) => {
+     |                    ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: value assigned to `static_count` is never read
+    --> src/../../../compiler/native/src/check/collect.rs:6231:28
+     |
+6231 |     let mut static_count = 0u32;
+     |                            ^^^^ this value is reassigned later and never used
+...
+6409 |         static_count = ranks.iter().copied().max().map_or(0, |m| m + 1);
+     |         --------------------------------------------------------------- `static_count` is overwritten here before the previous value is read
+     |
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/check/collect.rs:6942:9
+     |
+6942 |     let mut take = |g: &ast::Generics, out: &mut Vec<Sym>| {
+     |         ----^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/check/collect.rs:7308:9
+     |
+7308 |     let mut args_match = |a: crate::ty::ArgsId, b: crate::ty::ArgsId, map: &mut Vec<(u32, Ty)>, cmap: &mut Vec<(u32, crate::ty::Co...
+     |         ----^^^^^^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: unused variable: `extend`
+   --> src/../../../compiler/native/src/check/generics.rs:206:13
+    |
+206 |         let extend = lang_trait(&["core", "iter"], "Extend");
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_extend`
+
+warning: unreachable pattern
+   --> src/../../../compiler/native/src/check/generics.rs:392:13
+    |
+388 |             "Extend" => self.extend,
+    |             -------- matches all the relevant values
+...
+392 |             "Extend" => self.extend,
+    |             ^^^^^^^^ no value can reach this
+    |
+    = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/check/generics.rs:1594:9
+     |
+1594 |     let mut lt = |lt: ast::Lifetime, bound: &[Sym], out: &mut Vec<(ast::Lifetime, bool)>| {
+     |         ----^^
+     |         |
+     |         help: remove this `mut`
+
+warning: value assigned to `to_glue` is never read
+     --> src/../../../compiler/native/src/check/generics.rs:11755:27
+      |
+11755 |           let mut to_glue = false;
+      |                             ^^^^^ this value is reassigned later and never used
+...
+11768 | /             to_glue = !has_rel
+11769 | |                 && !prove_goal(p, &[], TraitRef { def: lang.ord, args: ord_args, bindings: EMPTY_BINDINGS })
+11770 | |                 && crate::check::collect::has_ord(p, &p.tys, self_ty);
+      | |_____________________________________________________________________- `to_glue` is overwritten here before the previous value is read
+
+warning: unused variable: `m`
+     --> src/../../../compiler/native/src/check/generics.rs:13393:28
+      |
+13393 |             TyKind::Ref(_, m, e) if is_default => matches!(cx.tys.kind(e), TyKind::Str | TyKind::Slice(_)).then_some(Vec::new()),
+      |                            ^ help: if this is intentional, prefix it with an underscore: `_m`
+
+warning: unreachable pattern
+    --> src/../../../compiler/native/src/check/iter.rs:1667:19
+     |
+1635 |                 | "size_hint"
+     |                   ----------- matches all the relevant values
+...
+1667 |                 | "size_hint"
+     |                   ^^^^^^^^^^^ no value can reach this
+
+warning: variable does not need to be mutable
+   --> src/../../../compiler/native/src/check/depth.rs:397:9
+    |
+397 |     let mut max_of = |ts: Vec<Ty>, memo: &mut FxMap<Ty, usize>| {
+    |         ----^^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `p`
+  --> src/../../../compiler/native/src/check/opaque.rs:88:13
+   |
+88 |         let p = self.p;
+   |             ^ help: if this is intentional, prefix it with an underscore: `_p`
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/check/opaque.rs:1138:9
+     |
+1138 |     let mut in_args = |a: ArgsId, out: &mut Vec<Ty>| {
+     |         ----^^^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: unused variable: `p`
+    --> src/../../../compiler/native/src/check/mod.rs:9128:13
+     |
+9128 |         let p = self.p;
+     |             ^ help: if this is intentional, prefix it with an underscore: `_p`
+
+warning: unused variable: `a`
+     --> src/../../../compiler/native/src/check/mod.rs:16526:26
+      |
+16526 |         for (_, _, n, _, a, g) in &spine {
+      |                          ^ help: if this is intentional, prefix it with an underscore: `_a`
+
+warning: value assigned to `last` is never read
+    --> src/../../../compiler/native/src/daemon.rs:1139:9
+     |
+1139 |         last = std::time::Instant::now();
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+1185 |         last = std::time::Instant::now();
+     |         -------------------------------- `last` is overwritten here before the previous value is read
+
+warning: variable does not need to be mutable
+   --> src/../../../compiler/native/src/driver/span_shift.rs:178:9
+    |
+178 |     let mut list = |extras: &mut Vec<ExtraNodes>, own: Span, spans: &[Span], pick: fn(&mut ExtraNodes) -> &mut Vec<usize>, i: usize...
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/../../../compiler/native/src/ir.rs:395:9
+    |
+395 |     let mut scan_rv = |rv: &Rvalue, bad: &mut Vec<bool>| match rv {
+    |         ----^^^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/../../../compiler/native/src/lower/any.rs:177:13
+    |
+177 |         let mut word = |this: &mut Self, k: u32| {
+    |             ----^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unreachable pattern
+   --> src/../../../compiler/native/src/lower/iter.rs:100:15
+    |
+ 49 |             | B::IterNextBack
+    |               --------------- matches all the relevant values
+...
+100 |             | B::IterNextBack
+    |               ^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+   --> src/../../../compiler/native/src/lower/iter.rs:116:15
+    |
+ 50 |             | B::IterSizeHint
+    |               --------------- matches all the relevant values
+...
+116 |             | B::IterSizeHint
+    |               ^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+   --> src/../../../compiler/native/src/lower/iter.rs:142:15
+    |
+ 51 |             | B::IterLen
+    |               ---------- matches all the relevant values
+...
+142 |             | B::IterLen
+    |               ^^^^^^^^^^ no value can reach this
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/lower/iter.rs:5954:13
+     |
+5954 |         let mut side_ok = |this: &mut Self, side: Place, is_start: bool| -> Local {
+     |             ----^^^^^^^
+     |             |
+     |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/lower/iter.rs:6784:13
+     |
+6784 |         let mut side = |this: &mut Self, v: Local, vt: Ty, q: Option<(AdtId, Ty)>, dt: Ty| -> Operand {
+     |             ----^^^^
+     |             |
+     |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src/../../../compiler/native/src/lower/range_fmt.rs:24:13
+   |
+24 |         let mut field = |this: &mut Self, i: u32| -> FmtPart {
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: unreachable pattern
+    --> src/../../../compiler/native/src/lower.rs:3094:13
+     |
+2087 |             Expr::Int(..) | Expr::Float(_) | Expr::Bool(_) | Expr::Char(_) | Expr::Str(_) | Expr::ByteStr(_) | Expr::Unit => {
+     |                             -------------- matches all the relevant values
+...
+3094 |             Expr::Float(_)
+     |             ^^^^^^^^^^^^^^ no value can reach this
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/lower.rs:3987:13
+     |
+3987 |         let mut dest_arg = |this: &mut Self| {
+     |             ----^^^^^^^^
+     |             |
+     |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/lower.rs:4176:21
+     |
+4176 |                 let mut side = |this: &mut Self, site: ExprId, f: LocalDefId| -> (Operand, Operand) {
+     |                     ----^^^^
+     |                     |
+     |                     help: remove this `mut`
+
+warning: unused variable: `a`
+    --> src/../../../compiler/native/src/lower.rs:5104:27
+     |
+5104 |                 for (ai, &a) in args.iter().enumerate() {
+     |                           ^ help: if this is intentional, prefix it with an underscore: `_a`
+
+warning: unreachable pattern
+    --> src/../../../compiler/native/src/lower.rs:6971:13
+     |
+6881 |             Pat::Slice { prefix, middle, suffix } => {
+     |             ------------------------------------- matches all the relevant values
+...
+6971 |             Pat::Slice { .. } | Pat::QPath { .. } | Pat::MacroCall(_) => {}
+     |             ^^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> src/../../../compiler/native/src/lower.rs:6971:33
+     |
+6910 |             Pat::Path(_) | Pat::QPath { .. } | Pat::TupleStruct { .. } | Pat::Struct { .. } => {
+     |                            ----------------- matches all the relevant values
+...
+6971 |             Pat::Slice { .. } | Pat::QPath { .. } | Pat::MacroCall(_) => {}
+     |                                 ^^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: value assigned to `last` is never read
+    --> src/../../../compiler/native/src/resolve/worklist.rs:3499:13
+     |
+3499 |             last = now;
+     |             ^^^^^^^^^^
+...
+4311 |     lap!("resolve: chunk scan+concat");
+     |     ---------------------------------- in this macro invocation
+     |
+     = help: maybe it is overwritten before being read?
+     = note: this warning originates in the macro `lap` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable pattern
+    --> src/../../../compiler/native/src/ty/consteval.rs:4117:13
+     |
+4114 |             ConstValue::Aggregate(vals) => vals.get(i).cloned(),
+     |             --------------------------- matches all the relevant values
+...
+4117 |             ConstValue::Aggregate(_) | ConstValue::Repeat(..) => None,
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: variable does not need to be mutable
+    --> src/../../../compiler/native/src/ty/lang.rs:2301:9
+     |
+2301 |     let mut find = |rows: &[&str], kind| rows.iter().any(|r| std_row_eq(r, path)).then_some(kind);
+     |         ----^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: type `UnitDefs` is more private than the item `Mode::from_env`
+   --> src/../../../compiler/native/src/cc/pgo.rs:74:5
+    |
+ 74 |     pub fn from_env(spec: &CcSpec, work: &Path, defs: Option<&UnitDefs>, warm: Option<&Warm>) -> Result<Option<Mode>, String> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ associated function `Mode::from_env` is reachable at visibility `pub(crate)`
+    |
+note: but type `UnitDefs` is only usable at visibility `pub(in crate::upstream::cc)`
+   --> src/../../../compiler/native/src/cc/pgo.rs:592:1
+    |
+592 | pub(super) struct UnitDefs {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `Warm` is more private than the item `Mode::from_env`
+   --> src/../../../compiler/native/src/cc/pgo.rs:74:5
+    |
+ 74 |     pub fn from_env(spec: &CcSpec, work: &Path, defs: Option<&UnitDefs>, warm: Option<&Warm>) -> Result<Option<Mode>, String> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ associated function `Mode::from_env` is reachable at visibility `pub(crate)`
+    |
+note: but type `Warm` is only usable at visibility `pub(in crate::upstream::cc)`
+   --> src/../../../compiler/native/src/cc/pgo.rs:186:1
+    |
+186 | pub(super) struct Warm {
+    | ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: suspicious definition of the runtime `write` symbol used by the standard library
+  --> src/../../../compiler/native/src/daemon.rs:64:5
+   |
+64 |     fn write(fd: i32, buf: *const u8, count: usize) -> isize;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: expected `unsafe extern "C" fn(i32, *const c_void, usize) -> isize` (for the current target)
+           found    `unsafe extern "C" fn(i32, *const u8, usize) -> isize`
+   = help: either fix the signature or remove any attributes like `#[unsafe(no_mangle)]`, `#[unsafe(export_name = "write")]`, or `#[link_name = "write"]`
+   = help: allow this lint if the signature is compatible
+   = note: `#[warn(suspicious_runtime_symbol_definitions)]` on by default
+
+warning: suspicious definition of the runtime `read` symbol used by the standard library
+  --> src/../../../compiler/native/src/daemon.rs:74:5
+   |
+74 |     fn read(fd: i32, buf: *mut u8, count: usize) -> isize;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: expected `unsafe extern "C" fn(i32, *mut c_void, usize) -> isize` (for the current target)
+           found    `unsafe extern "C" fn(i32, *mut u8, usize) -> isize`
+   = help: either fix the signature or remove any attributes like `#[unsafe(no_mangle)]`, `#[unsafe(export_name = "read")]`, or `#[link_name = "read"]`
+   = help: allow this lint if the signature is compatible
+
+warning: direct cast of function item into an integer
+    --> src/../../../compiler/native/src/daemon.rs:1051:43
+     |
+1051 |         signal(SIGINT, on_shutdown_signal as usize);
+     |                                           ^^^^^^^^
+     |
+     = note: `#[warn(function_casts_as_integer)]` on by default
+help: first cast to a pointer `as *const ()`
+     |
+1051 |         signal(SIGINT, on_shutdown_signal as *const () as usize);
+     |                                           ++++++++++++
+
+warning: direct cast of function item into an integer
+    --> src/../../../compiler/native/src/daemon.rs:1052:44
+     |
+1052 |         signal(SIGTERM, on_shutdown_signal as usize);
+     |                                            ^^^^^^^^
+     |
+help: first cast to a pointer `as *const ()`
+     |
+1052 |         signal(SIGTERM, on_shutdown_signal as *const () as usize);
+     |                                            ++++++++++++
+
+warning: `lustr-native` (bin "lustr-native") generated 55 warnings (run `cargo fix --bin "lustr-native" -p lustr-native` to apply 37 suggestions)
+    Finished `gate` profile [optimized] target(s) in 5m 09s

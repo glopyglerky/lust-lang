@@ -1,0 +1,60 @@
+{
+  "scope": "pre-correction export contract diagnostic",
+  "compiler_sha256": "a1897476004ab9793fe0b57ac2e89cdcaa3d3b1f036c52335389e0801a282db0",
+  "commands": [
+    {
+      "case": "deprecated_reexport",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/export-attribute-v3-d6__utnn/deprecated_reexport.rs",
+        "--crate-name=deprecated_reexport",
+        "--crate-type=rlib",
+        "--edition=2024",
+        "--emit=link,metadata",
+        "--out-dir",
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/export-attribute-v3-d6__utnn"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "archive_created": true,
+      "metadata_created": true
+    },
+    {
+      "case": "deprecated_module",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/export-attribute-v3-d6__utnn/deprecated_module.rs",
+        "--crate-name=deprecated_module",
+        "--crate-type=rlib",
+        "--edition=2024",
+        "--emit=link,metadata",
+        "--out-dir",
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/export-attribute-v3-d6__utnn"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "archive_created": true,
+      "metadata_created": true
+    },
+    {
+      "case": "deprecated_crate",
+      "argv": [
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/export-attribute-v3-d6__utnn/deprecated_crate.rs",
+        "--crate-name=deprecated_crate",
+        "--crate-type=rlib",
+        "--edition=2024",
+        "--emit=link,metadata",
+        "--out-dir",
+        "/workspace/scratch/0fa08655b84f/lustr-library-correctness/export-attribute-v3-d6__utnn"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "archive_created": true,
+      "metadata_created": true
+    }
+  ]
+}

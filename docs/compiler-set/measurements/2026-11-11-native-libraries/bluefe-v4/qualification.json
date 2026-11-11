@@ -1,0 +1,48 @@
+{
+  "schema": "bluefe.lustr-only-build.v1",
+  "success": false,
+  "source": {
+    "repository": "glopyglerky/blueFe",
+    "commit": "7175cffbb56b0e596a41f0bbda7ea58d35127502"
+  },
+  "compiler": {
+    "path": "/workspace/scratch/0fa08655b84f/lustr-library-correctness/gate/lustr-native",
+    "sha256": "704b9c9fa348313229581bb458f028f15861b6368ede24f3600648c8fa5268fd",
+    "version": "lustr-native 0.1.0 (Lust 0.2.0, build 774f1df0f45c7d7b)\nbinary: lustr-native\ncommit-hash: unknown\nhost: x86_64-unknown-linux-gnu\nrelease: 0.1.0\nbackend: unchanged Lust C/TinyCC\nnative-full-rust: false\n"
+  },
+  "cargo": {
+    "path": "/workspace/scratch/0fa08655b84f/build-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af"
+  },
+  "stage": 0,
+  "stock_rustc_fallback": false,
+  "complete_native_lustr": false,
+  "process_trace_required": false,
+  "diagnostic_only": true,
+  "configuration_sha256": "de38bfbee94e08b3e20e149cc5a32a5b7b05473e471b34f1d2307294d529710e",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "/workspace/scratch/0fa08655b84f/bluefe-native-only-work/x.py",
+    "--config",
+    "/workspace/scratch/0fa08655b84f/bluefe-native-v4-diagnostic/bootstrap.toml",
+    "--build-dir",
+    "/workspace/scratch/0fa08655b84f/bluefe-native-v4-diagnostic/build",
+    "-vv",
+    "build",
+    "--stage",
+    "0",
+    "compiler/rustc"
+  ],
+  "elapsed_seconds": 0.07567027699951723,
+  "returncode": 1,
+  "executed_programs": [],
+  "native_compiler_executions": 0,
+  "unexpected_compilers": [],
+  "error": "unchanged BlueFe build failed; inspect build.log and process evidence to distinguish native gaps from build-environment failures",
+  "source_guard_after": {
+    "returncode": 0,
+    "stdout": "Protected Rust sources match upstream 5b7b37aefcb5b2fba3c2392bc9065b9e4602d494; no source divergence admitted\n",
+    "stderr": ""
+  },
+  "compiler_unchanged": true
+}

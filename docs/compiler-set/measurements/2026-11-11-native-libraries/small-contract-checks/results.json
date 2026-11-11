@@ -1,0 +1,48 @@
+[
+  {
+    "label": "artifact-codec",
+    "argv": [
+      "/workspace/scratch/0fa08655b84f/lustr-artifact-tests"
+    ],
+    "cwd": "/workspace/scratch/0fa08655b84f/lustr-continue-work",
+    "returncode": 0,
+    "stdout": "\nrunning 3 tests\ntest tests::wrong_targets_duplicate_paths_and_nonobjects_are_rejected ... ok\ntest tests::corrupt_and_truncated_artifacts_are_rejected_without_panicking ... ok\ntest tests::real_object_and_typed_metadata_round_trip ... ok\n\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n",
+    "stderr": ""
+  },
+  {
+    "label": "bluefe-bootstrap-contract",
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tools/bluefe-native",
+      "-v"
+    ],
+    "cwd": "/workspace/scratch/0fa08655b84f/bluefe-native-only-work",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "test_inherited_compiler_selectors_are_removed (test_build.NativeBuildContract.test_inherited_compiler_selectors_are_removed) ... ok\ntest_trace_distinguishes_executed_tools_from_failed_path_probes (test_build.NativeBuildContract.test_trace_distinguishes_executed_tools_from_failed_path_probes) ... ok\ntest_upstream_bootstrap_selects_only_configured_native_compiler (test_build.NativeBuildContract.test_upstream_bootstrap_selects_only_configured_native_compiler) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.058s\n\nOK\n"
+  },
+  {
+    "label": "lust-source",
+    "argv": [
+      "/workspace/scratch/0fa08655b84f/build-tools/lust-upstream-check"
+    ],
+    "cwd": "/workspace/scratch/0fa08655b84f/lustr-continue-work",
+    "returncode": 0,
+    "stdout": "Lust tracked source matches upstream 240e08d91d4aed0299639f6f11fd522912b248f9; no divergences admitted\n",
+    "stderr": ""
+  },
+  {
+    "label": "rust-source",
+    "argv": [
+      "/workspace/scratch/0fa08655b84f/bluefe-native-source-guard"
+    ],
+    "cwd": "/workspace/scratch/0fa08655b84f/bluefe-native-only-work",
+    "returncode": 0,
+    "stdout": "Protected Rust sources match upstream 5b7b37aefcb5b2fba3c2392bc9065b9e4602d494; no source divergence admitted\n",
+    "stderr": ""
+  }
+]
