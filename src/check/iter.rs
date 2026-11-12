@@ -223,6 +223,9 @@ impl<'p> Ctx<'p> {
                 self.check_args(&[USIZE], args, name_span);
                 return Some(ret);
             }
+            if matches!(n, "sort" | "sort_by" | "sort_by_key") && !self.alloc_library_linked() {
+                return None;
+            }
             if n.starts_with("sort") || n.starts_with("binary_search") {
                 return Some(self.seq_sort(e, recv, el, derefs, n, name_span, args));
             }

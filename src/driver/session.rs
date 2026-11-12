@@ -424,6 +424,15 @@ pub struct Session {
     /// The one crate selection this session serves. A request whose key does
     /// not match is a routing bug; compile rejects it instead of mixing state.
     pub(crate) key: SessionKey,
+    /// Selected native test entries, set only by the in-process test runner.
+    /// Each symbol names a resolved function; the bool marks an ignored test.
+    /// Ordinary requests and the daemon protocol never populate this list.
+    pub(crate) harness_tests: Vec<(crate::intern::Sym, bool)>,
+    /// Source names from the resolver, retained only for a test request.
+    /// One-shot test sessions do not create the daemon's PatchBase.
+    pub(crate) harness_names: FxMap<crate::intern::Sym, crate::intern::Sym>,
+    /// The Cargo-selected root before library splicing, only for a test request.
+    pub(crate) harness_root: Option<(std::path::PathBuf, String)>,
     pub(crate) front: Front,
     pub(crate) caches: Caches,
     /// The checked shipped std (S5), loaded at most once per session:
@@ -467,6 +476,9 @@ impl Session {
         let known = Known::new(&interner);
         Session {
             key,
+            harness_tests: Vec::new(),
+            harness_names: FxMap::default(),
+            harness_root: None,
             front: Front {
                 interner: Arc::new(interner),
                 known: Arc::new(known),

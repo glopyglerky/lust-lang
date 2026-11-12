@@ -63,6 +63,9 @@
 #   prints "difftest: shard k/n ran <seen> of <matched> cases" before its summary line.
 #   DIFFTEST_RUSTC_CACHE caches rustc's side of each case, never lust's. Details in
 #   scripts/case-pool.sh.
+#   tests/platforms.json records explicit platform requirements. An exclusion
+#   requires the host Rust oracle to reject that exact unavailable API; each
+#   excluded case and its reason are reported, with a separate count.
 set -uo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 lust=$root/target/release/lust
@@ -297,6 +300,7 @@ if [ "${PANIC:-abort}" = unwind ] || [ "${RELEASE:-0}" = 1 ]; then
     exit 1
   fi
   shard_line
+  echo "difftest platform exclusions: $platform_excluded"
   echo "difftest ($mode): $pass passed, $fail failed, $unsupported unsupported"
   [ $fail -eq 0 ]
   exit $?
@@ -387,5 +391,6 @@ if [ $seen -eq 0 ]; then
   exit 1
 fi
 shard_line
+echo "difftest platform exclusions: $platform_excluded"
 echo "difftest${PANIC:+ (PANIC=$PANIC)}: $pass passed, $fail failed"
 [ $fail -eq 0 ]

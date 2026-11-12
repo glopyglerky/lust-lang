@@ -136,6 +136,13 @@ pub fn parse(lexed: &Lexed, interner: &Interner, known: &Known) -> PResult<Ast> 
 /// builds the same item attributes as the parse in place. An error
 /// in the run reads as no allows; the real parse reports it.
 pub fn leading_allows(lexed: &Lexed, interner: &Interner, known: &Known) -> Vec<Attr> {
+    leading_attributes(lexed, interner, known).unwrap_or_default().into_iter().filter(|a| is_allow(a, known)).collect()
+}
+
+/// Read only the leading crate attributes. The resolver uses this before macro
+/// expansion to select the crate's implicit library and macro preludes.
+/// Attribute syntax and cfg evaluation remain the ordinary parser/resolver rules.
+pub fn leading_attributes(lexed: &Lexed, interner: &Interner, known: &Known) -> PResult<Vec<Attr>> {
     let mut p = Parser {
         toks: &lexed.tokens,
         pos: 0,
@@ -156,10 +163,7 @@ pub fn leading_allows(lexed: &Lexed, interner: &Interner, known: &Known) -> Vec<
         split: None,
         in_body: false,
     };
-    match p.inner_attributes() {
-        Ok(inner) => inner.attrs.iter().filter(|a| is_allow(a, known)).cloned().collect(),
-        Err(_) => Vec::new(),
-    }
+    p.inner_attributes().map(|inner| inner.attrs)
 }
 
 /// Like `parse`, for a piece of a file after its first piece: items
@@ -290,7 +294,7 @@ struct ParsedAttrs {
 /// Attributes the resolver reads (docs/ARCH.md section 1.6): parsed and
 /// recorded like `derive`, then honored by cfg stripping and module
 /// loading. `cfg!` the macro is a separate form and stays with W-MACRO.
-const RESOLVE_ATTRS: &[&str] = &["cfg", "cfg_attr", "path", "macro_use", "macro_export", "no_implicit_prelude"];
+const RESOLVE_ATTRS: &[&str] = &["cfg", "cfg_attr", "path", "macro_use", "macro_export", "no_implicit_prelude", "no_std"];
 
 /// The attributes `thread_local!` puts on each static it declares
 /// (expand/builtin.rs), lazy and `const { .. }` form. No source text can

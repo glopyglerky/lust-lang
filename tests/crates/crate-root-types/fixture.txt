@@ -1,0 +1,2 @@
+check-lib=src/lib.rs
+daemon=1

@@ -142,6 +142,9 @@ fn table_lines(t: &ResolvedTables) -> Vec<String> {
     for (def, v) in &t.def_info {
         d.line("def_info", def, v);
     }
+    for (def, name) in &t.qualified_adts {
+        d.line("qualified_adts", def, name);
+    }
     for (s, m) in &t.const_init_module {
         let s = d.span(*s);
         d.line("const_init_module", &s, m);
@@ -196,6 +199,9 @@ fn table_lines(t: &ResolvedTables) -> Vec<String> {
     d.line("std_splice_lo", &"", &t.std_splice_lo);
     d.line("std_ranges", &"", &t.std_ranges);
     d.line("alloc_roots", &"", &t.alloc_roots);
+    for (root, scope) in &t.library_scopes {
+        d.line("library_scope", root, scope);
+    }
     d.line("module_alts", &"", &t.module_alts);
     d.out.sort_unstable();
     d.out

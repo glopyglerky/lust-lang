@@ -619,6 +619,27 @@ pub fn compile_ast_macro(def: &MacroRulesDef, exported: bool, strings: &[String]
     compile_macro(def.name, def.name_span, &body, exported, def.span, strings, interner)
 }
 
+/// Library names and implicit prelude selected by a crate. Explicit `std`
+/// linkage does not restore the std prelude of a `#![no_std]` crate.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct LibraryScope {
+    pub core_prelude: bool,
+    pub std: bool,
+    pub alloc: bool,
+}
+
+impl Default for LibraryScope {
+    fn default() -> Self {
+        Self { core_prelude: false, std: true, alloc: false }
+    }
+}
+
+impl LibraryScope {
+    pub fn prelude_macro(self, name: &str) -> bool {
+        if self.core_prelude { builtin::std_macro_path(&["core", name]) } else { builtin::is_prelude_macro(name) }
+    }
+}
+
 /// The driver facts expansion needs: who interns, which file this is
 /// (for `file!` and relative `include!`), the file's text (for `line!`
 /// and `column!`), and the cfg environment.
@@ -657,6 +678,7 @@ pub struct ExpandCtx<'a> {
     /// resolves only through one of these, as rustc reads `::name` as an
     /// extern crate. Empty off the Cargo path.
     pub extern_crates: Vec<Sym>,
+    pub libraries: LibraryScope,
     /// The requesting client's env and shown paths (`for_file` gives `ClientView::PROCESS`).
     pub client: &'a ClientView,
 }
@@ -714,6 +736,7 @@ impl<'a> ExpandCtx<'a> {
             module_path: Vec::new(),
             crate_name: None,
             extern_crates: Vec::new(),
+            libraries: LibraryScope::default(),
             client: &ClientView::PROCESS,
         }
     }
@@ -1795,7 +1818,14 @@ fn expand_macros(lexed: Lexed, ctx: &ExpandCtx, seeds: &[MacroSeed], extra: &[Ma
     if let Some(d) = delimiter_error(&lexed.tokens) {
         return Err(d);
     }
-    if !needs_expansion(&lexed.tokens, ctx.interner) && !seeds_bind_parser_name(&lexed.tokens, seeds, extra, ctx.interner) {
+    // Parser-owned macros normally skip expansion. In a core-prelude crate,
+    // unavailable names still need ordinary macro resolution (a local macro
+    // or explicit import may provide them). Macro-free files keep the fast path.
+    let core_macro_lookup = || ctx.libraries.core_prelude && lexed.tokens.windows(2).any(|pair| {
+        pair[1].tok == Tok::Bang && matches!(pair[0].tok, Tok::Ident(name)
+            if builtin::is_passthrough(ctx.interner.get(name)) && !ctx.libraries.prelude_macro(ctx.interner.get(name)))
+    });
+    if !needs_expansion(&lexed.tokens, ctx.interner) && !seeds_bind_parser_name(&lexed.tokens, seeds, extra, ctx.interner) && !core_macro_lookup() {
         return Ok((lexed, Vec::new()));
     }
     let (trees, _) = build_trees(&lexed.tokens);
@@ -2408,7 +2438,7 @@ impl<'a> Expander<'a> {
         let gdepth = globs.iter().map(|&(_, d, _)| d).max();
         let module_idx = self.module_imports.get(&(self.module.clone(), name)).copied();
         let exported_idx = if self.module.is_empty() { self.exported.get(&name).copied() } else { None };
-        let std_outer = builtin::is_prelude_macro(name_text);
+        let std_outer = self.ctx.libraries.prelude_macro(name_text);
         let def_expn = |i: u32| self.def_expn.get(i as usize).copied().unwrap_or(0);
         // rustc reads textual scope first: a textual definition is the
         // answer whenever there is one, and a different macro a `use` or
@@ -2487,7 +2517,11 @@ impl<'a> Expander<'a> {
             || globs.iter().any(|&(i, d, _)| d < dg && !self.same_macro(i, gidx))
             || module_idx.is_some_and(|i| !self.same_macro(i, gidx))
             || (module_idx.is_none() && self.ambiguous_imports.contains_key(&(self.module.clone(), name)))
-            || builtin::is_std_macro_name(name_text);
+            || if self.ctx.libraries.core_prelude {
+                self.ctx.libraries.prelude_macro(name_text)
+            } else {
+                builtin::is_std_macro_name(name_text)
+            };
         if outer_diff {
             PlainMacro::Ambiguous
         } else {
@@ -2531,7 +2565,7 @@ impl<'a> Expander<'a> {
                     // input is in the prescan's root table before its
                     // expansion runs: the call found X itself, and X may
                     // not shadow the std macro from outside its expansion.
-                    if c.def == x.def && x.expn != 0 && !self.expn_within(c.expn, x.expn) && builtin::is_prelude_macro(text) {
+                    if c.def == x.def && x.expn != 0 && !self.expn_within(c.expn, x.expn) && self.ctx.libraries.prelude_macro(text) {
                         return Err(Diag::new(
                             "L0507",
                             c.span,
@@ -2645,10 +2679,15 @@ impl<'a> Expander<'a> {
     /// extern crate `println` (E0433).
     fn builtin_call_path(&self, segs: &[Seg], leading_colon: bool) -> bool {
         if segs.len() == 1 {
-            return !leading_colon;
+            return !leading_colon && (!self.ctx.libraries.core_prelude
+                || self.ctx.libraries.prelude_macro(&segs[0].text)
+                || self.builtin_alias_of(segs[0].sym).is_some());
         }
         let texts: Vec<&str> = segs.iter().map(|s| s.text.as_str()).collect();
-        if self.shadowed_crates.contains(&segs[0].sym) || (texts[0] == "alloc" && !self.alloc_extern) {
+        if self.shadowed_crates.contains(&segs[0].sym)
+            || (texts[0] == "alloc" && !self.alloc_extern && !self.ctx.libraries.alloc)
+            || (texts[0] == "std" && !self.ctx.libraries.std)
+        {
             return false;
         }
         builtin::std_macro_path(&texts)
@@ -4642,6 +4681,11 @@ impl<'a> Expander<'a> {
     /// that name (`std::vec`, `core::panic`).
     fn std_builtin_macro(&self, segs: &[Seg]) -> Option<Sym> {
         let path: Vec<&str> = segs.iter().map(|s| s.text.as_str()).collect();
+        if matches!(path.first(), Some(&"std")) && !self.ctx.libraries.std
+            || matches!(path.first(), Some(&"alloc")) && !self.ctx.libraries.alloc && !self.alloc_extern
+        {
+            return None;
+        }
         if crate::ty::lang::std_path_kind(&path) != Some(crate::ty::lang::StdPathKind::Macro) {
             return None;
         }

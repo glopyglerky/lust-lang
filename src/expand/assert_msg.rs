@@ -10,13 +10,15 @@
 // `Spacing::Alone`, and `space_between` drops the space in `f(`, `x,`,
 // `a.b`, `#[`, `m!`.
 //
-// `cond_text` gives None for a form this printer does not model, and for
-// a text rustc breaks over several lines (more than 78 bytes; lust has
-// no line breaker): the caller rejects those with L0809, so lust never
-// prints a text that differs from rustc's.
+// Short conditions keep the flat printer. Longer expressions use the
+// bounded layout printer for ordinary paths, records, calls, arrays,
+// operators and references. Other long forms still return None: the
+// caller rejects them with L0809 instead of guessing at panic text.
 use super::*;
 use crate::diag::CtxtId;
 use crate::lexer::Tok;
+
+mod layout;
 
 /// rustc's pretty printer margin: a longer text breaks over lines.
 const MARGIN: usize = 78;
@@ -240,7 +242,14 @@ fn is_punct(t: Tok) -> bool {
 fn print(toks: Vec<T>) -> Option<String> {
     let mut p = P { t: toks, i: 0 };
     let e = p.expr(R::default())?;
-    (p.i == p.t.len() && e.s.len() <= MARGIN).then_some(e.s)
+    if p.i != p.t.len() {
+        return None;
+    }
+    if e.s.len() <= MARGIN {
+        return Some(e.s);
+    }
+    p.i = 0;
+    layout::print(&mut p, &e.s)
 }
 
 /// rustc's `ExprPrecedence`, lowest first.

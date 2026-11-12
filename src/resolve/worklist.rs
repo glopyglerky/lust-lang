@@ -378,6 +378,94 @@ fn is_macro_call(toks: &[lexer::Token], mut i: usize) -> bool {
     }
 }
 
+/// The crate's prelude and explicitly linked standard crates, before expansion.
+/// Ordinary files without leading inner attributes return immediately. Only a
+/// core-prelude crate needs the declaration walk; bodies stay opaque token trees.
+pub fn library_scope(lexed: &lexer::Lexed, env: &CfgEnv, interner: &Interner, known: &Known) -> Result<crate::expand::LibraryScope, Diag> {
+    use crate::lexer::Tok;
+    let mut scope = crate::expand::LibraryScope::default();
+    if !matches!(lexed.tokens.first().map(|t| t.tok), Some(Tok::Pound))
+        || !matches!(lexed.tokens.get(1).map(|t| t.tok), Some(Tok::Bang))
+    {
+        return Ok(scope);
+    }
+    fn expand_attrs(attrs: &mut Vec<Attr>, lexed: &lexer::Lexed, env: &CfgEnv, interner: &Interner) -> Result<(), Diag> {
+        for _ in 0..64 {
+            if !attrs.iter().any(|a| a.path.len() == 1 && interner.get(a.path[0].name) == "cfg_attr") {
+                return Ok(());
+            }
+            cfg::expand_cfg_attr(env, attrs, &lexed.strings, interner)?;
+        }
+        Err(crate::diag::not_yet("L0522", attrs.first().map_or(Span::default(), |a| a.span), "nested cfg attributes exceeding the expansion limit"))
+    }
+    let mut inner = parser::leading_attributes(lexed, interner, known)?;
+    expand_attrs(&mut inner, lexed, env, interner)?;
+    if !has_attr(&inner, "no_std", interner) {
+        return Ok(scope);
+    }
+    scope.core_prelude = true;
+    scope.std = false;
+    let tokens = &lexed.tokens;
+    let tok = |i: usize| tokens.get(i).map(|t| t.tok);
+    // Skip item bodies without allocating their token trees. Only attributes
+    // need trees, so cfg uses the same evaluator as the rest of resolution.
+    let group_end = |start: usize| {
+        let mut depth = 0usize;
+        for (j, token) in tokens.iter().enumerate().skip(start) {
+            match token.tok {
+                Tok::LParen | Tok::LBracket | Tok::LBrace => depth += 1,
+                Tok::RParen | Tok::RBracket | Tok::RBrace => {
+                    depth = depth.saturating_sub(1);
+                    if depth == 0 { return j + 1; }
+                }
+                Tok::Eof => return j + 1,
+                _ => {}
+            }
+        }
+        tokens.len()
+    };
+    let mut attrs = Vec::new();
+    let mut i = 0;
+    while i < tokens.len() {
+        if tok(i) == Some(Tok::Pound) {
+            let inner = tok(i + 1) == Some(Tok::Bang);
+            let j = i + 1 + usize::from(inner);
+            if tok(j) == Some(Tok::LBracket) {
+                let end = group_end(j);
+                if !inner {
+                    let body = scan::outline_trees(&tokens[j + 1..end.saturating_sub(1)]);
+                    attrs.push(cfg::attr_from_trees(&body, tokens[j].span, AttrStyle::Outer));
+                }
+                i = end;
+                continue;
+            }
+        }
+        if tok(i) == Some(Tok::Extern) && tok(i + 1) == Some(Tok::Crate) {
+            expand_attrs(&mut attrs, lexed, env, interner)?;
+            if cfg::attrs_enabled(env, &attrs, &lexed.strings, interner)?
+                && let Some(Tok::Ident(name)) = tok(i + 2)
+                && tok(i + 3) == Some(Tok::Semi)
+            {
+                match interner.get(name) {
+                    "std" => scope.std = true,
+                    "alloc" => scope.alloc = true,
+                    _ => {}
+                }
+            }
+        }
+        if matches!(tok(i), Some(Tok::LParen | Tok::LBracket | Tok::LBrace)) {
+            if tok(i) == Some(Tok::LBrace) { attrs.clear(); }
+            i = group_end(i);
+            continue;
+        }
+        if tok(i) == Some(Tok::Semi) {
+            attrs.clear();
+        }
+        i += 1;
+    }
+    Ok(scope)
+}
+
 /// The lexed form of `needs_resolve`, for callers that already lexed.
 pub fn needs_resolve_lexed(lexed: &lexer::Lexed, interner: &Interner) -> bool {
     route_keywords(lexed, interner) || NestedFnScan::default().feed(&lexed.tokens)
@@ -427,7 +515,7 @@ fn route_keywords(lexed: &lexer::Lexed, interner: &Interner) -> bool {
                 }
                 if toks.get(j).map(|t| t.tok) == Some(Tok::LBracket)
                     && let Some(Tok::Ident(s)) = toks.get(j + 1).map(|t| t.tok)
-                    && matches!(interner.get(s), "cfg" | "cfg_attr" | "path" | "macro_use" | "macro_export" | "no_implicit_prelude")
+                    && matches!(interner.get(s), "cfg" | "cfg_attr" | "path" | "macro_use" | "macro_export" | "no_implicit_prelude" | "no_std")
                 {
                     return true;
                 }
@@ -901,6 +989,7 @@ pub struct FileExpander {
     /// `ResolveCache::resolves` of the resolve that built it.
     resolve: u64,
     menv: MacroEnv,
+    libraries: crate::expand::LibraryScope,
     magic: Sym,
     env: CfgEnv,
     cargo_env: Vec<(String, String)>,
@@ -945,6 +1034,7 @@ impl FileExpander {
             module_path: module_path.clone(),
             crate_name: Some(self.crate_name.clone()),
             extern_crates: self.menv.extern_crates(interner),
+            libraries: self.libraries,
             client,
         };
         let spliced = self.menv.splice(*di, lexed, self.magic);
@@ -1325,10 +1415,11 @@ fn hash_tokens(tokens: &[crate::lexer::Token], strings: &[String]) -> u64 {
 /// crate names, the crate's `$crate` magic, name, Cargo env, display
 /// root, and the client's shown root (`file!`). The cfg environment
 /// keys the whole `ResolveCache` already.
-fn expansion_env_hash(menv: &MacroEnv, job: &CrateJob, input: &OneInput, client: &crate::expand::ClientView, interner: &Interner) -> u64 {
+fn expansion_env_hash(menv: &MacroEnv, job: &CrateJob, input: &OneInput, client: &crate::expand::ClientView, interner: &Interner, libraries: crate::expand::LibraryScope) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut h = crate::intern::FxHasher::default();
-    "expansion-env-v2".hash(&mut h);
+    "expansion-env-v3".hash(&mut h);
+    if libraries.core_prelude { libraries.hash(&mut h); }
     crate::expand::parser_name_facts(&menv.seeds, interner).hash(&mut h);
     let mut externs: Vec<&String> = menv.dep_owned.keys().collect();
     externs.sort_unstable();
@@ -1726,7 +1817,7 @@ fn add_platform_job(input: &CrateInput, tables: &mut ResolvedTables, jobs: &mut 
     let root_module = tables.add_crate_root(interner.intern("std"));
     tables.crate_magic.insert(magic, root_module);
     tables.std_platform = Some((root_module, magic));
-    let mut env = input.env.with_features(&[]);
+    let mut env = input.env.for_dependency(&[]);
     env.allow_lust_dev = true;
     jobs.push(CrateJob {
         input: OneInput {
@@ -2073,7 +2164,7 @@ fn add_dep_job(
     let magic = interner.intern(&crate_magic_name(stable));
     let root_module = tables.add_crate_root(interner.intern(&crate_name));
     tables.crate_magic.insert(magic, root_module);
-    let mut env = input.env.with_features(&dep.features);
+    let mut env = input.env.for_dependency(&dep.features);
     if lust_owned {
         env.allow_lust_dev = true;
     } else {
@@ -3313,6 +3404,7 @@ impl MacroEnv {
         // seed instead: a plain call of it is the L0507 error. A glob
         // that brings a macro whose name std also exports (`assert`)
         // is ambiguous with the std macro of that name the same way.
+        let libraries = tables.library_scope(job.root_module);
         let mut glob_seeds: Vec<Vec<crate::expand::MacroSeed>> = Vec::with_capacity(discs.len());
         for d in &per_disc {
             // (importing module, name) -> (glob target, source, ambiguous), in first-seen order.
@@ -3330,7 +3422,11 @@ impl MacroEnv {
                 names.sort_by(|a, b| interner.get(a.0).cmp(interner.get(b.0)));
                 for (name, src_idx) in names {
                     let amb = ambiguous.contains_key(&(target.clone(), name))
-                        || crate::expand::builtin::is_std_macro_name(interner.get(name));
+                        || if libraries.core_prelude {
+                            libraries.prelude_macro(interner.get(name))
+                        } else {
+                            crate::expand::builtin::is_std_macro_name(interner.get(name))
+                        };
                     let key = (site.module.clone(), name);
                     match found.iter_mut().find(|(k, _)| *k == key) {
                         Some((_, (_, s, a))) => *a |= amb || *s != src_idx,
@@ -3520,6 +3616,14 @@ fn resolve_one(
     if !diags.is_empty() {
         return Err(OneError { diags, seen: seen_of(&discs), std_asks });
     }
+    let libraries = match discs[0].lexed.as_ref().map(|lexed| library_scope(lexed, &input.env, interner, known)).transpose() {
+        Ok(Some(scope)) => scope,
+        Ok(None) => crate::expand::LibraryScope::default(),
+        Err(d) => return Err(OneError { diags: vec![d], seen: seen_of(&discs), std_asks }),
+    };
+    if libraries.core_prelude {
+        tables.library_scopes.insert(job.root_module, libraries);
+    }
     lap!("resolve: discovery");
     // Unknown cfg names (L0520) are checked on the original tokens of
     // every file before expansion can strip the item that carries one, on
@@ -3566,7 +3670,7 @@ fn resolve_one(
         // the `include!` family) comes back only while each of those reads
         // reads the same (`expand::deps_stale_in`).
         let keep = !cache.one_shot;
-        let env_hash = if keep { expansion_env_hash(&menv, job, input, client, interner) } else { 0 };
+        let env_hash = if keep { expansion_env_hash(&menv, job, input, client, interner, libraries) } else { 0 };
         // Each macro source's hash and the seeds it names, and each file's reachable seeds
         // (`MacroEnv::reach`) and key, on the pool.
         let seed_index = keep.then(|| crate::expand::SeedReach::new(&menv.seeds, interner));
@@ -3629,6 +3733,7 @@ fn resolve_one(
                 module_path: module_paths[di].clone(),
                 crate_name: Some(input.crate_name.clone()),
                 extern_crates: menv.extern_crates(interner),
+                libraries,
                 client,
             };
             let spliced = menv.splice(di, orig, job.magic);
@@ -4299,6 +4404,7 @@ fn resolve_one(
         cache.file_expander = Some(std::sync::Arc::new(FileExpander {
             resolve: cache.resolves,
             menv,
+            libraries,
             magic: job.magic,
             env: input.env.clone(),
             cargo_env: input.cargo_env.clone(),
@@ -5044,6 +5150,23 @@ fn record_display(tables: &mut ResolvedTables, input: &OneInput, flat_prefix: &s
     tables.display_names.insert(flat, display);
 }
 
+/// A root Adt keeps its plain declaration name and stable identity, but
+/// a resolved path under a nearer binding needs an unambiguous spelling.
+/// `$` cannot occur in a source identifier, and `crate` cannot name a
+/// user module. Other Adts already have collision-free flat names.
+fn register_qualified_adt(tables: &mut ResolvedTables, def: DefId, flat: Sym, name: Sym, has_ctor: bool, interner: &Interner) {
+    if flat != name {
+        return;
+    }
+    let qualified = interner.intern(&format!("crate${}", interner.get(name)));
+    tables.qualified_adts.insert(def, qualified);
+    tables.flat[ns_index(Namespace::Type)].insert(qualified, def);
+    if has_ctor {
+        tables.flat[ns_index(Namespace::Value)].insert(qualified, def);
+    }
+    tables.display_names.insert(qualified, name);
+}
+
 /// Step 3 input: registers every defined name in one item list, renames
 /// defs to their flat names, and collects the module's imports. Module
 /// bindings register first (same sweep): a `mod` item's name is a
@@ -5171,6 +5294,7 @@ fn register_items(
                     bind(tables, Namespace::Value, s.name, Target::Def(def), vis());
                 }
                 record_adt(tables, def, flat, module, vis(), &s.fields, interner);
+                register_qualified_adt(tables, def, flat, s.name, has_ctor, interner);
                 s.name = flat;
             }
             ItemKind::Enum(e) => {
@@ -5186,6 +5310,7 @@ fn register_items(
                 tables.def_info.insert(def, DefInfo { kind: ResKind::Adt, flat, module, vis: vis() });
                 tables.variants.insert(def, e.variants.iter().map(|v| v.name).collect());
                 tables.flat[ns_index(Namespace::Type)].insert(flat, def);
+                register_qualified_adt(tables, def, flat, e.name, false, interner);
                 // Enum variant fields have no visibility of their own
                 // in Rust: they take the enum's visibility.
                 for v in &e.variants {
@@ -6305,7 +6430,8 @@ impl Rewrite<'_> {
         }
     }
 
-    /// The L0505 reject for a path `misread` flags (a false reject).
+    /// The L0505 reject for a path `misread` flags and no alternate
+    /// spelling supports yet (a false reject).
     fn push_misread(&mut self, span: Span) {
         self.diags.push(crate::diag::not_yet(
             "L0505",
@@ -6314,31 +6440,41 @@ impl Rewrite<'_> {
         ));
     }
 
+    /// A resolved def's spelling at this use site. Root Adts have an
+    /// alternate name that bypasses local/module/generic bindings while
+    /// preserving the same DefId and declaration. Keep rejecting other
+    /// collisions until their checker name indexes support this too.
+    fn path_name(&mut self, def: DefId, ns: Namespace, single: bool, span: Span, module: ModuleId, scopes: &[Frame]) -> Option<Sym> {
+        let flat = self.tables.def_info.get(&def)?.flat;
+        if !self.misread(flat, def, ns, single, module, scopes) {
+            return Some(flat);
+        }
+        if let Some(&qualified) = self.tables.qualified_adts.get(&def) {
+            return Some(qualified);
+        }
+        self.push_misread(span);
+        Some(flat)
+    }
+
     /// Applies a resolution to a written path in place. `span` is the
     /// path's own span for diagnostics; `ns` and `scopes` are the
     /// namespace and frames the checker will read the rewritten path in.
     fn apply(&mut self, segs: &mut Vec<PathSeg>, res: PathRes, span: Span, module: ModuleId, ns: Namespace, scopes: &[Frame]) {
         match res {
             PathRes::Done(Target::Def(def)) => {
-                if let Some(info) = self.tables.def_info.get(&def) {
-                    if self.misread(info.flat, def, ns, true, module, scopes) {
-                        self.push_misread(span);
-                    }
+                if let Some(flat) = self.path_name(def, ns, true, span, module, scopes) {
                     let args = segs.last().map(|s| s.args.clone()).unwrap_or_default();
-                    *segs = vec![PathSeg { name: info.flat, args }];
+                    *segs = vec![PathSeg { name: flat, args }];
                 }
             }
             PathRes::Done(Target::Variant(def, variant)) => {
-                if let Some(info) = self.tables.def_info.get(&def) {
-                    if self.misread(info.flat, def, ns, false, module, scopes) {
-                        self.push_misread(span);
-                    }
+                if let Some(flat) = self.path_name(def, ns, false, span, module, scopes) {
                     // Written generic args stay on their segment
                     // (`E::<u8>::V`, `V::<u8>`): the checker reads them.
                     let n = segs.len();
                     let variant_args = segs.last().map(|s| s.args.clone()).unwrap_or_default();
                     let enum_args = if n >= 2 { segs[n - 2].args.clone() } else { Default::default() };
-                    *segs = vec![PathSeg { name: info.flat, args: enum_args }, PathSeg { name: variant, args: variant_args }];
+                    *segs = vec![PathSeg { name: flat, args: enum_args }, PathSeg { name: variant, args: variant_args }];
                 }
             }
             PathRes::Done(Target::Module(_)) => {
@@ -6355,10 +6491,7 @@ impl Rewrite<'_> {
             }
             PathRes::Partial(Target::Def(def), rest) => {
                 if rest + 1 == segs.len() {
-                    if let Some(info) = self.tables.def_info.get(&def) {
-                        if self.misread(info.flat, def, ns, false, module, scopes) {
-                            self.push_misread(span);
-                        }
+                    if let Some(flat) = self.path_name(def, ns, false, span, module, scopes) {
                         let item_seg = segs[rest].clone();
                         // Associated fn visibility (variants take the
                         // enum's vis, already checked by resolution).
@@ -6372,7 +6505,7 @@ impl Rewrite<'_> {
                         // arguments (`W::<u8>::item`): the checker
                         // reads them as the Self type's arguments.
                         let mut head = segs[rest.saturating_sub(1)].clone();
-                        head.name = info.flat;
+                        head.name = flat;
                         *segs = vec![head, item_seg];
                     }
                 }
@@ -6582,7 +6715,15 @@ impl Rewrite<'_> {
     /// the crate root has no `extern crate alloc;` (rustc E0433 in
     /// edition 2024), and says so. Check would read it by name.
     fn alloc_unlinked(&mut self, names: &[Sym], module: ModuleId, span: Span) -> bool {
-        if names.len() < 2 || self.interner.get(names[0]) != "alloc" || !self.tables.alloc_out_of_scope(module) {
+        if names.len() < 2 { return false; }
+        if self.interner.get(names[0]) == "std" && !self.tables.library_scope(module).std {
+            self.diags.push(Diag::new(
+                "L0102", span, "cannot find crate `std`: it is not linked",
+                "A `#![no_std]` crate can name `core`, or explicitly link another crate with `extern crate`.",
+            ));
+            return true;
+        }
+        if self.interner.get(names[0]) != "alloc" || !self.tables.alloc_out_of_scope(module) {
             return false;
         }
         self.diags.push(Diag::new(
@@ -6721,6 +6862,29 @@ impl Rewrite<'_> {
             }
             // After std aliases: `use std as alloc;` binds the name.
             if res == PathRes::Absent && self.alloc_unlinked(&names, module, span) {
+                return;
+            }
+            if res == PathRes::Absent && self.tables.library_scope(module).core_prelude
+                && let Some(&first) = names.first()
+                && matches!(self.interner.get(first), "Vec" | "String" | "Box" | "ToOwned" | "ToString")
+                && !self.tables.std_glob_imports(module, self.interner.get(first), self.interner)
+            {
+                // A bare const generic argument is parsed as a type path.
+                // Preserve a real const binding, whose rewritten spelling
+                // keeps it distinct from the builtin type. A value-only name
+                // in another module must not make the type prelude available.
+                if ns == Namespace::Type && names.len() == 1 {
+                    let (value, _) = self.resolve(&names, Namespace::Value, module, scopes);
+                    if let PathRes::Done(Target::Def(def)) = value
+                        && self.tables.def_info.get(&def).is_some_and(|info| info.kind == ResKind::Const && info.flat != first)
+                    {
+                        self.apply(segs, value, span, module, Namespace::Value, scopes);
+                        return;
+                    }
+                }
+                self.diags.push(Diag::new("L0102", span,
+                    format!("cannot find type `{}` in this scope", self.interner.get(first)),
+                    "This name is not in the core prelude; import it from an explicitly linked crate."));
                 return;
             }
             // A bare name a module-level glob of a sync or thread module

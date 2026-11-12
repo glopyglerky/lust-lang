@@ -7627,8 +7627,30 @@ impl<'p> Lower<'p> {
                             _ => unreachable!("borrow_of gives a place operand"),
                         };
                         let (pa, pb) = (place_of(&a), place_of(&b));
-                        let (x, y) = (self.str_view_at(pa, t, ld, span), self.str_view_at(pb, tb, rd, span));
-                        Rvalue::StrCmp(if ne { BinOp::Ne } else { BinOp::Eq }, x, y)
+                        if self.ck.is_seq_cmp(e) {
+                            // View the already borrowed values as slices, as
+                            // the ordinary sequence operator does. This keeps
+                            // operand evaluation single and preserves both
+                            // original values for the failing assertion's Debug.
+                            let base = self.peel(t, ld);
+                            let elem = match self.kind(base) {
+                                TyKind::Slice(elem) | TyKind::Array(elem, _) => elem,
+                                _ => self.body.tys.vec_elem(base).expect("checked sequence comparison"),
+                            };
+                            let sty = self.body.tys.intern(TyKind::Slice(elem));
+                            let rt = self.ref_ty(false, sty);
+                            let view = |this: &mut Self, place: Place, depth| {
+                                let tmp = this.temp(rt);
+                                this.assign(Place::local(tmp), Rvalue::SliceOf(Self::derefs(place, depth)), span);
+                                Operand::Move(Place::local(tmp))
+                            };
+                            let x = view(self, pa, ld);
+                            let y = view(self, pb, rd);
+                            Rvalue::Eq { a: x, b: y, ty: sty, ne }
+                        } else {
+                            let (x, y) = (self.str_view_at(pa, t, ld, span), self.str_view_at(pb, tb, rd, span));
+                            Rvalue::StrCmp(if ne { BinOp::Ne } else { BinOp::Eq }, x, y)
+                        }
                     }
                     _ => Rvalue::Eq { a: a.clone(), b: b.clone(), ty: t, ne },
                 };

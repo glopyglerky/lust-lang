@@ -1,0 +1,4 @@
+# Rust warns about the dependency's undeclared name. Lust keeps its explicit
+# unknown-name rejection; the caller's declaration must not hide that error.
+expect=L0520
+cargo=pass

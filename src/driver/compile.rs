@@ -121,7 +121,7 @@ fn fill_dep_build_outputs(
                 }
                 dep.cargo_env.extend(out.rustc_env);
                 dep.build_cfgs = out.rustc_cfg;
-                dep.build_check_cfgs = out.rustc_check_cfg;
+                dep.build_check_cfgs.extend(out.rustc_check_cfg);
             }
         }
         fill_dep_build_outputs(&mut dep.deps, cache, env, memo)?;
@@ -2044,6 +2044,7 @@ fn resolved_setup(
     req: &Request,
     front: &mut Front,
     caches: &mut Caches,
+    harness_root: &mut Option<(PathBuf, String)>,
     std_cache: &mut Option<Result<std::sync::Arc<crate::stdload::StdLoad>, String>>,
     user_src: &str,
     root_lexed: Option<lexer::Lexed>,
@@ -2085,6 +2086,9 @@ fn resolved_setup(
                 .map_err(code2)?;
         let root_text = std::fs::read_to_string(&unit.target.src_path)
             .map_err(|e| code2(format!("cannot read {}: {e}", unit.target.src_path.display())))?;
+        if req.harness {
+            *harness_root = Some((unit.target.src_path.clone(), root_text.clone()));
+        }
         // Edition and lint gates for the selected unit (section 1.1),
         // rendered against the crate root file.
         let mut gate_map = SourceMap::default();
@@ -2095,6 +2099,9 @@ fn resolved_setup(
             }
         }
         let mut env = CfgEnv::new(&key.target_triple, &unit.features, key.krate.test, key.profile);
+        for cfg in cargo::manifest_check_cfgs(&graph, &unit.package.manifest_path).map_err(code2)? {
+            env.add_check_cfg(&cfg);
+        }
         // Cargo env for the selected unit plus its build script
         // outputs (section 1.1): `OUT_DIR` and `rustc-env` pairs for
         // `env!`, `rustc-cfg` values for `#[cfg]`. The script re-runs
@@ -2375,6 +2382,14 @@ fn resolved_setup(
     // The patch base and a kept program describe the Ast being replaced.
     // (A resolve error above leaves them in place, so the request after
     // it can patch.)
+    if front.patch.as_ref().is_some_and(|base| !base.libraries_match(&tables)) {
+        // Ordinary edits retain the original read-based reuse path. Changing a
+        // crate's implicit prelude or linked standard libraries invalidates
+        // bodies that previously found builtin methods without an import read.
+        front.env_hash = None;
+        front.walk_after_reject = false;
+        caches.gen_reuse.clear();
+    }
     front.patch = None;
     let old_kept = std::mem::take(&mut front.kept);
     let old_ast = std::mem::replace(&mut front.ast, Arc::new(ast));
@@ -2643,7 +2658,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
     }
     let session_key = session.key.clone();
     session.front.client = client_view(req);
-    let Session { front, caches, std_cache, disk_cache, .. } = session;
+    let Session { front, caches, std_cache, disk_cache, harness_tests, harness_names, harness_root, .. } = session;
     // The last check's answer, kept only for this same request (a no-op
     // check reuses it on the resolver path; anything else recomputes).
     let check_fp = check_fingerprint(req);
@@ -2726,7 +2741,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
 
     // Both front ends produce the same locals for the shared tail.
     let (map, mut changed, mut mention_only, mut const_fn_changed, fn_count, mode, fn_lines_all, body_hashes_all, resolved_tables) = if use_resolver {
-        match resolved_setup(req, front, caches, std_cache, &src, root_lexed, route_std_mods, crate_ids, &mut std_ranges, &mut std_routes, &mut std_methods, &mut t, &mut visits, reusable) {
+        match resolved_setup(req, front, caches, harness_root, std_cache, &src, root_lexed, route_std_mods, crate_ids, &mut std_ranges, &mut std_routes, &mut std_methods, &mut t, &mut visits, reusable) {
             Ok(x) => x,
             Err(resp) => return resp,
         }
@@ -3566,6 +3581,9 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
     front.note_kept_use(visits.path, visits.kept);
     // Template check errors from the kept program are collect's errors
     // (`gen_reuse.template_errors` counts them).
+    if req.harness {
+        *harness_names = resolved_tables.as_ref().map(|tables| tables.display_names.clone()).unwrap_or_default();
+    }
     let collect = |front: &mut Front, caches: &mut Caches| {
         collect::collect_reuse(
             front.ast.clone(),
@@ -3577,6 +3595,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
             resolved_tables.clone(),
             &mut caches.gen_reuse,
             &std_routes,
+            req.harness,
         )
     };
     // A refused header delta that found the edited signature's own errors
@@ -4718,7 +4737,25 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
     const SHARD_RECORD: &str = "glue shard ";
     let fn_units: Vec<usize> = (0..groups.len()).map(|g| g + FIRST_FN_UNIT).collect();
     let dirty_fn_units: Vec<usize> = (0..groups.len()).filter(|&g| dirty_groups[g]).map(|g| g + FIRST_FN_UNIT).collect();
-    let main_slot = front.fn_slot[program.main.unwrap().0 as usize];
+    let entry_slot = program.main.map(|main| front.fn_slot[main.0 as usize]);
+    let main_slot = entry_slot.unwrap_or(0);
+    let mut test_slots = Vec::new();
+    if req.harness {
+        for &(name, ignored) in harness_tests.iter() {
+            let Some(id) = program.fn_names.get(&name) else {
+                return Response {
+                    stderr: "error: test source changed during harness construction; run the test command again\n".into(),
+                    code: 1,
+                    ..Default::default()
+                };
+            };
+            test_slots.push((front.fn_slot[id.0 as usize], ignored));
+        }
+    }
+    let main_unit = |overlays: &[usize]| {
+        let init = cgen::unwind_init(&program, |f| front.fn_slot[f.0 as usize]);
+        if req.harness { cgen::test_main_unit(&test_slots, overlays, init) } else { cgen::main_unit(main_slot, overlays, init) }
+    };
     // Instance slots take their template's line: cgen stores an
     // instance's panic lines relative to it (see `line_base_of`).
     let mut slot_lines = vec![0u32; n_slots];
@@ -4842,14 +4879,14 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
         super::release_c::groups(&caches.out, names, &file, &line)
     };
     let gen_unit = |u: usize, overlay: bool| match u {
-        0 => cgen::main_unit(main_slot, &registered, cgen::unwind_init(&program, |f| front.fn_slot[f.0 as usize])),
+        0 => main_unit(&registered),
         1 => cgen::glue_unit(&program, &caches.glue),
         2 => cgen::runtime_unit(),
         3 => cgen::table_unit(caches.table_cap, &fn_units),
         LOC_UNIT => cgen::loc_unit(&files, &slot_lines),
         g => {
             let register = if overlay { format!("lust_overlay_u{g}") } else { format!("lust_register_u{g}") };
-            cgen::fn_unit(&program, &caches.out, &groups[g - FIRST_FN_UNIT].clone().collect::<Vec<_>>(), &caches.glue, &register, Some(main_slot))
+            cgen::fn_unit(&program, &caches.out, &groups[g - FIRST_FN_UNIT].clone().collect::<Vec<_>>(), &caches.glue, &register, entry_slot)
         }
     };
     // Release C: whether fn bodies are LLVM IR (cgen/ll.rs), and B1's switches.
@@ -5007,7 +5044,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
             let assemble = |u: usize, inl: &[Vec<usize>], c_refs: Option<&cgen::ll::CRefs>, copy_hot: Option<&cgen::CopyHot>| {
                 let t = Instant::now();
                 let (c, helpers) = cgen::in_layout_phase(asm_tag, || cgen::names::with(rn, || match u {
-                    0 => (cgen::main_unit(main_slot, &[], cgen::unwind_init(&program, |f| front.fn_slot[f.0 as usize])), String::new()),
+                    0 => (main_unit(&[]), String::new()),
                     1 => match super::release_c::statics_bytes() {
                         0 => (adapt(cgen::names::statics_unit(&program, &caches.glue), &Default::default()), String::new()),
                         target => {
@@ -5037,7 +5074,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
                         if b1_record {
                             cgen::record::open();
                         }
-                        let (c, h) = cgen::fn_unit_parts(&program, &caches.out, slots, &inl[g - FIRST_FN_UNIT], &caches.glue, reg, Some(main_slot), c_refs, copy_hot);
+                        let (c, h) = cgen::fn_unit_parts(&program, &caches.out, slots, &inl[g - FIRST_FN_UNIT], &caches.glue, reg, entry_slot, c_refs, copy_hot);
                         if b1_record {
                             let rec = cgen::record::close(&c);
                             b1_records.lock().unwrap_or_else(|e| e.into_inner()).push((g - FIRST_FN_UNIT, rec));
@@ -5641,7 +5678,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
         } else {
             for u in [0, 1, 2, 3, LOC_UNIT].into_iter().chain(fn_units.iter().copied()) {
                 // The standalone main unit registers no overlays; `lust_base_init` covers all units.
-                let c = if u == 0 { cgen::main_unit(main_slot, &[], cgen::unwind_init(&program, |f| front.fn_slot[f.0 as usize])) } else { gen_unit(u, false) };
+                let c = if u == 0 { main_unit(&[]) } else { gen_unit(u, false) };
                 let _ = std::fs::write(format!("{}.u{u}.c", p.display()), c);
             }
         }
@@ -5703,7 +5740,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
             } else {
                 let order: Vec<usize> = [0, 1, 2, 3, LOC_UNIT].into_iter().chain(fn_units.iter().copied()).collect();
                 let fresh = par_map(&order, |&u| match u {
-                    0 => Some(cgen::main_unit(main_slot, &[], cgen::unwind_init(&program, |f| front.fn_slot[f.0 as usize]))),
+                    0 => Some(main_unit(&[])),
                     u if made.contains_key(&u) => None,
                     u => Some(gen_unit(u, false)),
                 });

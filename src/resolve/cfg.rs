@@ -90,18 +90,38 @@ pub struct CfgEnv {
     /// `lust port prepare`). They are known names; their values here are
     /// flags or pairs like the rest.
     pub custom_names: BTreeSet<String>,
+    /// Additions owned by this crate, separated from target/profile facts so
+    /// they can be dropped when constructing a dependency's environment.
+    custom_flags: BTreeSet<String>,
+    custom_pair_start: Option<usize>,
     /// True only while a shipped std or adapter crate resolves: `lust_dev`
     /// is then a known, true flag (section 1.6).
     pub allow_lust_dev: bool,
 }
 
 impl CfgEnv {
-    /// This environment with another unit's feature set: the target,
-    /// profile, and test facts of a workspace session are shared by all
-    /// its crates (ARCH 1.8); only per-unit features differ.
+    /// This environment with another feature set and all other facts intact.
+    /// A different crate uses `for_dependency` to discard crate-local facts.
     pub fn with_features(&self, features: &[String]) -> CfgEnv {
         let mut env = self.clone();
         env.features = features.iter().cloned().collect();
+        env
+    }
+
+    /// A dependency inherits the target and profile, but not this crate's
+    /// test harness, cfg declarations, or build-script cfg values. Its own
+    /// declarations and values are added after this step.
+    pub fn for_dependency(&self, features: &[String]) -> CfgEnv {
+        let mut env = self.with_features(features);
+        for flag in std::mem::take(&mut env.custom_flags) {
+            env.flags.remove(&flag);
+        }
+        if let Some(start) = env.custom_pair_start.take() {
+            env.pairs.truncate(start);
+        }
+        env.custom_names.clear();
+        env.flags.remove("test");
+        env.allow_lust_dev = false;
         env
     }
 
@@ -241,11 +261,14 @@ impl CfgEnv {
             Some((name, value)) => {
                 let value = value.trim().trim_matches('"');
                 self.custom_names.insert(name.trim().to_string());
+                self.custom_pair_start.get_or_insert(self.pairs.len());
                 self.pair(name.trim(), value);
             }
             None => {
                 self.custom_names.insert(cfg.to_string());
-                self.flags.insert(cfg.to_string());
+                if self.flags.insert(cfg.to_string()) {
+                    self.custom_flags.insert(cfg.to_string());
+                }
             }
         }
     }
@@ -255,12 +278,15 @@ impl CfgEnv {
     /// as a known custom cfg name, without setting it.
     pub fn add_check_cfg(&mut self, cfg: &str) {
         let cfg = cfg.trim();
-        let name = match cfg.strip_prefix("cfg(") {
-            Some(rest) => rest.split(['(', ',', ')']).next().unwrap_or("").trim(),
-            None => cfg.split('=').next().unwrap_or("").trim(),
-        };
-        if !name.is_empty() {
-            self.custom_names.insert(name.to_string());
+        if cfg.split_once('(').is_some_and(|(head, _)| head.trim() == "cfg") {
+            if let Ok(names) = check_cfg_names(cfg) {
+                self.custom_names.extend(names);
+            }
+        } else {
+            // Retain the old build-script record format. New Cargo manifest
+            // declarations are validated with check_cfg_names before this call.
+            let name = cfg.split('=').next().unwrap_or("").trim();
+            if !name.is_empty() { self.custom_names.insert(name.to_string()); }
         }
     }
 
@@ -280,6 +306,7 @@ impl CfgEnv {
         pairs.sort();
         parts.extend(pairs);
         parts.extend(self.features.iter().map(|f| format!("feature={f}")));
+        parts.extend(self.custom_names.iter().map(|f| format!("check-cfg={f}")));
         parts.join(" ")
     }
 
@@ -379,6 +406,68 @@ impl CfgEnv {
     }
 }
 
+/// Validate Cargo's explicit name declarations using the Rust lexer. The
+/// expected values are lint input, never enabled configuration values.
+/// Global name-check suppression is outside this bounded declaration form.
+pub fn check_cfg_names(text: &str) -> Result<Vec<String>, String> {
+    let interner = Interner::default();
+    let lexed = crate::lexer::lex(text, crate::diag::FileId(0), 0, &interner)
+        .map_err(|_| "invalid Rust tokens in check-cfg".to_string())?;
+    let tokens: Vec<Tok> = lexed.tokens.iter().map(|t| t.tok).filter(|t| *t != Tok::Eof).collect();
+    let name = |token: Option<&Tok>| match token { Some(Tok::Ident(s)) => Some(interner.get(*s)), _ => None };
+    if name(tokens.first()) != Some("cfg") || tokens.get(1) != Some(&Tok::LParen) || tokens.last() != Some(&Tok::RParen) {
+        return Err("check-cfg must be cfg(name, ..., values(...))".into());
+    }
+    let end = tokens.len() - 1;
+    let mut at = 2;
+    let mut names = Vec::new();
+    while at < end {
+        let Some(ident) = name(tokens.get(at)) else { return Err("expected a cfg name".into()); };
+        at += 1;
+        if tokens.get(at) == Some(&Tok::LParen) {
+            if ident != "values" || names.is_empty() {
+                return Err("check-cfg supports explicit cfg names and optional expected values".into());
+            }
+            at += 1;
+            let mut any = false;
+            let mut concrete = false;
+            while at < end && tokens[at] != Tok::RParen {
+                match tokens[at] {
+                    Tok::Str(..) => {
+                        concrete = true;
+                        at += 1;
+                    }
+                    _ if matches!(name(tokens.get(at)), Some("none" | "any"))
+                        && tokens.get(at + 1) == Some(&Tok::LParen)
+                        && tokens.get(at + 2) == Some(&Tok::RParen) => {
+                            if name(tokens.get(at)) == Some("any") {
+                                if any { return Err("any() cannot be repeated in check-cfg values".into()); }
+                                any = true;
+                            } else {
+                                concrete = true;
+                            }
+                            at += 3;
+                        }
+                    _ => return Err("expected a string, none() or any() in check-cfg values".into()),
+                }
+                if any && concrete { return Err("any() cannot be combined with other check-cfg values".into()); }
+                if tokens.get(at) == Some(&Tok::Comma) { at += 1; }
+                else if tokens.get(at) != Some(&Tok::RParen) { return Err("expected a comma in check-cfg values".into()); }
+            }
+            if tokens.get(at) != Some(&Tok::RParen) { return Err("unterminated check-cfg values".into()); }
+            at += 1;
+            if tokens.get(at) == Some(&Tok::Comma) { at += 1; }
+            if at != end { return Err("expected values must be last in check-cfg".into()); }
+            break;
+        }
+        names.push(ident.to_string());
+        if at == end { break; }
+        if tokens.get(at) != Some(&Tok::Comma) { return Err("expected a comma between cfg names".into()); }
+        at += 1;
+    }
+    Ok(names)
+}
+
 /// The L0520 diagnostic for a cfg name lust does not know.
 fn unknown_cfg(name: &str, span: Span) -> Diag {
     Diag::new(
@@ -453,7 +542,7 @@ pub fn expand_cfg_attr(env: &CfgEnv, attrs: &mut Vec<Attr>, strings: &[String], 
 }
 
 /// One attribute rebuilt from cfg_attr token trees.
-fn attr_from_trees(trees: &[TokenTree], span: Span, style: crate::ast::AttrStyle) -> Attr {
+pub(crate) fn attr_from_trees(trees: &[TokenTree], span: Span, style: crate::ast::AttrStyle) -> Attr {
     let mut path = Vec::new();
     let mut i = 0;
     while let Some(TokenTree::Token(t)) = trees.get(i) {
@@ -619,5 +708,45 @@ mod tests {
         let mut shipped = env.clone();
         shipped.allow_lust_dev = true;
         assert!(eval_pred(&shipped, "lust_dev").unwrap());
+    }
+
+    #[test]
+    fn declared_names_are_known_but_not_enabled() {
+        let mut env = CfgEnv::new("", &[], false, ProfileFlags::DEV);
+        let before = env.describe();
+        env.add_check_cfg("cfg(first_mode, second_mode, values(none(), \"wide\"))");
+        assert!(!eval_pred(&env, "first_mode").unwrap());
+        assert!(!eval_pred(&env, "second_mode = \"wide\"").unwrap());
+        assert_ne!(before, env.describe());
+        env.add_rustc_cfg("second_mode=\"wide\"");
+        assert!(eval_pred(&env, "second_mode = \"wide\"").unwrap());
+        for malformed in ["cfg(first_mode", "cfg(first_mode=\"x\")", "cfg(first_mode,,)", "cfg(first_mode, values(42))",
+            "cfg(first_mode, values(any(), \"x\"))", "cfg(first_mode, values(none(), any()))", "cfg(first_mode, values(any(), any()))"] {
+            assert!(check_cfg_names(malformed).is_err(), "{malformed}");
+        }
+    }
+
+    #[test]
+    fn dependency_cfg_is_per_crate() {
+        let mut root = CfgEnv::new("x86_64-unknown-linux-gnu", &["root_feature".into()], true, ProfileFlags::DEV);
+        let base = CfgEnv::new("x86_64-unknown-linux-gnu", &["dep_feature".into()], false, ProfileFlags::DEV);
+        root.add_check_cfg("cfg(root_only, unix, target_arch)");
+        root.add_rustc_cfg("root_mode");
+        root.add_rustc_cfg("root_mode");
+        root.add_rustc_cfg("root_value=\"wide\"");
+        root.add_rustc_cfg("unix");
+        root.add_rustc_cfg("target_arch=\"x86_64\"");
+        root.allow_lust_dev = true;
+        let mut dep = root.for_dependency(&["dep_feature".into()]);
+        assert_eq!(dep, base, "only target/profile facts and the dependency's features survive");
+        assert!(eval_pred(&root, "root_mode").unwrap());
+        assert!(eval_pred(&root, "test").unwrap());
+        assert_eq!(eval_pred(&dep, "root_only").unwrap_err().code, "L0520");
+        assert_eq!(eval_pred(&dep, "root_mode").unwrap_err().code, "L0520");
+        dep.add_check_cfg("cfg(dep_mode)");
+        assert!(!eval_pred(&dep, "dep_mode").unwrap());
+        dep.add_rustc_cfg("dep_mode");
+        assert!(eval_pred(&dep, "dep_mode").unwrap());
+        assert_eq!(eval_pred(&root, "dep_mode").unwrap_err().code, "L0520");
     }
 }

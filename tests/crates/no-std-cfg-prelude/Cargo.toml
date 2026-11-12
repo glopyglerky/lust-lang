@@ -1,0 +1,10 @@
+[package]
+name = "no_std_cfg_prelude"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[features]
+default = ["core_only"]
+core_only = []

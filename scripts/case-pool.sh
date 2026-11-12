@@ -40,6 +40,18 @@ jobs=${DIFFTEST_JOBS:-$(nproc)}
 rustc_cache=${DIFFTEST_RUSTC_CACHE:-$HOME/.cache/lust-difftest}
 [ "$rustc_cache" = off ] || mkdir -p "$rustc_cache" || rustc_cache=off
 rustc_version=$(rustc -vV 2>&1)
+# Only reviewed target-specific cases can be excluded. The helper requires
+# the host Rust oracle to confirm the missing platform API before doing so.
+declare -A platform_skip
+platform_excluded=0
+if ! python3 "$root/scripts/fixture-platforms.py" >"$work/platform-exclusions.tsv"; then
+  echo "FAIL: fixture platform applicability could not be verified"
+  exit 1
+fi
+while IFS=$'\t' read -r platform_file platform_reason; do
+  [ -n "$platform_file" ] || continue
+  platform_skip["$root/$platform_file"]=$platform_reason
+done <"$work/platform-exclusions.tsv"
 # For the rustc cache key, per fixture dir:
 #   dep_hash[dir]: every file under the dir (subdirs too) except the dir's own .rs cases:
 #                  include!/include_str! data and module files in subdirs.
@@ -164,6 +176,11 @@ run_all() {
     [[ "$f" == */unwind/* ]] && name="unwind-$name"
     [[ "$f" == */release/* ]] && name="release-$name"
     [[ -n "$filter" && "$name" != *"$filter"* ]] && continue
+    if [ -n "${platform_skip[$f]:-}" ]; then
+      platform_excluded=$((platform_excluded + 1))
+      echo "excluded $name: ${platform_skip[$f]}"
+      continue
+    fi
     m=$((m + 1))
     (( (m - 1) % shard_n == shard_k )) || continue
     if [ $running -ge "$jobs" ]; then wait -n; running=$((running - 1)); fi

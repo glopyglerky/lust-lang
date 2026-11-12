@@ -1,4 +1,4 @@
-// capability: attributes: test, ignore, should_panic (`lust test` runs them at the crate root and in inline modules)
+// capability: attributes: test, ignore, should_panic (`lust test` uses native crate resolution, including file modules and macro-generated tests)
 // expect: ok
 // command: test
 

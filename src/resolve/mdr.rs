@@ -229,6 +229,9 @@ fn def_record(t: &ResolvedTables, h: &mut FxHasher, d: &crate::def::DefId) {
     if let Some(info) = t.def_info.get(d) {
         (info.kind as u8, info.flat.0, info.module.0).hash(h);
         hash_vis(h, &info.vis);
+        if info.kind == crate::resolve::imports::ResKind::Adt {
+            t.qualified_adts.get(d).hash(h);
+        }
     }
     t.variants.get(d).hash(h);
     if let Some(m) = t.assoc_vis.get(d) {
@@ -283,6 +286,9 @@ pub fn structure(t: &ResolvedTables, files: &[&str]) -> u64 {
     }
     // Hash maps: order-independent sums.
     let mut sum = Sum::default();
+    for (m, scope) in &t.library_scopes {
+        sum.add(|x| (0x04u8, m.0, scope).hash(x));
+    }
     for (m, (cfg, name)) in &t.crate_cfgs {
         sum.add(|x| (0x01u8, m.0, format!("{cfg:?}"), name).hash(x));
     }
@@ -580,6 +586,9 @@ pub fn build(t: &ResolvedTables, map: &SourceMap, parts: Vec<CratePart>) -> Mdr 
         tree[i].add(|h| {
             (info.parent.map(|p| p.0), info.name.0, &info.path, info.no_prelude, info.krate_root.0, info.macro_use).hash(h);
             hash_vis(h, &info.vis);
+            if let Some(scope) = t.library_scopes.get(&info.krate_root) {
+                scope.hash(h);
+            }
         });
         // Child order: a swap of two `mod` lines moves textual macro scopes.
         if let Some(p) = info.parent {

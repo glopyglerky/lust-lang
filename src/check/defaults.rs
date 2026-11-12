@@ -39,9 +39,13 @@ fn value_params(g: &ast::Generics) -> Vec<&ast::GenericParam> {
 /// The written generics of the struct, enum, or type alias with this
 /// flat name (the merged Ast holds every module's items).
 pub fn type_generics<'a>(ast: &'a Ast, cx: &ResolveCx, name: Sym) -> Option<&'a ast::Generics> {
+    // Resolved root Adt paths may use an alternate spelling to avoid a
+    // nearer binding. The type and item indexes identify the same Adt;
+    // defaults and const parameter kinds still come from its declaration.
+    let same_adt = |declared| declared == name || cx.type_names.get(&name).is_some_and(|id| cx.type_names.get(&declared) == Some(id));
     match &ast.items.get(*cx.item_index.get(&name)? as usize)?.kind {
-        ast::ItemKind::Struct(s) if s.name == name => Some(&s.generics),
-        ast::ItemKind::Enum(e) if e.name == name => Some(&e.generics),
+        ast::ItemKind::Struct(s) if same_adt(s.name) => Some(&s.generics),
+        ast::ItemKind::Enum(e) if same_adt(e.name) => Some(&e.generics),
         ast::ItemKind::Type(a) if a.name == name => Some(&a.generics),
         _ => None,
     }

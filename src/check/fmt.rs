@@ -94,6 +94,31 @@ impl<'p> Ctx<'p> {
         p.std_import(&mut self.out.reads, self.module, module, name)
     }
 
+    pub(super) fn std_library_linked(&self) -> bool {
+        self.p.resolved.as_ref().is_none_or(|t| t.library_scope(self.module).std)
+    }
+
+    pub(super) fn alloc_library_linked(&self) -> bool {
+        self.p.resolved.as_ref().is_none_or(|t| {
+            let scope = t.library_scope(self.module);
+            scope.std || scope.alloc
+        })
+    }
+
+    /// The allocation traits are in std's prelude, but never core's.
+    /// An explicit import still makes them available in a no_std crate.
+    pub(super) fn alloc_trait_in_scope(&mut self, name: &str) -> bool {
+        if !self.p.resolved.as_ref().is_some_and(|t| t.library_scope(self.module).core_prelude) {
+            return true;
+        }
+        let (module, trait_def) = if name == "ToOwned" {
+            ("borrow", self.p.gx.lang.to_owned)
+        } else {
+            ("string", self.p.gx.lang.to_string)
+        };
+        self.enclosing_impl_trait() == Some(trait_def) || self.std_trait_imported(module, name) || self.std_glob(module)
+    }
+
     /// True when a glob of std module `module` (or core's: `std::ops::*`,
     /// `std::hash::*`) is imported into this body's module: it brings
     /// every trait of that module in scope. Recorded as a `StdImport` read.
@@ -174,6 +199,7 @@ impl<'p> Ctx<'p> {
             return self.builtin_fmt_call(e, recv, base, derefs, name_span, args);
         }
         if n == "to_string"
+            && self.alloc_trait_in_scope("ToString")
             && args.is_empty()
             && (self.tys.local_adt(base).is_some()
                 || matches!(self.tys.kind(base), TyKind::Dyn(..))

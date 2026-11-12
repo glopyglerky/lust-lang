@@ -125,7 +125,8 @@ def cargo_scenario(srcdir, name, work, env, daemon):
     `lust check|run <root> --manifest-path Cargo.toml <flags>` from the
     `cargo` file or a `cmd` directive. The oracle is `cargo run` (dev
     profile, offline) of the same bin. Warm must equal cold; an accepted
-    program must give cargo's exit code and stdout."""
+    program must give cargo's exit code and stdout. A `required` marker means
+    valid versions must be accepted, rather than counted as unsupported."""
     problems, notes = [], []
     cmd = open(os.path.join(srcdir, "cargo")).read().split()
     versions = sorted(f for f in os.listdir(srcdir) if f.startswith("v") and os.path.isdir(os.path.join(srcdir, f)))
@@ -163,7 +164,11 @@ def cargo_scenario(srcdir, name, work, env, daemon):
         grc = 128 - grc if grc < 0 else grc  # killed by a signal: the shell's code, as lust's client gives it
         # A compile reject in both modes: lust is a subset.
         if rejects(wrc, werr) and rejects(crc, cerr):
-            notes.append(f"{tag}: lust rejects what cargo accepts: {werr[:160]!r}")
+            message = f"{tag}: lust rejects what cargo accepts: {werr[:160]!r}"
+            if os.path.isfile(os.path.join(srcdir, "required")):
+                problems.append(message)
+            else:
+                notes.append(message)
             continue
         for mode, rc, out in (("warm", wrc, wout), ("cold", crc, cout)):
             if (rc, out) != (grc, gout):

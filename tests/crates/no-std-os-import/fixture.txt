@@ -1,0 +1,2 @@
+lib=1
+expect=L0506

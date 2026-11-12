@@ -147,6 +147,12 @@ fn trait_in_scope(cx: &mut Ctx, trait_def: DefId) -> bool {
     {
         return true;
     }
+    if trait_def == lang.to_owned {
+        return cx.alloc_trait_in_scope("ToOwned") || in_template_env(cx, trait_def);
+    }
+    if trait_def == lang.to_string {
+        return cx.alloc_trait_in_scope("ToString") || in_template_env(cx, trait_def);
+    }
     if [
         lang.copy,
         lang.clone,
@@ -172,8 +178,6 @@ fn trait_in_scope(cx: &mut Ctx, trait_def: DefId) -> bool {
         // Prelude conversion traits (W-STD-B).
         lang.as_ref,
         lang.as_mut,
-        lang.to_owned,
-        lang.to_string,
     ]
     .contains(&trait_def)
     {

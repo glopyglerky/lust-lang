@@ -954,7 +954,7 @@ pub fn select_unit(
     // them for this unit, recursively. Dev-dependencies join only the
     // selected test crate itself, never its dependencies.
     let mut stack = vec![pkg.id_repr.clone()];
-    let mut deps = build_deps(graph, pkg, env, interner, test_crate, &check_map, &mut stack);
+    let mut deps = build_deps(graph, pkg, env, interner, test_crate, &check_map, &mut stack)?;
     // A bin, test, example, or bench target of a package with a lib
     // target depends on that lib implicitly (Cargo adds it as an
     // extern named by the lib crate name; it is not in the manifest
@@ -981,7 +981,7 @@ pub fn select_unit(
                     manifest_dir: pkg.manifest_path.parent().map_or_else(PathBuf::new, Path::to_path_buf),
                     cargo_env: package_cargo_env(pkg, lib),
                     build_cfgs: Vec::new(),
-                    build_check_cfgs: Vec::new(),
+                    build_check_cfgs: manifest_check_cfgs(graph, &pkg.manifest_path)?,
                     features: lib_features,
                     deps: deps.clone(),
                 },
@@ -1010,7 +1010,7 @@ fn build_deps(
     test_crate: bool,
     check_map: &Option<std::collections::HashMap<(String, String), Vec<String>>>,
     stack: &mut Vec<String>,
-) -> Vec<DepUnit> {
+) -> Result<Vec<DepUnit>, String> {
     let mut out = Vec::new();
     for dep in &pkg.dependencies {
         let kind_ok = dep.kind == "normal" || (test_crate && dep.kind == "dev");
@@ -1029,7 +1029,7 @@ fn build_deps(
             Vec::new()
         } else {
             stack.push(dep_pkg.id_repr.clone());
-            let s = build_deps(graph, dep_pkg, env, interner, false, check_map, stack);
+            let s = build_deps(graph, dep_pkg, env, interner, false, check_map, stack)?;
             stack.pop();
             s
         };
@@ -1045,12 +1045,12 @@ fn build_deps(
             manifest_dir: dep_pkg.manifest_path.parent().map_or_else(PathBuf::new, Path::to_path_buf),
             cargo_env: package_cargo_env(dep_pkg, lib),
             build_cfgs: Vec::new(),
-            build_check_cfgs: Vec::new(),
+            build_check_cfgs: if dep_pkg.source.is_none() { manifest_check_cfgs(graph, &dep_pkg.manifest_path)? } else { Vec::new() },
             features,
             deps: sub,
         });
     }
-    out
+    Ok(out)
 }
 
 /// The edition gate for a selected unit (section 1.1): lust source crates
@@ -1073,28 +1073,78 @@ pub fn check_edition(unit: &UnitInfo) -> Result<(), Diag> {
 /// other rust lint at deny/forbid rejects the session with L0531 naming
 /// the lint, because rustc would reject code that triggers it and lust
 /// does not check it (section 1.1).
-pub fn check_lints(graph: &CrateGraph, unit: &UnitInfo) -> Result<(), Diag> {
-    let mut texts: Vec<String> = Vec::new();
-    if let Ok(t) = std::fs::read_to_string(&unit.package.manifest_path) {
-        texts.push(t);
-    }
-    let root_manifest = graph.workspace_root.join("Cargo.toml");
-    if root_manifest != unit.package.manifest_path
-        && let Ok(t) = std::fs::read_to_string(&root_manifest)
+#[derive(Debug, Default)]
+struct LintConfig {
+    check_cfgs: Vec<String>,
+    denied: Option<String>,
+}
+
+/// Manifest lint data is keyed by the same graph identity and watch stamp as
+/// Cargo's resolved units. A warm body edit must not reread or parse manifests.
+fn lint_config(graph: &CrateGraph, manifest: &Path) -> Result<std::sync::Arc<LintConfig>, String> {
+    type Cache = std::collections::HashMap<PathBuf, (u64, Result<std::sync::Arc<LintConfig>, String>)>;
+    static CACHE: OnceLock<Mutex<Cache>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| Mutex::new(Cache::new()));
+    if let Some((key, value)) = cache.lock().unwrap().get(manifest)
+        && *key == graph.key
     {
-        texts.push(t);
+        return value.clone();
     }
-    for text in &texts {
-        if let Some(lint) = first_deny_lint(text) {
-            return Err(Diag::new(
-                "L0531",
-                Span::default(),
-                format!("lint `{lint}` is denied in the manifest, but lust does not check it"),
-                "Lower the lint to warn for lust dev builds, or build this crate with Cargo.",
-            ));
-        }
+    let value = (|| {
+        let own = std::fs::read_to_string(manifest).map_err(|e| format!("read manifest lints: {e}"))?;
+        let root_manifest = graph.workspace_root.join("Cargo.toml");
+        let root = if root_manifest == manifest { None } else {
+            Some(std::fs::read_to_string(&root_manifest).map_err(|e| format!("read workspace lints: {e}"))?)
+        };
+        // Preserve the original small scan when there are no declarations to
+        // interpret. Only the extended manifest form needs the TOML reader.
+        let result = if !own.contains("check-cfg") && !root.as_ref().is_some_and(|t| t.contains("check-cfg")) {
+            LintConfig { check_cfgs: Vec::new(), denied: first_deny_lint(&own).or_else(|| root.as_deref().and_then(first_deny_lint)) }
+        } else {
+            let local = super::cargo_lints::parse(&own)?;
+            let workspace = if let Some(root) = &root { super::cargo_lints::parse(root)? } else { local.clone() };
+            let mut check_cfgs = local.local_cfgs;
+            let mut denied = local.local_deny;
+            if local.inherit {
+                check_cfgs.extend(workspace.workspace_cfgs);
+                denied = denied.or(workspace.workspace_deny);
+            }
+            for declaration in &check_cfgs {
+                super::cfg::check_cfg_names(declaration).map_err(|e| format!("invalid manifest check-cfg `{declaration}`: {e}"))?;
+            }
+            LintConfig { check_cfgs, denied }
+        };
+        Ok(std::sync::Arc::new(result))
+    })();
+    // Replace the previous graph's entry for this manifest. A manifest edit
+    // must not accumulate old configurations in a long-running daemon, and
+    // the hit path above borrows the path without allocating a cache key.
+    cache.lock().unwrap().insert(manifest.to_path_buf(), (graph.key, value.clone()));
+    value
+}
+
+pub fn check_lints(graph: &CrateGraph, unit: &UnitInfo) -> Result<(), Diag> {
+    let config = lint_config(graph, &unit.package.manifest_path)
+        .map_err(|e| Diag::new("L0531", Span::default(), e, "Use Cargo's supported manifest lint configuration."))?;
+    if let Some(lint) = &config.denied {
+        return Err(Diag::new(
+            "L0531",
+            Span::default(),
+            format!("lint `{lint}` is denied in the manifest, but lust does not check it"),
+            "This lint requires a native implementation before this configuration is supported.",
+        ));
     }
     Ok(())
+}
+
+/// Expected cfg names do not enable cfg flags or values. Keep each package's
+/// declarations separate, including workspace opt-in and dependency units.
+pub fn manifest_check_cfgs(graph: &CrateGraph, manifest: &Path) -> Result<Vec<String>, String> {
+    let config = lint_config(graph, manifest)?;
+    if let Some(lint) = &config.denied {
+        return Err(format!("lint `{lint}` is denied in the manifest, but lust does not check it"));
+    }
+    Ok(config.check_cfgs.clone())
 }
 
 /// The first non-`unsafe_code` rust lint at deny or forbid level in one

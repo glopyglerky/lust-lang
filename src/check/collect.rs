@@ -3430,7 +3430,7 @@ pub fn collect_with_order_resolved(
     def_order: &mut DefOrder,
     resolved: Option<std::sync::Arc<crate::resolve::imports::ResolvedTables>>,
 ) -> Result<Program, Vec<Diag>> {
-    collect_reuse(ast, interner, known, crate_ids, walk_instances, def_order, resolved, &mut Default::default(), &[])
+    collect_reuse(ast, interner, known, crate_ids, walk_instances, def_order, resolved, &mut Default::default(), &[], false)
 }
 
 /// `collect_with_order_resolved` with the driver session's generic
@@ -3449,6 +3449,7 @@ pub fn collect_reuse(
     resolved: Option<std::sync::Arc<crate::resolve::imports::ResolvedTables>>,
     reuse: &mut crate::driver::gen_reuse::GenReuse,
     std_routes: &[&'static crate::ty::lang::StdFnDef],
+    test_harness: bool,
 ) -> Result<Program, Vec<Diag>> {
     let mut p = Program {
         ast: ast.clone(),
@@ -4176,6 +4177,22 @@ pub fn collect_reuse(
         let parent = stmt_idx.and_then(|si| stmt_parent_hashes[si]).map(|hash| DefId { krate: p.krate, hash });
         p.defs.insert_adt(def, id, DefData::skeleton(kind, parent, name, Vis::Priv, span));
         p.tys.intern(TyKind::Adt(def, EMPTY_ARGS));
+    }
+
+    // A qualified path to a root Adt can need a collision-free spelling
+    // under a nearer item or generic parameter. Both names refer to the
+    // same Adt record and source item; no new definition or identity is
+    // introduced. Install these before fields, defaults, and signatures
+    // resolve their written types. Single-file collection keeps its path.
+    if let Some(tables) = &p.resolved {
+        for (&def, &qualified) in &tables.qualified_adts {
+            if let Some(id) = p.defs.local_adt(def) {
+                p.type_names.insert(qualified, id);
+                if let Some(&idx) = p.gx.item_index.get(&p.adts[id.0 as usize].name) {
+                    p.gx.item_index.insert(qualified, idx);
+                }
+            }
+        }
     }
 
     // Pass 1.5: type aliases. Resolved by a small fixpoint: an alias
@@ -5077,7 +5094,7 @@ pub fn collect_reuse(
                 } else {
                     p.fn_names.insert(def.name, id);
                 }
-                if def.name == known.main && p.main.is_none() {
+                if !test_harness && def.name == known.main && p.main.is_none() {
                     p.main = Some(id);
                 }
             }

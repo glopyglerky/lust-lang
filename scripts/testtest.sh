@@ -21,8 +21,14 @@ report() {
 
 command -v timeout >/dev/null || { echo "testtest: the `timeout` command is required"; exit 1; }
 
-for f in "$root"/tests/testrun/*.rs; do
+for f in "$root"/tests/testrun/*.rs "$root"/tests/testrun/crates/*/src/lib.rs; do
   name=$(basename "$f" .rs)
+  crate_args=()
+  if [[ "$f" == */crates/*/src/lib.rs ]]; then
+    manifest_dir=$(dirname "$(dirname "$f")")
+    name="crate-$(basename "$manifest_dir")"
+    crate_args=(--manifest-path "$manifest_dir/Cargo.toml" --lib --offline)
+  fi
   [[ -n "$filter" && "$name" != *"$filter"* ]] && continue
   if ! rustc --edition 2024 -C overflow-checks=on -A warnings --test -o "$work/$name.rt" "$f" 2>"$work/$name.rt.err"; then
     report bad "$name" "rustc --test rejected it: $(head -3 "$work/$name.rt.err")"; continue
@@ -45,7 +51,7 @@ for f in "$root"/tests/testrun/*.rs; do
     fi >> "$work/$name.expected"
   done < "$work/$name.names"
   # Actual results from lust.
-  "$lust" test "$f" --json --timeout 1 > "$work/$name.lust.json" 2>"$work/$name.lust.err"
+  "$lust" test "$f" "${crate_args[@]}" --json --timeout 1 > "$work/$name.lust.json" 2>"$work/$name.lust.err"
   lust_exit=$?
   if python3 - "$work/$name.expected" "$work/$name.lust.json" "$lust_exit" <<'PYEOF'
 import json, sys
@@ -94,8 +100,26 @@ PYEOF
   first=$(head -1 "$work/$name.names")
   if [ -n "$first" ]; then
     want=$(grep -c "$first" "$work/$name.names")
-    got=$("$lust" test "$f" "$first" --json --timeout 1 2>/dev/null | grep -c '"kind":"test"')
+    got=$("$lust" test "$f" "$first" "${crate_args[@]}" --json --timeout 1 2>/dev/null | grep -c '"kind":"test"')
     if [ "$got" = "$want" ]; then report ok "$name/filter"; else report bad "$name/filter" "filter ran $got tests, want $want"; fi
+  fi
+  if [ "${#crate_args[@]}" -ne 0 ] && [ -f "$manifest_dir/src/selection.rs" ]; then
+    "$lust" test "$manifest_dir/src/selection.rs" "${crate_args[@]}" --list --json > "$work/$name.selection.json" 2> "$work/$name.selection.err"
+    selection_exit=$?
+    if python3 - "$f" "$work/$name.names" "$work/$name.selection.json" "$selection_exit" <<'PYEOF'
+import json, pathlib, sys
+source = pathlib.Path(sys.argv[1])
+record = json.loads(pathlib.Path(sys.argv[3]).read_text())
+value = 0xcbf29ce484222325
+for byte in source.read_bytes():
+    value = ((value ^ byte) * 0x100000001b3) & 0xffffffffffffffff
+assert int(sys.argv[4]) == 0
+assert record['kind'] == 'list'
+assert pathlib.Path(record['file']).resolve() == source.resolve()
+assert record['source_hash'] == f'fnv1a64:{value:016x}'
+assert sorted(record['tests']) == sorted(pathlib.Path(sys.argv[2]).read_text().splitlines())
+PYEOF
+    then report ok "$name/selected-source"; else report bad "$name/selected-source" "metadata does not describe the selected Cargo library"; fi
   fi
 done
 

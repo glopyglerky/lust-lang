@@ -363,6 +363,7 @@ pub(super) fn check(
         Some(Arc::new(cold_tables)),
         &mut reuse,
         &std_routes,
+        false,
     );
     let mut cold_p = match (warm, collected) {
         (Err(w), Err(c)) => {
@@ -500,6 +501,7 @@ pub(super) fn check_pool(
         tables,
         &mut reuse,
         std_routes,
+        false,
     );
     let _ = super::laps::take();
     match (pooled, &fresh) {

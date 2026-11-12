@@ -1,49 +1,79 @@
 name: CI
 
-# There is no git remote yet, so this workflow has never run. It is kept
-# valid (actionlint) and runs the same scripts/ci.sh gate as a dev box.
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-jobs:
-  linux-x86_64:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Cache pinned tcc
-        id: tcc
-        uses: actions/cache@v4
-        with:
-          path: |
-            third_party/tcc
-            third_party/tinycc
-          key: tcc-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-tcc.sh') }}
-      - name: Build pinned tcc
-        if: steps.tcc.outputs.cache-hit != 'true'
-        run: scripts/build-tcc.sh
-      - name: Install rustc 1.99
-        run: |
-          rustup set profile minimal
-          rustup toolchain install 1.99.0
-          rustup default 1.99.0
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
-      - name: Run CI gate
-        env:
-          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
-        run: bash scripts/ci.sh
+defaults:
+  run:
+    shell: bash
 
-  macos-arm64:
-    runs-on: macos-14
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: Native gate (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - runner: macos-15
+            target: aarch64-apple-darwin
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.0
+      PYTHONDONTWRITEBYTECODE: '1'
+      CARGO_BUILD_JOBS: '1'
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the bootstrap and independent Rust oracle
+        run: rustup toolchain install 1.99.0 --profile minimal
+      - name: Install GNU utilities on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y gawk
+      - name: Install GNU utilities on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install bash coreutils findutils flock gawk gnu-sed grep
+          echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
+          for package in coreutils findutils gnu-sed grep; do
+            echo "$(brew --prefix "$package")/libexec/gnubin" >> "$GITHUB_PATH"
+          done
+      - name: Verify the native host
+        env:
+          EXPECTED_TARGET: ${{ matrix.target }}
+        run: |
+          python3 - <<'PY'
+          import os, subprocess
+          version = subprocess.check_output(['rustc', '-vV'], text=True)
+          print(version)
+          if 'host: ' + os.environ['EXPECTED_TARGET'] not in version.splitlines():
+              raise SystemExit('runner host differs from the declared native platform')
+          PY
+      - name: Check native tooling and manifest lint parsing
+        run: |
+          rustc --edition=2024 --test tests/tools/manifest-lints.rs -o "$RUNNER_TEMP/manifest-lints-test"
+          "$RUNNER_TEMP/manifest-lints-test"
+          python3 scripts/test-native-speed.py
+          python3 scripts/test-speed-slice.py
       - name: Cache pinned tcc
         id: tcc
         uses: actions/cache@v4
@@ -55,20 +85,137 @@ jobs:
       - name: Build pinned tcc
         if: steps.tcc.outputs.cache-hit != 'true'
         run: scripts/build-tcc.sh
-      - name: Install rustc 1.99
-        run: |
-          rustup set profile minimal
-          rustup toolchain install 1.99.0
-          rustup default 1.99.0
-      - name: Cache cargo registry
+      - name: Cache dependency downloads
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/registry
-          key: cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
-      # Known macOS risks, tracked outside this file: tcc Mach-O output,
-      # the hardcoded libbase.so name, and BSD userland differences in
-      # bench scripts. This job exists to find them; expect red at first.
-      - name: Run CI gate
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-${{ runner.os }}-${{ runner.arch }}-1.99.0-${{ hashFiles('**/Cargo.lock') }}
+      - name: Prepare the offline fixture dependencies
+        run: bash scripts/fetch-deps.sh
+      - name: Check crate configuration isolation
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
-        run: bash scripts/ci.sh
+          CARGO_PROFILE_TEST_DEBUG: '0'
+        run: cargo test --locked --bin lust-core resolve::cfg::tests:: -- --test-threads=1 2>&1 | tee "$RUNNER_TEMP/native-cfg-tests.log"
+      - name: Run the inherited CI gate
+        env:
+          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
+        run: bash scripts/ci.sh 2>&1 | tee "$RUNNER_TEMP/native-gate.log"
+      - name: Check the capability declarations
+        run: python3 scripts/test-capabilities.py target/release/lust 2>&1 | tee "$RUNNER_TEMP/native-capabilities.log"
+      - name: Compare native test results with Rust
+        run: bash scripts/testtest.sh 2>&1 | tee "$RUNNER_TEMP/native-test-command.log"
+      - name: Exercise macros through the native compiler
+        env:
+          LUST: ${{ github.workspace }}/target/release/lust
+          LUST_STRICT: '1'
+        run: bash scripts/test-macros.sh 2>&1 | tee "$RUNNER_TEMP/native-macros.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-gate-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/native-cfg-tests.log
+            ${{ runner.temp }}/native-gate.log
+            ${{ runner.temp }}/native-capabilities.log
+            ${{ runner.temp }}/native-test-command.log
+            ${{ runner.temp }}/native-macros.log
+          if-no-files-found: warn
+
+  native-speed:
+    name: Native upstream comparison
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.0
+      PYTHONDONTWRITEBYTECODE: '1'
+      CARGO_INCREMENTAL: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the matched bootstrap and Rust oracle
+        run: rustup toolchain install 1.99.0 --profile minimal
+      - name: Build pinned tcc
+        run: scripts/build-tcc.sh
+      - name: Check comparison decisions
+        run: python3 scripts/test-native-speed.py
+      - name: Materialize the original upstream reference
+        run: |
+          revision=$(python3 - <<'PY'
+          from pathlib import Path
+          import re
+          value = Path('upstream/lust.rev').read_text().strip()
+          if not re.fullmatch('[0-9a-f]{40}', value):
+              raise SystemExit('invalid upstream revision')
+          print(value)
+          PY
+          )
+          git fetch --no-tags --depth=1 https://github.com/t3dotgg/lust-lang "$revision"
+          git worktree add --detach "$RUNNER_TEMP/lust-reference" "$revision"
+          test "$(git -C "$RUNNER_TEMP/lust-reference" rev-parse HEAD)" = "$revision"
+      - name: Verify matching optimized compiler profiles
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, tomllib
+          root = pathlib.Path(os.environ['GITHUB_WORKSPACE'])
+          reference = pathlib.Path(os.environ['RUNNER_TEMP']) / 'lust-reference'
+          profiles = {
+              name: tomllib.loads((path / 'Cargo.toml').read_text())['profile']['release']
+              for name, path in [('candidate', root), ('upstream', reference)]
+          }
+          print(json.dumps(profiles, indent=2))
+          if profiles['candidate'] != profiles['upstream']:
+              raise SystemExit('compiler release profiles differ')
+          PY
+      - name: Build both native compilers with the same release recipe
+        env:
+          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
+        run: |
+          cargo build --release --locked -j1 -vv 2>&1 | tee "$RUNNER_TEMP/candidate-build.log"
+          cargo build --manifest-path "$RUNNER_TEMP/lust-reference/Cargo.toml" --release --locked -j1 -vv 2>&1 | tee "$RUNNER_TEMP/upstream-build.log"
+      - name: Package the exact native builds and runtime inputs
+        run: |
+          python3 scripts/package-native-build.py \
+            --source "$GITHUB_WORKSPACE" \
+            --binary-dir "$GITHUB_WORKSPACE/target/release" \
+            --tcc-home "$GITHUB_WORKSPACE/third_party/tcc" \
+            --tcc-source "$GITHUB_WORKSPACE/third_party/tinycc" \
+            --build-log "$RUNNER_TEMP/candidate-build.log" \
+            --output "$RUNNER_TEMP/native-builds/candidate"
+          python3 scripts/package-native-build.py \
+            --source "$RUNNER_TEMP/lust-reference" \
+            --binary-dir "$RUNNER_TEMP/lust-reference/target/release" \
+            --tcc-home "$GITHUB_WORKSPACE/third_party/tcc" \
+            --tcc-source "$GITHUB_WORKSPACE/third_party/tinycc" \
+            --build-log "$RUNNER_TEMP/upstream-build.log" \
+            --output "$RUNNER_TEMP/native-builds/upstream"
+      - name: Retain both measured native builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-builds-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/native-builds/*.tar.gz
+            ${{ runner.temp }}/native-builds/*.tar.gz.sha256
+          if-no-files-found: error
+      - name: Enforce cold and warm native no-regression comparisons
+        run: |
+          python3 scripts/compare-native-speed.py \
+            --upstream "$RUNNER_TEMP/native-builds/upstream/bin/lust" \
+            --candidate "$RUNNER_TEMP/native-builds/candidate/bin/lust" \
+            --rustc "$(rustup which rustc)" \
+            --pairs 24 --modules 8 --enforce \
+            --output "$RUNNER_TEMP/native-speed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-speed-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/candidate-build.log
+            ${{ runner.temp }}/upstream-build.log
+            ${{ runner.temp }}/native-speed
+          if-no-files-found: warn

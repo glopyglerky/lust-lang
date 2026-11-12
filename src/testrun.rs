@@ -2,31 +2,28 @@
 // each test in its own child process with a timeout. A panicking test ends its child only (it
 // unwinds, as under `rustc --test`, and exits 101), never the run.
 //
-// The test binary is the user file plus a generated `main` that dispatches on
-// `std::env::args().count()`: the runner passes i+1 dummy arguments to run test i. With no extra
-// arguments the binary runs every test in order. A user `main` is renamed in place (same byte
-// length, so every span still matches the user file); `rustc --test` ignores `main` the same way.
-// Tests in inline modules (at any depth) are named by their path (`tests::adds`), as in rustc;
-// the harness reaches them through a `pub(crate)` fn it adds at each module's closing brace,
-// on that line (`harness_shims`). A module file (`mod name;`) is an error: the harness is a copy
-// of this one file and could not read the tests in it.
+// Tests are discovered from the native resolver's AST after checking the original crate
+// with cfg(test). The backend adds a hosted dispatcher that calls those function slots.
+// Source files, module paths, macro locations and the crate's no_std prelude stay unchanged.
+// A user main remains an ordinary function, as with rustc --test. Inline and file modules,
+// including private modules and macro-generated tests, follow ordinary crate resolution.
 //
 // Exit status follows cargo test: 0 when every selected test passes, 101 when the build fails or
 // any test fails or times out, 2 for bad arguments or an unreadable file. A filtered test is
 // never reported as a pass; it is counted in `filtered_out`. A `#[ignore]` test is reported as
 // ignored and never runs. A `#[should_panic]` test passes only when it panics with the
 // expected text, when one is written.
-use crate::ast::{Ast, Attr, AttrInput, Expr, Item, ItemKind, TyExpr};
-use crate::diag::{self, Diag, FileId, SourceMap};
-use crate::driver::{self, Cmd, Request, SessionKey};
-use crate::intern::{Interner, Known};
-use crate::{lexer, parser};
+use crate::ast::{Ast, Attr, AttrInput, Expr, ItemKind, TyExpr};
+use crate::diag::{self, Diag};
+use crate::driver::{self, Cmd};
+use crate::intern::{Interner, Sym};
+use crate::lexer;
 use std::io::Read;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-const USAGE: &str = "usage: lust test <file.rs> [filter] [--json] [--list] [--timeout SECONDS] [--max-errors N]";
+const USAGE: &str = "usage: lust test <file.rs> [filter] [--json] [--list] [--timeout SECONDS] [--max-errors N] [crate selection flags]";
 
 struct Opts {
     file: PathBuf,
@@ -35,12 +32,14 @@ struct Opts {
     list: bool,
     timeout: Duration,
     max_errors: usize,
+    crate_args: Vec<String>,
 }
 
 /// Parses `lust test` arguments (without the word `test`).
 fn parse_opts(args: &[String]) -> Result<Opts, String> {
     let (mut file, mut filter, mut json, mut list) = (None, None, false, false);
     let (mut timeout, mut max_errors) = (Duration::from_secs(10), diag::DEFAULT_MAX_ERRORS);
+    let mut crate_args = Vec::new();
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -50,13 +49,21 @@ fn parse_opts(args: &[String]) -> Result<Opts, String> {
             "--max-errors" => max_errors = it.next().and_then(|v| v.parse().ok()).ok_or(USAGE)?,
             _ if a.starts_with("--timeout=") => timeout = parse_secs(&a["--timeout=".len()..].to_string())?,
             _ if a.starts_with("--max-errors=") => max_errors = a["--max-errors=".len()..].parse().map_err(|_| USAGE.to_string())?,
-            _ if a.starts_with("--") => return Err(USAGE.into()),
+            "--manifest-path" | "--package" | "-p" | "--bin" | "--features" | "--target" | "-C" => {
+                crate_args.push(a.clone());
+                crate_args.push(it.next().ok_or(USAGE)?.clone());
+            }
+            "--lib" | "--no-default-features" | "--all-features" | "--offline" | "--locked" | "--frozen" => crate_args.push(a.clone()),
+            _ if ["--manifest-path=", "--package=", "--bin=", "--features=", "--target="].iter().any(|prefix| a.starts_with(prefix)) => {
+                crate_args.push(a.clone());
+            }
+            _ if a.starts_with('-') => return Err(USAGE.into()),
             _ if file.is_none() => file = Some(PathBuf::from(a)),
             _ if filter.is_none() => filter = Some(a.clone()),
             _ => return Err(USAGE.into()),
         }
     }
-    Ok(Opts { file: file.ok_or(USAGE)?, filter, json, list, timeout, max_errors })
+    Ok(Opts { file: file.ok_or(USAGE)?, filter, json, list, timeout, max_errors, crate_args })
 }
 
 fn parse_secs(s: &String) -> Result<Duration, String> {
@@ -142,46 +149,36 @@ fn millis(start: Instant) -> f64 {
 struct TestCase {
     /// The path from the crate root (`tests::adds`), as rustc --test names it.
     name: String,
-    /// The inline modules from the crate root to the fn (empty at the root).
-    module: Vec<String>,
-    /// The fn's own name.
-    fn_name: String,
+    /// The function's native resolved name, independent of its visibility.
+    symbol: Sym,
     ignored: bool,
     should_panic: Option<Option<String>>,
 }
 
-/// Finds the `#[test]` fns in `items`, the crate root or an inline module body
-/// whose path is `module`, as rustc --test does: in every inline module, also
-/// nested ones. `mods` gets each inline module that holds a test, with the byte
-/// offset of its closing `}`, where the harness adds the fns that reach the
-/// tests (`harness_shims`). A test lust cannot reach is an error, never a test
-/// that silently does not run.
+/// Finds tests in the already resolved native AST. The resolver has applied cfg,
+/// expanded macros, loaded module files and retained each definition's source span.
 fn find_tests(
-    items: &[Item],
-    module: &[String],
-    src: &str,
     ast: &Ast,
     interner: &Interner,
+    display_name: impl Fn(Sym) -> Sym,
     tests: &mut Vec<TestCase>,
-    mods: &mut Vec<(Vec<String>, usize)>,
     bad: &mut Vec<Diag>,
 ) {
-    for item in items {
+    for item in &ast.items {
         match &item.kind {
             ItemKind::Fn(def) if def.is_test => {
-                let fn_name = interner.get(def.name).to_string();
+                let name = interner.get(display_name(def.name)).to_string();
                 let ret_ok = def.ret.is_none_or(|t| matches!(ast.ty(t), TyExpr::Unit));
-                if def.self_param.is_some() || !def.params.is_empty() || !ret_ok {
+                if def.self_param.is_some() || !def.params.is_empty() || !def.generics.params.is_empty() || !ret_ok {
                     bad.push(Diag::new(
                         "L0110",
                         def.name_span,
-                        format!("test function `{fn_name}` must take no arguments and return `()`"),
-                        format!("Change the signature to `fn {fn_name}() {{ ... }}`."),
+                        format!("test function `{name}` must take no arguments, have no generic parameters and return `()`"),
+                        "Write a non-generic test function with no arguments that returns `()`.",
                     ));
                 } else {
                     let (ignored, should_panic) = harness_attrs(&item.attrs, ast, interner);
-                    let name = module.iter().chain([&fn_name]).cloned().collect::<Vec<_>>().join("::");
-                    tests.push(TestCase { name, module: module.to_vec(), fn_name, ignored, should_panic });
+                    tests.push(TestCase { name, symbol: def.name, ignored, should_panic });
                 }
             }
             ItemKind::Impl(imp) => {
@@ -191,68 +188,8 @@ fn find_tests(
                     }
                 }
             }
-            ItemKind::Mod(m) => {
-                let mut path = module.to_vec();
-                path.push(interner.get(m.name).to_string());
-                let Some(body) = &m.body else {
-                    // The harness is built from a copy of this one file, so it
-                    // cannot read the module's file or the tests in it.
-                    bad.push(diag::unsupported(m.name_span, "module files (`mod name;`) in `lust test`"));
-                    continue;
-                };
-                let before = tests.len();
-                find_tests(body, &path, src, ast, interner, tests, mods, bad);
-                if tests.len() > before {
-                    // A module a macro wrote has no closing brace of its own in the file.
-                    let close = (m.span.hi as usize).checked_sub(1).filter(|&c| src.as_bytes().get(c) == Some(&b'}'));
-                    match close {
-                        Some(c) if src.get(m.name_span.lo as usize..m.name_span.hi as usize) == Some(interner.get(m.name)) => {
-                            mods.push((path, c))
-                        }
-                        _ => bad.push(diag::unsupported(m.name_span, "#[test] fns in a module that a macro writes, in `lust test`")),
-                    }
-                }
-            }
             _ => {}
         }
-    }
-}
-
-/// The text the harness adds before the closing `}` of each module in `mods`:
-/// one `pub(crate)` fn per selected test in or under that module, which calls
-/// the test (or the same fn of the child module on the way to it). Test `i`
-/// is `__lust_test_{i}`. A private test fn in a private module is reachable
-/// this way, as rustc's harness reaches it. The text has no newline, so lines
-/// (and panic locations) still match the user file. Returned last offset first,
-/// for in-place insertion.
-fn harness_shims(selected: &[TestCase], mods: &[(Vec<String>, usize)]) -> Vec<(usize, String)> {
-    let mut out: Vec<(usize, String)> = mods
-        .iter()
-        .filter_map(|(path, close)| {
-            let text: String = selected
-                .iter()
-                .enumerate()
-                .filter(|(_, t)| t.module.starts_with(path))
-                .map(|(i, t)| {
-                    let target = match t.module.get(path.len()) {
-                        None => t.fn_name.clone(),
-                        Some(child) => format!("{child}::__lust_test_{i}"),
-                    };
-                    format!(" pub(crate) fn __lust_test_{i}() {{ self::{target}() }}")
-                })
-                .collect();
-            (!text.is_empty()).then_some((*close, text))
-        })
-        .collect();
-    out.sort_by(|a, b| b.0.cmp(&a.0));
-    out
-}
-
-/// The harness call that runs selected test `i`.
-fn harness_call(i: usize, t: &TestCase) -> String {
-    match t.module.first() {
-        None => t.fn_name.clone(),
-        Some(top) => format!("{top}::__lust_test_{i}"),
     }
 }
 
@@ -339,8 +276,28 @@ pub fn run(args: &[String]) -> i32 {
             return 2;
         }
     };
+    // Select and check the real crate through the normal compiler pipeline. Test
+    // mode preserves its Cargo features, declared cfg names and dependency graph.
+    let mut crate_args = vec!["check".to_string(), opts.file.to_string_lossy().into_owned()];
+    crate_args.extend(opts.crate_args.iter().cloned());
+    let Some(crate::protocol::Invocation::Compile { mut req, .. }) = crate::protocol::parse_args(&crate_args) else {
+        eprintln!("{USAGE}");
+        return 2;
+    };
+    let dir = std::env::temp_dir().join(format!("lust-test-{}", std::process::id()));
+    let bin = dir.join("testbin");
+    req.session.krate.test = true;
+    req.harness = true;
+    req.json = opts.json;
+    req.max_errors = opts.max_errors;
+    req.out = bin.clone();
+    let mut session = driver::Session::new(dir.join("obj"), false, req.session.clone());
+    let check = driver::compile(&req, &mut session);
+    // Cargo target selection happens inside the native resolver, after argument
+    // parsing. Metadata must identify those checked bytes, even when --lib or
+    // --bin selected a different root than the explicit positional file.
+    let (path, src) = session.harness_root.take().map_or((path, src), |(path, source)| (path.to_string_lossy().into_owned(), source));
     let hash = diag::source_hash(&src);
-    // Prints rendered diagnostics in the right stream for the mode, plus the JSON summary.
     let fail_build = |text: String, filtered_out: usize| -> i32 {
         if opts.json {
             print!("{text}");
@@ -350,41 +307,28 @@ pub fn run(args: &[String]) -> i32 {
         }
         101
     };
-
-    // Parse once to find the tests, their names, and the user's `main` (if any). This
-    // one-shot parse has its own source map with the user file as file 0.
-    let mut map = SourceMap::default();
-    map.add_file(&path, &src);
-    let interner = Interner::default();
-    let known = Known::new(&interner);
-    let lexed = match lexer::lex(&src, FileId(0), 0, &interner).and_then(|l| {
-        let ctx = crate::expand::ExpandCtx::for_file(&interner, &known, std::path::Path::new(&path), &src, true);
-        crate::expand::expand_lexed(l, &ctx)
-    }) {
-        Ok(l) => l,
-        Err(d) => return fail_build(diag::render(&mut [d], &map, &src, opts.json, opts.max_errors), 0),
-    };
-    let ast = match parser::parse(&lexed, &interner, &known) {
-        Ok(a) => a,
-        Err(d) => return fail_build(diag::render(&mut [d], &map, &src, opts.json, opts.max_errors), 0),
-    };
-    let mut tests: Vec<TestCase> = Vec::new();
-    let mut fn_names: Vec<String> = Vec::new();
-    let mut main_span = None;
-    let mut bad: Vec<Diag> = Vec::new();
-    for item in &ast.items {
-        if let ItemKind::Fn(def) = &item.kind {
-            let name = interner.get(def.name).to_string();
-            if name == "main" {
-                main_span = Some(def.name_span);
-            }
-            fn_names.push(name);
+    if check.code != 0 {
+        let _ = std::fs::remove_dir_all(&dir);
+        print!("{}", check.stdout);
+        eprint!("{}", check.stderr);
+        if opts.json {
+            println!("{}", summary_json(&path, &hash, "failed", &[], 0, start));
         }
+        return 101;
     }
-    let mut mods: Vec<(Vec<String>, usize)> = Vec::new();
-    find_tests(&ast.items, &[], &src, &ast, &interner, &mut tests, &mut mods, &mut bad);
+    let mut tests = Vec::new();
+    let mut bad = Vec::new();
+    find_tests(
+        &session.front.ast,
+        &session.front.interner,
+        |name| session.harness_names.get(&name).copied().unwrap_or(name),
+        &mut tests,
+        &mut bad,
+    );
     if !bad.is_empty() {
-        return fail_build(diag::render(&mut bad, &map, &src, opts.json, opts.max_errors), 0);
+        let text = diag::render(&mut bad, &session.front.map, &src, opts.json, opts.max_errors);
+        let _ = std::fs::remove_dir_all(&dir);
+        return fail_build(text, 0);
     }
     let selected: Vec<TestCase> = match &opts.filter {
         Some(f) => tests.iter().filter(|t| t.name.contains(f.as_str())).cloned().collect(),
@@ -408,81 +352,18 @@ pub fn run(args: &[String]) -> i32 {
             }
             println!("\n{} tests", selected.len());
         }
+        let _ = std::fs::remove_dir_all(&dir);
         return 0;
     }
 
-    // Check the user file as written first, so diagnostics name the real file and hash.
-    // One session per crate root: the user file as a test crate, then the
-    // generated harness file as its own bin crate (driver sessions are keyed
-    // by crate, so the harness build below gets a fresh session).
-    let dir = std::env::temp_dir().join(format!("lust-test-{}", std::process::id()));
-    let mut session = driver::Session::new(dir.join("obj"), false, SessionKey::synthetic(&file, true));
-    session.caches.leak_at_exit = true;
-    // Both requests are test crates: the harness build must keep the
-    // `#[test]` fns it calls (a normal build removes them).
-    let req = |cmd: Cmd, file: PathBuf, out: PathBuf| Request {
-        cmd,
-        session: SessionKey::synthetic(&file, true),
-        file,
-        out,
-        json: opts.json,
-        timings: false,
-        debug: false,
-        emit_c: None,
-        max_errors: opts.max_errors,
-        run_args: None,
-        // The check below runs on the user file before the generated `main` is added.
-        harness: cmd == Cmd::Check, cc: false,
-        client: Default::default(),
-    };
-    let check = driver::compile(&req(Cmd::Check, file.clone(), dir.join("testbin")), &mut session);
-    if check.code != 0 {
-        let _ = std::fs::remove_dir_all(&dir);
-        // In JSON mode the driver puts diagnostics on stdout already; keep its split.
-        print!("{}", check.stdout);
-        eprint!("{}", check.stderr);
-        if opts.json {
-            println!("{}", summary_json(&path, &hash, "failed", &[], filtered_out, start));
-        }
-        return 101;
-    }
-
-    // Build the harness: user source (with `main` renamed) plus a generated dispatching `main`.
-    let mut harness = src.clone();
-    if let Some(span) = main_span {
-        let replacement = ["zain", "yain", "xain", "wain", "vain", "qain"]
-            .iter()
-            .find(|c| !fn_names.iter().any(|n| n == *c))
-            .expect("no free name for the user main");
-        harness.replace_range(span.lo as usize..span.hi as usize, replacement);
-    }
-    for (at, text) in harness_shims(&selected, &mods) {
-        harness.insert_str(at, &text);
-    }
-    harness.push_str("\nfn main() {\n    let n = std::env::args().count();\n    if n == 1 {\n");
-    for (i, t) in selected.iter().enumerate().filter(|(_, t)| !t.ignored) {
-        harness.push_str(&format!("        {}();\n", harness_call(i, t)));
-    }
-    for (i, t) in selected.iter().enumerate() {
-        harness.push_str(&format!("    }} else if n == {} {{\n        {}();\n", i + 2, harness_call(i, t)));
-    }
-    harness.push_str("    }\n}\n");
-    if let Err(e) = std::fs::create_dir_all(&dir).and_then(|_| std::fs::write(dir.join("harness.rs"), &harness)) {
-        eprintln!("error: cannot write the test harness: {e}");
-        let _ = std::fs::remove_dir_all(&dir);
-        return 101;
-    }
-    let harness_path = abs(&dir.join("harness.rs"));
-    let bin = dir.join("testbin");
-    let mut session = driver::Session::new(dir.join("obj-harness"), false, SessionKey::synthetic(&harness_path, true));
-    session.caches.leak_at_exit = true;
-    let build = driver::compile(&req(Cmd::Build, harness_path.clone(), bin.clone()), &mut session);
+    // Build the original crate. Only the compiler-generated entry unit changes:
+    // it dispatches directly to checked native functions, without source wrappers.
+    session.harness_tests = selected.iter().map(|test| (test.symbol, test.ignored)).collect();
+    req.cmd = Cmd::Build;
+    let build = driver::compile(&req, &mut session);
     if build.code != 0 {
-        // Spans match the user file byte for byte; only the file name differs.
-        let fix = |s: &str| s.replace(&harness_path.to_string_lossy().into_owned(), &path);
-        let _ = std::fs::remove_dir_all(session.obj_dir());
-        print!("{}", fix(&build.stdout));
-        eprint!("{}", fix(&build.stderr));
+        print!("{}", build.stdout);
+        eprint!("{}", build.stderr);
         if opts.json {
             println!("{}", summary_json(&path, &hash, "failed", &[], filtered_out, start));
         }
@@ -509,9 +390,6 @@ pub fn run(args: &[String]) -> i32 {
         } else {
             run_one(&bin, i, &t.name, opts.timeout)
         };
-        // Panic messages name the harness file; its lines match the user file, so rename it back.
-        o.stderr = o.stderr.replace(&harness_path.to_string_lossy().into_owned(), &path);
-        o.stdout = o.stdout.replace(&harness_path.to_string_lossy().into_owned(), &path);
         // A `should_panic` test passes only when it panics, and its
         // output must hold the expected text when one is written.
         // A timeout stays a timeout.

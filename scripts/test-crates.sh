@@ -27,6 +27,8 @@
 #                     `lust check <root> --lib` must both accept (or both
 #                     reject, with expect=); nothing runs. root= names the
 #                     lib root (default src/lib.rs)
+#   check-lib=<path>  before building the bin, both compilers must also
+#                     accept the library selected by this root path
 #   projdir=<name>    the project directory's name in the work dir (default
 #                     proj), for paths Cargo percent-encodes in package ids
 #                     (a space, `#`, a non-ASCII char)
@@ -115,6 +117,7 @@ for dir in "$fixtures"/*/; do
   cargo_pass=""
   stderr_mode=""
   lib=""
+  check_lib=""
   daemon=""
   prog_args=()
   if [ -f "$proj/fixture.txt" ]; then
@@ -130,6 +133,7 @@ for dir in "$fixtures"/*/; do
         cargo) cargo_pass=$v ;;
         stderr) stderr_mode=$v ;;
         lib) lib=$v ;;
+        check-lib) check_lib=$v ;;
         daemon) daemon=$v ;;
         projdir) ;;
         args) # split on spaces by design (see header)
@@ -225,6 +229,28 @@ for dir in "$fixtures"/*/; do
     report bad "$name" "cargo built, but no binary at $cargo_bin"
     continue
   fi
+  if [ -n "$check_lib" ]; then
+    cargo_lib=(build --manifest-path "$proj/$manifest" --lib --target-dir "$case_dir/cargo-target")
+    lust_lib=(check "$proj/$check_lib" --manifest-path "$proj/$manifest" --lib)
+    if [ -n "$dev_config" ]; then
+      cargo_lib+=(--no-default-features)
+      [ -z "$features" ] || cargo_lib+=(--features "$features")
+    elif [ -n "$features" ]; then
+      cargo_lib+=(--features "$features")
+      lust_lib+=(--features "$features")
+    fi
+    if [ -n "$target" ]; then cargo_lib+=(--target "$target"); lust_lib+=(--target "$target"); fi
+    if ! (cd "$proj" && timeout 60 cargo "${cargo_lib[@]}") >"$case_dir/cargo.lib.out" 2>"$case_dir/cargo.lib.err"; then
+      report bad "$name" "cargo library build failed: $(tail -3 "$case_dir/cargo.lib.err")"
+      continue
+    fi
+    lust_cc "$lust" "${lust_lib[@]}" >"$case_dir/lust.lib.out" 2>"$case_dir/lust.lib.err"; st=$?
+    if [ "$st" -ne 0 ]; then
+      report bad "$name" "lust library check failed (exit $st): $(head -5 "$case_dir/lust.lib.err")"
+      continue
+    fi
+    slow_note "$name" "lust library check"
+  fi
   lust_cc "$lust" "${lust_args[@]}" >"$case_dir/lust.out" 2>"$case_dir/lust.err"; st=$?
   if is_timeout "$st"; then
     report bad "$name" "HANG lust build timed out alone at ${retry_timeout}s (first at ${case_timeout}s)"
@@ -258,7 +284,21 @@ for dir in "$fixtures"/*/; do
     # on this socket, inside the project dir; it exits once idle): its
     # cold build, then its warm one, must give the same program.
     dbad=""
+    if [ -n "${LUST_LIBRARY:-}${LUST_STD_SRC:-}" ]; then
+      report bad "$name" "source overrides disable daemon routing"
+      continue
+    fi
     for dpass in cold warm; do
+      if [ "$dpass" = warm ]; then
+        for ((waited=0; waited<100; waited++)); do
+          [ ! -S "$proj/.lust-daemon.sock" ] || break
+          sleep 0.1
+        done
+        if [ ! -S "$proj/.lust-daemon.sock" ]; then
+          dbad="warm build has no established daemon socket"
+          break
+        fi
+      fi
       env -u LUST_NO_DAEMON LUST_DAEMON_SOCKET="$proj/.lust-daemon.sock" LUST_DAEMON_IDLE=20 \
         timeout "$case_timeout" "$lust" "${lust_args[@]}" >"$case_dir/daemon.$dpass.out" 2>"$case_dir/daemon.$dpass.err"; st=$?
       if [ "$st" -ne 0 ]; then

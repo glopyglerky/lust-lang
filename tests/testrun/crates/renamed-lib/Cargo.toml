@@ -1,0 +1,9 @@
+[package]
+name = "native-test-library"
+version = "0.0.0"
+edition = "2024"
+
+[lib]
+name = "native_test_exports"
+
+[workspace]

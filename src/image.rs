@@ -488,6 +488,7 @@ static REEXECED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::
 /// Start of main, single-threaded. In a process `reexec` started (arena
 /// or not), children (cargo, tcc, user programs) get randomization back
 /// and no arena variable.
+#[cfg(target_os = "linux")]
 pub fn process_start() {
     if std::env::var_os(ARENA_ENV).is_none() {
         return;
@@ -503,6 +504,12 @@ pub fn process_start() {
         std::env::remove_var(ARENA_ENV);
     }
 }
+
+// Front images use Linux address-space controls. Referencing personality from
+// unconditional startup prevents even ordinary native builds from linking on
+// hosts that do not provide that syscall.
+#[cfg(not(target_os = "linux"))]
+pub fn process_start() {}
 
 /// What an image carries besides the session: the process-wide state the
 /// session's data points into or orders against.

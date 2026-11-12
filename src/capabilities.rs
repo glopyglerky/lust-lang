@@ -1653,8 +1653,6 @@ const REJECTED: &[(&str, &str)] = &[
     ("traits, generic type aliases, and type items named like builtin types inside function bodies", "L0820"),
     ("a non-pub member of an impl inside a function body when a block `use` is in scope or the self type does not resolve", "L0820"),
     ("#[test] functions inside impl blocks and traits (rustc rejects them too)", "L0402"),
-    ("module files (`mod name;`) in `lust test`, which reads the one file it is given", "L9001"),
-    ("#[test] fns in a module that a macro writes, in `lust test` (a fallback that no known program reaches)", "L9001"),
     ("raw references (`&raw`)", "L0820"),
     ("tuple struct patterns with field numbers", "L0820"),
     ("variadic parameters (rustc rejects them outside `extern` blocks too)", "L0820"),
@@ -1764,9 +1762,10 @@ const EXPRESSIONS: &[&str] = &[
 
 const ATTRIBUTES: &[&str] = &[
     "derive",
-    "test, ignore, should_panic (`lust test` runs them at the crate root and in inline modules)",
+    "test, ignore, should_panic (`lust test` uses native crate resolution, including file modules and macro-generated tests)",
     "allow, warn, and expect; deny and forbid for `unsafe_code` and tool lints",
     "cfg and cfg_attr",
+    "no_std (core prelude; root `extern crate std;` and `extern crate alloc;` declarations)",
     "doc",
     "inline, cold, must_use, deprecated, track_caller",
     "repr",

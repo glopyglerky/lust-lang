@@ -10503,6 +10503,16 @@ pub fn loc_unit(files: &SlotFiles, slot_lines: &[u32]) -> String {
 /// sets up the runtime's panic payloads and hook runner; under
 /// panic=unwind a `main` that ends by a panic exits 101.
 pub fn main_unit(main_slot: u32, overlays: &[usize], init: Option<UnwindInit>) -> String {
+    main_unit_inner(main_slot, overlays, init, None)
+}
+
+/// Hosted test entry for functions compiled in their original crate. The dispatcher
+/// is compiler-generated C, so a no_std crate never acquires a std import or prelude.
+pub fn test_main_unit(tests: &[(u32, bool)], overlays: &[usize], init: Option<UnwindInit>) -> String {
+    main_unit_inner(0, overlays, init, Some(tests))
+}
+
+fn main_unit_inner(main_slot: u32, overlays: &[usize], init: Option<UnwindInit>, tests: Option<&[(u32, bool)]>) -> String {
     let unwind = init.as_ref().is_some_and(|i| i.unwind);
     let tables = init.as_ref().is_some_and(|i| i.unwind && i.tables);
     let runner_slot = init.as_ref().and_then(|i| i.hook_runner);
@@ -10519,7 +10529,31 @@ pub fn main_unit(main_slot: u32, overlays: &[usize], init: Option<UnwindInit>) -
     let mut c = unit_header();
     c.push_str("void lust_loc_init(void);\nvoid lust_kstatics_init(void);\n");
     // Release C calls main's body (and passes the hook runner) by name.
-    let main_call = if names::release() {
+    let main_call = if let Some(tests) = tests {
+        let call = |slot| {
+            if names::release() { format!("{}()", names::body(slot)) } else { format!("((void (*)(void))lust_fns[{slot}])()") }
+        };
+        if names::release() {
+            for &(slot, _) in tests {
+                let _ = writeln!(c, "void {}(void);", names::body(slot));
+            }
+            if let Some(slot) = runner_slot {
+                let _ = writeln!(c, "void {}(void);", names::body(slot));
+            }
+        }
+        c.push_str("static void lust_test_main(void) {\n  switch (lust_argc) {\n  case 1:\n");
+        for &(slot, ignored) in tests {
+            if !ignored {
+                let _ = writeln!(c, "    {};", call(slot));
+            }
+        }
+        c.push_str("    break;\n");
+        for (index, &(slot, _)) in tests.iter().enumerate() {
+            let _ = writeln!(c, "  case {}: {}; break;", index + 2, call(slot));
+        }
+        c.push_str("  }\n}\n");
+        "lust_test_main()".to_string()
+    } else if names::release() {
         let _ = writeln!(c, "void {}(void);", names::body(main_slot));
         if let Some(s) = runner_slot.filter(|&s| s != main_slot) {
             let _ = writeln!(c, "void {}(void);", names::body(s));

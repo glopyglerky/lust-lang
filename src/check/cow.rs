@@ -161,7 +161,7 @@ impl<'p> Ctx<'p> {
             "deref" if self.std_trait_imported("ops", "Deref") => (Builtin::CowDeref, Autoref::Ref, self.tys.mk_ref(false, b), Vec::new()),
             // The blanket `ToOwned` of a Clone type: a Cow's own
             // `to_owned` is its clone (a Borrowed stays Borrowed).
-            "to_owned" => (Builtin::Clone, Autoref::Ref, base, Vec::new()),
+            "to_owned" if self.alloc_trait_in_scope("ToOwned") => (Builtin::Clone, Autoref::Ref, base, Vec::new()),
             // `Add` and `AddAssign` for `Cow<str>` are checked
             // above, ahead of this match.
             // Cow's own `clone_from` is the derived-enum body over

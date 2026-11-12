@@ -294,6 +294,12 @@ pub struct ResolvedTables {
     /// checker resolves the rewritten flat names in the root module, so a
     /// root query for a flat name answers here.
     pub flat: [FxMap<Sym, DefId>; 3],
+    /// Collision-free alternate spellings of selected-crate root Adts.
+    /// Their declarations and stable DefIds keep the usual flat name;
+    /// a resolved path uses this spelling only when that name would be
+    /// captured by a nearer binding. The flat indexes contain the same
+    /// DefId for both spellings, before parallel rewrite or body patches.
+    pub qualified_adts: FxMap<DefId, Sym>,
     /// The defining module of each flattened fn, in LocalDefId order.
     pub fn_module: Vec<ModuleId>,
     /// Crate roots by their `$crate` magic segment name. A macro defined
@@ -411,6 +417,9 @@ pub struct ResolvedTables {
     /// only there (and in shipped std source) does `alloc` name the
     /// alloc crate, as in rustc edition 2024 (`extern_in_scope`).
     pub alloc_roots: Vec<ModuleId>,
+    /// Only crates selecting the core prelude need an entry; ordinary std
+    /// crates keep the original lookup path and allocate no side-table entry.
+    pub library_scopes: FxMap<ModuleId, crate::expand::LibraryScope>,
     /// The file each `mod name;` without `#[path]` did not take:
     /// `name/mod.rs` beside the `name.rs` it loaded, or the reverse. Once
     /// one appears a cold resolve rejects that module (L0502); the body
@@ -504,6 +513,7 @@ impl ResolvedTables {
             display_names: FxMap::default(),
             module_defs: vec![DefId::PLACEHOLDER],
             flat: Default::default(),
+            qualified_adts: FxMap::default(),
             fn_module: Vec::new(),
             crate_magic: FxMap::default(),
             std_aliases: BTreeMap::new(),
@@ -525,6 +535,7 @@ impl ResolvedTables {
             std_splice_lo: None,
             std_ranges: Vec::new(),
             alloc_roots: Vec::new(),
+            library_scopes: FxMap::default(),
             module_alts: Vec::new(),
             module_index: std::sync::OnceLock::new(),
         }
@@ -615,7 +626,7 @@ impl ResolvedTables {
         if self.root_of(src) != root || path.first().is_none_or(|s| interner.get(*s) != "std") {
             return false;
         }
-        if !leading_colon && !self.std_is_extern(from, interner) {
+        if if leading_colon { self.extern_in_scope(from, "std").is_none() } else { !self.std_is_extern(from, interner) } {
             return false;
         }
         let strs: Vec<&str> = path.iter().map(|s| interner.get(*s)).collect();
@@ -1424,6 +1435,14 @@ impl ResolvedTables {
                 n += 1;
             }};
         }
+        for (&module, scope) in &self.library_scopes {
+            fold!(0x11, |h: &mut crate::intern::FxHasher| {
+                h.write_u64(module.0 as u64);
+                h.write_u64(scope.core_prelude as u64);
+                h.write_u64(scope.std as u64);
+                h.write_u64(scope.alloc as u64);
+            });
+        }
         for (i, m) in self.modules.iter().enumerate() {
             fold!(0x10, |h: &mut crate::intern::FxHasher| {
                 h.write_u64(i as u64);
@@ -1802,6 +1821,31 @@ pub struct SegInfo {
 }
 
 impl ResolvedTables {
+    pub fn library_scope(&self, from: ModuleId) -> crate::expand::LibraryScope {
+        if self.library_scopes.is_empty() { return crate::expand::LibraryScope::default(); }
+        let root = self.root_of(from);
+        let scope = self.library_scopes.get(&root).copied().unwrap_or_default();
+        // Spliced library source shares the selected crate's module tree,
+        // but keeps its own prelude. Only resolver-registered module IDs
+        // count; a user's similarly named module gains no library scope.
+        if scope.core_prelude && from != root && !self.std_modules.is_empty() {
+            let mut at = Some(from);
+            while let Some(module) = at.filter(|m| *m != root) {
+                if self.std_modules.iter().any(|&(_, shipped)| shipped == module) {
+                    return crate::expand::LibraryScope::default();
+                }
+                at = self.modules[module.0 as usize].parent;
+            }
+        }
+        scope
+    }
+
+    pub fn in_prelude(&self, from: ModuleId, name: &str, ns: Namespace) -> bool {
+        !self.modules[from.0 as usize].no_prelude
+            && in_std_prelude(name, ns)
+            && !(self.library_scope(from).core_prelude && matches!(name, "Vec" | "String" | "Box" | "ToOwned" | "ToString"))
+    }
+
     /// The extern prelude index of a crate name in the prelude of the
     /// crate `from` belongs to, if it is one there.
     pub fn extern_by_name(&self, from: ModuleId, name: &str) -> Option<u32> {
@@ -1815,6 +1859,9 @@ impl ResolvedTables {
     /// modules of the splice (rustc E0433 otherwise).
     fn extern_in_scope(&self, from: ModuleId, name: &str) -> Option<u32> {
         let i = self.extern_by_name(from, name)?;
+        if name == "std" && self.externs[i as usize].is_std_lib && !self.library_scope(from).std {
+            return None;
+        }
         if name != "alloc" || !self.externs[i as usize].is_std_lib {
             return Some(i);
         }
@@ -2012,7 +2059,7 @@ impl ResolvedTables {
         if let Some(i) = self.extern_in_scope(from, name_str) {
             return PathRes::Done(self.extern_target(i));
         }
-        if !self.modules[from.0 as usize].no_prelude && in_std_prelude(name_str, ns) {
+        if self.in_prelude(from, name_str, ns) {
             return PathRes::Prelude;
         }
         PathRes::Absent
@@ -2046,7 +2093,7 @@ impl ResolvedTables {
         // different item is ambiguous with either.
         let outer: Option<SegBind> = if let Some(i) = self.extern_in_scope(from, name_str) {
             Some(SegBind::Extern(i))
-        } else if !self.modules[from.0 as usize].no_prelude && in_std_prelude(name_str, ns) {
+        } else if self.in_prelude(from, name_str, ns) {
             Some(SegBind::Prelude(name))
         } else {
             None
@@ -2503,7 +2550,11 @@ pub fn run_imports(tables: &mut ResolvedTables, imports: &[Import], interner: &I
         // A std path the shipped std source or platform crate lacks
         // (`std::os::unix::fs::OpenOptionsExt`) exists in std all the same.
         if matches!(strs.first(), Some(&("std" | "core" | "alloc")))
-            && (imp.leading_colon || tables.std_root_is_extern(imp.module, path[0], interner))
+            && if imp.leading_colon {
+                tables.extern_in_scope(imp.module, strs[0]).is_some()
+            } else {
+                tables.std_root_is_extern(imp.module, path[0], interner)
+            }
             && crate::resolve::stdpaths::std_has(&strs).is_some()
         {
             diags.push(std_missing_diag(&strs, glob, imp.span));
@@ -2856,7 +2907,7 @@ fn try_import(tables: &mut ResolvedTables, imp: &Import, self_sym: Sym, interner
     if let ImportKind::Single { path, name } = &imp.kind
         && tables.std_platform.is_some()
         && let Some(redirected) = tables.std_platform_path(path, imp.module, interner)
-        && (imp.leading_colon || tables.std_is_extern(imp.module, interner))
+        && if imp.leading_colon { tables.extern_in_scope(imp.module, "std").is_some() } else { tables.std_is_extern(imp.module, interner) }
     {
         let imp2 = Import { kind: ImportKind::Single { path: redirected, name: *name }, leading_colon: false, ..imp.clone() };
         return try_import(tables, &imp2, self_sym, interner, diags);

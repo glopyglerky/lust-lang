@@ -2,7 +2,7 @@
 // (longer than its 78-byte margin) or that holds an item is accepted in a
 // const context: the text is never printed there (a true condition passes,
 // a false one is a compile error). ts-rust's fswatch/unix.rs has the
-// const _ form. In runtime code it stays L0809 (tests/reject).
+// const _ form. Item-holding runtime conditions still reject (tests/reject).
 #![allow(dead_code)]
 const O_RDONLY: i32 = 0x0;
 const O_CLOEXEC: i32 = 0x80000;

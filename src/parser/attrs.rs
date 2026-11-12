@@ -31,7 +31,7 @@ pub(super) fn check_input(name: &str, attr: &Attr, interner: &Interner) -> PResu
             }
             _ => false,
         },
-        "cold" | "test" | "non_exhaustive" | "global_allocator" => matches!(attr.input, AttrInput::None),
+        "cold" | "test" | "non_exhaustive" | "global_allocator" | "no_std" => matches!(attr.input, AttrInput::None),
         "must_use" => matches!(&attr.input, AttrInput::None) || eq_str(&attr.input),
         // `ignore` and `ignore = "reason"` are the only forms (probed).
         "ignore" => matches!(attr.input, AttrInput::None) || eq_str(&attr.input),

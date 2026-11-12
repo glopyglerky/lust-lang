@@ -1,3 +1,33 @@
+# Lustr
+
+Lustr is a native fork of Lust that expands its supported Rust subset while
+preserving its fast native compilation paths. Full Rust compatibility is the
+long-term goal. This development branch starts directly from the stock upstream
+commit in [`upstream/lust.rev`](upstream/lust.rev).
+
+The [native development contract](docs/LUSTR.md) records implementation rules,
+upstream decisions, current limitations and qualification requirements. The
+commands and architecture below are the inherited upstream documentation.
+Full Rust coverage and compiler-wide speed parity remain unproved.
+
+## Build this branch
+
+Build Lustr from this checkout with Rust 1.99.0 and a C build environment:
+
+```sh
+scripts/build-tcc.sh
+cargo +1.99.0 build --release --locked -j1
+./target/release/lust capabilities --json
+```
+
+The native client and compiler retain the upstream names `lust` and `lust-core`.
+Use `lust check`, `lust build`, `lust run` and `lust test` for native development.
+The release downloads and historical measurements in the inherited sections
+below describe upstream Lust. Lustr's comparison gate measures this branch
+against the exact stock revision in `upstream/lust.rev`.
+
+---
+
 <img src="assets/icon.svg" width="64" height="64" alt="Lust logo: a pink crab with a smiling face">
 
 # lust-lang

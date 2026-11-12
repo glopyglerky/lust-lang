@@ -126,6 +126,7 @@ impl<'p> Ctx<'p> {
             return Some(self.splice_method(e, recv, elem, derefs, name_span, args, turbofish));
         }
         if n == "join" || n == "concat" {
+            if !self.alloc_library_linked() { return None; }
             return self.slice_join_concat(e, recv, elem, derefs, name_span, args, n == "join");
         }
         if n == "copy_within" {

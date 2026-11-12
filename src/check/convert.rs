@@ -229,6 +229,9 @@ impl<'p> Ctx<'p> {
         let p = self.p;
         let lang = p.gx.lang;
         let n = p.interner.get(name);
+        if matches!(n, "to_owned" | "clone_into") && !self.alloc_trait_in_scope("ToOwned") {
+            return None;
+        }
         // `clone_into` is the one of these with an argument.
         if n != "clone_into" && !args.is_empty() {
             return None;

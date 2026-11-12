@@ -95,6 +95,12 @@ struct Stamp {
 }
 
 impl PatchBase {
+    /// A prelude/linkage change affects implicit builtin method resolution,
+    /// including bodies which previously had no explicit library import.
+    pub(crate) fn libraries_match(&self, tables: &ResolvedTables) -> bool {
+        self.tables.library_scopes == tables.library_scopes
+    }
+
     /// For `main::census`: the base's resolved tables, when no one else holds them.
     pub(crate) fn tables_mut(&mut self) -> Option<&mut ResolvedTables> {
         Arc::get_mut(&mut self.tables)
@@ -1731,6 +1737,7 @@ fn expand_pure(
         crate_name: Some(crate_name.clone()),
         // No dependency macro expands on this path (a user macro gives up).
         extern_crates: Vec::new(),
+        libraries: base.tables.library_scope(module),
         client: &front.client,
     };
     // Unknown cfg names reject before expansion, as in the resolver.

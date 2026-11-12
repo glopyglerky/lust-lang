@@ -36,8 +36,6 @@ UNPROBED = {
         "borrowck fallback; scripts/agentkit-test.sh needs the unsupported(..) text listed",
     "the `BTreeMap` or `Arc` type where the resolver has no rule for it (a fallback that no known program reaches)":
         "resolver fallback; scripts/agentkit-test.sh needs the names listed",
-    "#[test] fns in a module that a macro writes, in `lust test` (a fallback that no known program reaches)":
-        "testrun guard; a macro-written test module runs (the brace and name checks pass)",
     "dependency crates with no lust adapter or shim yet (named in the message)":
         "needs a Cargo project: tests/crates/adapter-missing covers it",
 }

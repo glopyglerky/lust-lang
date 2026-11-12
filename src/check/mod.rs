@@ -4171,6 +4171,11 @@ impl<'p> Ctx<'p> {
     fn prim_assoc_sig(&mut self, self_ty: Ty, name: Sym, extra: &[Ty]) -> Option<(Builtin, Vec<Ty>, Ty, Vec<Ty>)> {
         use Builtin as B;
         let k = &*self.p.known;
+        if name == k.to_string && !self.alloc_trait_in_scope("ToString")
+            || name == k.to_owned && !self.alloc_trait_in_scope("ToOwned")
+        {
+            return None;
+        }
         // `u64::from(x)` and `map(u64::from)`: std's `From` for a
         // primitive target, as the conversion builtin. The input
         // type is the one extra; its legality is checked where the
@@ -17542,6 +17547,11 @@ impl<'p> Ctx<'p> {
             (_, TyKind::Error) => return ERROR,
             _ => None,
         };
+        let found = found.filter(|_| {
+            (name != k.to_string || self.alloc_trait_in_scope("ToString"))
+                && (name != k.to_owned || self.alloc_trait_in_scope("ToOwned"))
+                && (name != k.to_vec || self.alloc_library_linked())
+        });
         match found {
             Some((b, autoref, params, ret)) => {
                 if autoref != Autoref::None {
@@ -18177,6 +18187,12 @@ impl<'p> Ctx<'p> {
     fn float_method(&mut self, name: Sym, t: Ty, f: FloatTy) -> Option<(Builtin, Autoref, Vec<Ty>, Ty)> {
         use Builtin as B;
         let k = &*self.p.known;
+        if !self.std_library_linked() && matches!(self.name(name),
+            "sqrt" | "floor" | "ceil" | "round" | "trunc" | "fract" | "exp" | "ln" |
+            "log2" | "log10" | "powi" | "powf" | "log" | "mul_add")
+        {
+            return None;
+        }
         let un = |b: Builtin| Some((b, Autoref::None, vec![], t));
         let n = name;
         if n == k.sqrt {
@@ -18368,6 +18384,12 @@ impl<'p> Ctx<'p> {
     fn str_method(&mut self, name: Sym) -> Option<(Builtin, Autoref, Vec<Ty>, Ty)> {
         use Builtin as B;
         let k = &*self.p.known;
+        if !self.alloc_library_linked() && matches!(self.name(name),
+            "to_ascii_lowercase" | "to_ascii_uppercase" | "to_lowercase" | "to_uppercase" |
+            "replace" | "replacen" | "repeat")
+        {
+            return None;
+        }
         let chars = CHARS;
         let opt_str = self.tys.mk_option(REF_STR);
         let bytes = self.tys.intern(TyKind::Slice(int(IntTy::U8)));
@@ -19163,7 +19185,7 @@ impl<'p> Ctx<'p> {
     }
 
     /// `assert_eq!`/`assert_ne!` operand types `a` and `b`: one type with
-    /// PartialEq and Debug, or a String against a `&str`.
+    /// PartialEq and Debug, or one of core's supported cross-type pairs.
     fn assert_eq_types(&mut self, e: ExprId, a: Ty, b: Ty, span: Span, s: Span) {
         if let Some((ld, rd)) = self.mixed_string_eq(a, b) {
             // String against &str: compared as strings, as Rust's PartialEq impls do.
@@ -19180,7 +19202,23 @@ impl<'p> Ctx<'p> {
                 );
             }
         } else {
-            self.mismatch(s, a, b);
+            // Assertion operands are borrowed but not coerced to one type.
+            // Reuse the operator's sequence impl matrix for slice/array/Vec
+            // pairs; same-type assertions keep the existing fast path.
+            let (ld, lb) = self.autoderef(a);
+            let (rd, rb) = self.autoderef(b);
+            if self.seq_cmp(e, BinOp::Eq, a, b, ld, lb, rd, rb, span).is_some() {
+                // Panic formatting still uses each original operand's type.
+                for operand in [a, b] {
+                    let operand = self.deep(operand);
+                    if !has_debug(self.p, &self.tys, operand) {
+                        let tn = self.tn(operand);
+                        self.err("L0112", span, format!("assertion comparison needs Debug, but `{tn}` does not implement it"), "Derive or implement Debug for the element type.");
+                    }
+                }
+            } else {
+                self.mismatch(s, a, b);
+            }
         }
     }
 
