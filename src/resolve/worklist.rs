@@ -1120,6 +1120,9 @@ struct FinalChunk {
     /// What the rewrite read, with each answer then (resolve/mdr.rs): the
     /// chunk stands while those answers do (B3 step 3).
     deps: Option<crate::resolve::mdr::ChunkDeps>,
+    /// Root Adt alternate spellings actually used by this chunk. Restore
+    /// these with a hit; unused root types need no extra name entries.
+    qualified_adts: Vec<(DefId, Sym)>,
 }
 
 impl FinalChunk {
@@ -1142,6 +1145,7 @@ impl FinalChunk {
             scan_bodies: self.scan_bodies.clone(),
             nested_bodies: self.nested_bodies.clone(),
             deps: if deps { self.deps.clone() } else { None },
+            qualified_adts: self.qualified_adts.clone(),
         }
     }
 }
@@ -4085,6 +4089,7 @@ fn resolve_one(
     // mutably. A work whose final chunk is cached is skipped.
     let rewritten = final_hits.iter().filter(|h| h.is_none()).count();
     let mut rw_reads: Vec<Option<crate::resolve::mdr::FileReads>> = vec![None; works.len()];
+    let mut rw_qualified: FxMap<usize, Vec<(DefId, Sym)>> = FxMap::default();
     let rw_diags: Vec<Diag> = {
         let tables: &ResolvedTables = tables;
         let cells: Vec<(usize, std::sync::Mutex<&mut FileWork>)> = works
@@ -4107,16 +4112,20 @@ fn resolve_one(
                 gen_params: Vec::new(),
                 std_splice_lo: input.std_splice_lo,
                 gen_floor: 0,
+                qualified_adts: Some(Vec::new()),
             };
             crate::resolve::mdr::begin();
             rw.file_items(&mut w.ast, *fi, module, &[]);
-            (*fi, rw.diags, crate::resolve::mdr::end())
+            (*fi, rw.diags, crate::resolve::mdr::end(), rw.qualified_adts.unwrap())
         });
         crate::resolve::mdr::recording(false);
         let mut diags = Vec::new();
-        for (fi, d, reads) in per_work {
+        for (fi, d, reads, qualified) in per_work {
             diags.extend(d);
             rw_reads[fi] = reads;
+            if !qualified.is_empty() {
+                rw_qualified.insert(fi, qualified);
+            }
         }
         diags
     };
@@ -4171,6 +4180,7 @@ fn resolve_one(
         structure: Option<u64>,
         scan: Option<crate::driver::ast_hash::AstScans>,
         deps: Option<crate::resolve::mdr::ChunkDeps>,
+        qualified_adts: Vec<(DefId, Sym)>,
     }
     // Module/import structure per file, hashed before flattening drops
     // it: the file path, then its `mod`, `use`, and `extern crate`
@@ -4206,6 +4216,7 @@ fn resolve_one(
     let mut unused: Vec<Ast> = Vec::new();
     for ((fi, mut w), hit) in works.into_iter().enumerate().zip(final_hits) {
         if let Some(c) = hit {
+            register_qualified_adts(tables, &c.qualified_adts);
             unused.push(std::mem::take(&mut w.ast));
             pendings.push(Pending {
                 key: w.key,
@@ -4228,9 +4239,12 @@ fn resolve_one(
                     bodies: c.scan_bodies.into_iter().chain(c.nested_bodies).collect(),
                 }),
                 deps: c.deps,
+                qualified_adts: c.qualified_adts,
             });
             continue;
         }
+        let qualified_adts = rw_qualified.remove(&fi).unwrap_or_default();
+        register_qualified_adts(tables, &qualified_adts);
         let structure = structures[fi];
         let mut flat_items = Vec::new();
         let mut flat_mods: Vec<ModuleId> = Vec::new();
@@ -4288,6 +4302,7 @@ fn resolve_one(
             structure,
             scan: None,
             deps: rw_deps[fi].take(),
+            qualified_adts,
         });
     }
     if !unused.is_empty() {
@@ -4332,6 +4347,7 @@ fn resolve_one(
                 scan_bodies: scan.bodies[..top].to_vec(),
                 nested_bodies: scan.bodies[top..].to_vec(),
                 deps: pd.deps.clone(),
+                qualified_adts: pd.qualified_adts.clone(),
             },
         );
     }
@@ -5150,21 +5166,23 @@ fn record_display(tables: &mut ResolvedTables, input: &OneInput, flat_prefix: &s
     tables.display_names.insert(flat, display);
 }
 
-/// A root Adt keeps its plain declaration name and stable identity, but
-/// a resolved path under a nearer binding needs an unambiguous spelling.
-/// `$` cannot occur in a source identifier, and `crate` cannot name a
-/// user module. Other Adts already have collision-free flat names.
-fn register_qualified_adt(tables: &mut ResolvedTables, def: DefId, flat: Sym, name: Sym, has_ctor: bool, interner: &Interner) {
-    if flat != name {
-        return;
+/// Installs the alternate spellings a completed rewrite actually used,
+/// before checker name indexes are made. These are derived outputs of
+/// rewriting, not inputs to module lookup or its cache fingerprints.
+fn register_qualified_adts(tables: &mut ResolvedTables, aliases: &[(DefId, Sym)]) {
+    for &(def, qualified) in aliases {
+        if tables.qualified_adts.contains_key(&def) {
+            continue;
+        }
+        let flat = tables.def_info[&def].flat;
+        let has_ctor = tables.flat[ns_index(Namespace::Value)].get(&flat) == Some(&def);
+        tables.qualified_adts.insert(def, qualified);
+        tables.flat[ns_index(Namespace::Type)].insert(qualified, def);
+        if has_ctor {
+            tables.flat[ns_index(Namespace::Value)].insert(qualified, def);
+        }
+        tables.display_names.insert(qualified, flat);
     }
-    let qualified = interner.intern(&format!("crate${}", interner.get(name)));
-    tables.qualified_adts.insert(def, qualified);
-    tables.flat[ns_index(Namespace::Type)].insert(qualified, def);
-    if has_ctor {
-        tables.flat[ns_index(Namespace::Value)].insert(qualified, def);
-    }
-    tables.display_names.insert(qualified, name);
 }
 
 /// Step 3 input: registers every defined name in one item list, renames
@@ -5294,7 +5312,6 @@ fn register_items(
                     bind(tables, Namespace::Value, s.name, Target::Def(def), vis());
                 }
                 record_adt(tables, def, flat, module, vis(), &s.fields, interner);
-                register_qualified_adt(tables, def, flat, s.name, has_ctor, interner);
                 s.name = flat;
             }
             ItemKind::Enum(e) => {
@@ -5310,7 +5327,6 @@ fn register_items(
                 tables.def_info.insert(def, DefInfo { kind: ResKind::Adt, flat, module, vis: vis() });
                 tables.variants.insert(def, e.variants.iter().map(|v| v.name).collect());
                 tables.flat[ns_index(Namespace::Type)].insert(flat, def);
-                register_qualified_adt(tables, def, flat, e.name, false, interner);
                 // Enum variant fields have no visibility of their own
                 // in Rust: they take the enum's visibility.
                 for v in &e.variants {
@@ -5814,6 +5830,10 @@ struct Rewrite<'a> {
     /// item being rewritten (a nested fn, const, or static). They still
     /// shadow module items, but a path to one is rustc E0401.
     gen_floor: usize,
+    /// Full rewrites collect only the aliases they use. Frozen body/item
+    /// patches cannot add checker names: None makes a first new alias
+    /// refuse that patch, so the driver performs a full resolve instead.
+    qualified_adts: Option<Vec<(DefId, Sym)>>,
 }
 
 impl Rewrite<'_> {
@@ -6445,11 +6465,24 @@ impl Rewrite<'_> {
     /// preserving the same DefId and declaration. Keep rejecting other
     /// collisions until their checker name indexes support this too.
     fn path_name(&mut self, def: DefId, ns: Namespace, single: bool, span: Span, module: ModuleId, scopes: &[Frame]) -> Option<Sym> {
-        let flat = self.tables.def_info.get(&def)?.flat;
+        let info = self.tables.def_info.get(&def)?;
+        let flat = info.flat;
         if !self.misread(flat, def, ns, single, module, scopes) {
             return Some(flat);
         }
         if let Some(&qualified) = self.tables.qualified_adts.get(&def) {
+            return Some(qualified);
+        }
+        if info.kind == ResKind::Adt && info.module == ROOT_MODULE
+            && let Some(aliases) = &mut self.qualified_adts
+        {
+            if let Some(&(_, qualified)) = aliases.iter().find(|&&(id, _)| id == def) {
+                return Some(qualified);
+            }
+            // The root declaration and DefId stay unchanged. `$` cannot
+            // occur in source identifiers, so this spelling is unambiguous.
+            let qualified = self.interner.intern(&format!("crate${}", self.interner.get(flat)));
+            aliases.push((def, qualified));
             return Some(qualified);
         }
         self.push_misread(span);
@@ -8579,6 +8612,7 @@ pub fn rewrite_fn_body(
         gen_params: Vec::new(),
         std_splice_lo,
         gen_floor: 0,
+        qualified_adts: None,
     };
     if let Some(g) = outer {
         rw.push_params(g);
@@ -8613,6 +8647,7 @@ pub fn rewrite_fn_item(
         gen_params: Vec::new(),
         std_splice_lo,
         gen_floor: 0,
+        qualified_adts: None,
     };
     if let Some(g) = outer {
         rw.push_params(g);
@@ -9121,6 +9156,34 @@ mod tests {
         let out = [true, false].map(|one_shot| resolve_crate_cached(&input, &interner, &known, &mut ResolveCache::new(one_shot)));
         let _ = std::fs::remove_dir_all(&dir);
         out
+    }
+
+    #[test]
+    fn root_adt_aliases_are_demand_driven() {
+        let ordinary = "struct Plain; enum Choice { First } fn main() { let _ = Plain; let _ = Choice::First; }";
+        for resolved in resolve_both_ways(ordinary, "ordinary-root-types") {
+            assert!(resolved.ok().expect("ordinary types resolve").tables.qualified_adts.is_empty());
+        }
+        let captured = "
+            struct Unused;
+            enum Fault { First }
+            mod child {
+                struct Fault;
+                fn value() -> crate::Fault { crate::Fault::First }
+            }
+            fn main() {}
+        ";
+        for resolved in resolve_both_ways(captured, "captured-root-type") {
+            let tables = resolved.ok().expect("captured root type resolves").tables;
+            assert_eq!(tables.qualified_adts.len(), 1, "only the captured definition gains a spelling");
+            let (&def, &name) = tables.qualified_adts.iter().next().unwrap();
+            let info = &tables.def_info[&def];
+            assert_eq!(info.kind, ResKind::Adt);
+            assert_ne!(info.flat, name);
+            assert_eq!(tables.flat[ns_index(Namespace::Type)].get(&info.flat), Some(&def));
+            assert_eq!(tables.flat[ns_index(Namespace::Type)].get(&name), Some(&def));
+            assert_eq!(tables.display_names.get(&name), Some(&info.flat));
+        }
     }
 
     /// Both resolves of `resolve_both_ways` succeed with equal crates: fn

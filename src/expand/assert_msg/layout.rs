@@ -65,6 +65,9 @@ fn comma_list(items: Vec<Doc>) -> Doc {
     group(0, false, parts)
 }
 
+// Keep long-expression layout out of the ordinary flat printer's code and stack frame.
+#[inline(never)]
+#[cold]
 pub(super) fn print(parser: &mut P, expected_flat: &str) -> Option<String> {
     // Expansion can ask for an assertion's text before the main parser
     // checks expression-chain limits. These cold-path budgets bound the

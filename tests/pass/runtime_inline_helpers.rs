@@ -112,7 +112,7 @@ fn main() {
             .collect();
         println!("{}", row.join(" "));
     }
-    let fs = [0.0f32, -0.0, f32::NAN, 2.5];
+    let fs = [0.0f32, -0.0, f32::NAN, 2.5, -2.0, f32::INFINITY, f32::NEG_INFINITY];
     for &x in &fs {
         let row: Vec<String> = fs.iter().map(|&y| format!("{:?} {:?}", black_box(x).min(y), black_box(x).max(y))).collect();
         println!("{}", row.join(" "));

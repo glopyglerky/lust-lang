@@ -74,6 +74,7 @@ jobs:
           "$RUNNER_TEMP/manifest-lints-test"
           python3 scripts/test-native-speed.py
           python3 scripts/test-speed-slice.py
+          python3 scripts/fixture-platforms.py 2>&1 | tee "$RUNNER_TEMP/native-platforms.log"
       - name: Cache pinned tcc
         id: tcc
         uses: actions/cache@v4
@@ -94,13 +95,14 @@ jobs:
           key: cargo-${{ runner.os }}-${{ runner.arch }}-1.99.0-${{ hashFiles('**/Cargo.lock') }}
       - name: Prepare the offline fixture dependencies
         run: bash scripts/fetch-deps.sh
-      - name: Check crate configuration isolation
+      - name: Check crate configuration and root type resolution
         if: matrix.target == 'x86_64-unknown-linux-gnu'
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
           CARGO_PROFILE_TEST_DEBUG: '0'
         run: |
           cargo test --locked --bin lust-core resolve::cfg::tests:: -- --test-threads=1 2>&1 | tee "$RUNNER_TEMP/native-cfg-tests.log"
+          cargo test --locked --bin lust-core resolve::worklist::tests::root_adt_aliases_are_demand_driven -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
       - name: Run the inherited CI gate
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
@@ -119,6 +121,7 @@ jobs:
         with:
           name: native-gate-${{ matrix.target }}-${{ github.sha }}
           path: |
+            ${{ runner.temp }}/native-platforms.log
             ${{ runner.temp }}/native-cfg-tests.log
             ${{ runner.temp }}/native-gate.log
             ${{ runner.temp }}/native-capabilities.log

@@ -513,17 +513,42 @@ static inline int lust_inl_range_bounds_get_(uint64_t len, uint64_t s_tag, uint6
         (void)0;                                                                                       \
     })
 
-/* f64 and f32 min and max as float.c: a NaN loses to a number, and of two equal values
-   (0.0 and -0.0) the second wins. The integer to float casts round to nearest, ties to
-   even, as Rust's `as` (the runtime builds them from integer steps for tcc). */
+/* f64 and f32 min and max as float.c: a NaN loses to a number. AArch64's
+   pinned Rust lowering orders zero ties; other targets keep the second
+   operand. The unequal and NaN paths stay the same. */
+#if defined(__aarch64__)
+static inline double lust_inl_f64_equal_(double a, double b, int maximum) {
+    uint64_t x, y;
+    __builtin_memcpy(&x, &a, sizeof(x));
+    __builtin_memcpy(&y, &b, sizeof(y));
+    x = maximum ? x & y : x | y;
+    __builtin_memcpy(&a, &x, sizeof(a));
+    return a;
+}
+static inline float lust_inl_f32_equal_(float a, float b, int maximum) {
+    uint32_t x, y;
+    __builtin_memcpy(&x, &a, sizeof(x));
+    __builtin_memcpy(&y, &b, sizeof(y));
+    x = maximum ? x & y : x | y;
+    __builtin_memcpy(&a, &x, sizeof(a));
+    return a;
+}
+static inline double lust_inl_f64_min_(double a, double b) { return a < b ? a : b < a ? b : a == b ? lust_inl_f64_equal_(a, b, 0) : a == a ? a : b; }
+static inline double lust_inl_f64_max_(double a, double b) { return a > b ? a : b > a ? b : a == b ? lust_inl_f64_equal_(a, b, 1) : a == a ? a : b; }
+static inline float lust_inl_f32_min_(float a, float b) { return a < b ? a : b < a ? b : a == b ? lust_inl_f32_equal_(a, b, 0) : a == a ? a : b; }
+static inline float lust_inl_f32_max_(float a, float b) { return a > b ? a : b > a ? b : a == b ? lust_inl_f32_equal_(a, b, 1) : a == a ? a : b; }
+#else
 static inline double lust_inl_f64_min_(double a, double b) { return a < b ? a : b < a ? b : a == b ? b : a == a ? a : b; }
 static inline double lust_inl_f64_max_(double a, double b) { return a > b ? a : b > a ? b : a == b ? b : a == a ? a : b; }
 static inline float lust_inl_f32_min_(float a, float b) { return a < b ? a : b < a ? b : a == b ? b : a == a ? a : b; }
 static inline float lust_inl_f32_max_(float a, float b) { return a > b ? a : b > a ? b : a == b ? b : a == a ? a : b; }
+#endif
 #define lust_f64_min(a, b) lust_inl_f64_min_((a), (b))
 #define lust_f64_max(a, b) lust_inl_f64_max_((a), (b))
 #define lust_f32_min(a, b) lust_inl_f32_min_((a), (b))
 #define lust_f32_max(a, b) lust_inl_f32_max_((a), (b))
+/* Integer to float casts round to nearest, ties to even, as Rust's `as`
+   (the runtime builds them from integer steps for tcc). */
 #define lust_u64_to_f64(v) ((double)(uint64_t)(v))
 #define lust_i64_to_f64(v) ((double)(int64_t)(v))
 #endif

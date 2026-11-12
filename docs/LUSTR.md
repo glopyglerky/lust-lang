@@ -7,7 +7,7 @@ compiler pipeline. Full Rust compatibility is the long-term goal.
 
 ## Extension rules
 
-- Preserve every accepted upstream program and its checked semantics.
+- Preserve upstream's valid accepted programs and Rust-compatible behavior.
 - Implement missing behavior in the stage that already owns it. Keep the
   existing body, item and generic reuse paths active for unchanged inputs.
 - Allocate extension state only where the new construct requires it. Track

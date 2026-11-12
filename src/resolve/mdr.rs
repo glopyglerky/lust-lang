@@ -229,9 +229,8 @@ fn def_record(t: &ResolvedTables, h: &mut FxHasher, d: &crate::def::DefId) {
     if let Some(info) = t.def_info.get(d) {
         (info.kind as u8, info.flat.0, info.module.0).hash(h);
         hash_vis(h, &info.vis);
-        if info.kind == crate::resolve::imports::ResKind::Adt {
-            t.qualified_adts.get(d).hash(h);
-        }
+        // A root Adt's alternate spelling is derived from its kind and
+        // flat name only when rewrite needs it; it is not a lookup input.
     }
     t.variants.get(d).hash(h);
     if let Some(m) = t.assoc_vis.get(d) {

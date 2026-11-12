@@ -928,6 +928,9 @@ fn find_body_edit(front: &Front, text: &str, edit: Edit) -> Result<NewBody, &'st
             }
         })
         .ok_or_else(|| outside_fn_reason(ast, file, a, b))?;
+    if body_uses_qualified_adt(front, base, fn_index) {
+        return Err("body: root type spelling");
+    }
     let def = fn_def_at(ast, item, sub);
     let rpit = def.ret.is_some_and(|t| matches!(ast.ty(t), TyExpr::ImplTrait { .. })).then(|| super::ast_hash::body_scan(ast, def, None).0);
     if !matches!(ast.items[item].kind, ItemKind::Fn(_) | ItemKind::Impl(_)) {
@@ -1042,6 +1045,20 @@ fn find_body_edit(front: &Front, text: &str, edit: Edit) -> Result<NewBody, &'st
         && plain_body(&hoisted, &front.interner);
     let SameItems { items, impls, is_impl, .. } = same;
     Ok(NewBody { fn_index, item, sub, old_body: (span.lo, span.hi), body_ast, body, exprs, pats, plain, old_exprs: def.exprs, items, impls, is_impl, hoisted: impl_fns, sig, nested, rpit })
+}
+
+/// Removing the last use of an alternate root-type spelling must remove
+/// its table entry too. Frozen patches do not edit those tables, so only
+/// edits to a body that already uses one resolve in full. The existing
+/// post-rewrite identifier scan answers without walking the old Ast.
+fn body_uses_qualified_adt(front: &Front, base: &PatchBase, fn_index: usize) -> bool {
+    if base.tables.qualified_adts.is_empty() {
+        return false;
+    }
+    let Some(names) = front.chunks.first().and_then(|c| c.scan.body_idents.get(fn_index)) else {
+        return true;
+    };
+    base.tables.qualified_adts.values().any(|name| names.binary_search(name).is_ok())
 }
 
 /// The byte range of one top-level fn or method: from its first token
@@ -1204,6 +1221,18 @@ fn find_item_edit(front: &Front, text: &str, edit: Edit) -> Result<NewItem, Opti
         return Err(Some("item: body impl"));
     }
     let def = fn_def_at(ast, item, sub);
+    if !base.tables.qualified_adts.is_empty() {
+        if body_uses_qualified_adt(front, base, fn_index) {
+            return Err(Some("item: root type spelling"));
+        }
+        // An item edit can remove a spelling from its signature while
+        // leaving its body unchanged. Header names are needed only here;
+        // ordinary crates keep the original patch path.
+        let names = super::ast_hash::fn_head_idents(ast, def);
+        if base.tables.qualified_adts.values().any(|name| names.contains(name)) {
+            return Err(Some("item: root type spelling"));
+        }
+    }
     // The outline holds the qualifiers, so the new fn is const too.
     let full = def.qual.is_const || matches!(&ast.items[item].kind, ItemKind::Impl(imp) if imp.trait_ref.is_some());
     // Body items in the old fn: the header edit keeps them when the body's

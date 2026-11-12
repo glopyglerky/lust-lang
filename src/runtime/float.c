@@ -1532,31 +1532,49 @@ float lust_f32_powi(float a, int32_t e) {
     return e < 0 ? 1.0f / r : r;
 }
 
-/* f64::min and f64::max: a NaN operand yields the other operand,
-   and equal operands yield the second one (so the zero sign of the
-   second operand wins). */
+/* f64::min and f64::max: a NaN operand yields the other operand.
+   Rust permits either equal operand, including opposite signed zeros.
+   Match the pinned native lowering: AArch64 orders zero ties, while
+   other targets retain the second operand. Equal nonzero values have
+   identical bits, so OR/AND changes only an opposite-zero tie. */
 double lust_f64_min(double a, double b) {
     if (a < b) return a;
     if (b < a) return b;
+#if defined(__aarch64__)
+    if (a == b) return lust_f64_from_bits(lust_f64_bits(a) | lust_f64_bits(b));
+#else
     if (a == b) return b;
+#endif
     return a == a ? a : b;
 }
 double lust_f64_max(double a, double b) {
     if (a > b) return a;
     if (b > a) return b;
+#if defined(__aarch64__)
+    if (a == b) return lust_f64_from_bits(lust_f64_bits(a) & lust_f64_bits(b));
+#else
     if (a == b) return b;
+#endif
     return a == a ? a : b;
 }
 float lust_f32_min(float a, float b) {
     if (a < b) return a;
     if (b < a) return b;
+#if defined(__aarch64__)
+    if (a == b) return lust_f32_from_bits(lust_f32_bits(a) | lust_f32_bits(b));
+#else
     if (a == b) return b;
+#endif
     return a == a ? a : b;
 }
 float lust_f32_max(float a, float b) {
     if (a > b) return a;
     if (b > a) return b;
+#if defined(__aarch64__)
+    if (a == b) return lust_f32_from_bits(lust_f32_bits(a) & lust_f32_bits(b));
+#else
     if (a == b) return b;
+#endif
     return a == a ? a : b;
 }
 

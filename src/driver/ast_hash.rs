@@ -210,6 +210,15 @@ pub(crate) fn fn_head_hash(ast: &Ast, f: &FnDef) -> u64 {
     h.finish()
 }
 
+/// Identifiers in one fn's header. Used only when an item patch must
+/// prove it cannot remove a lazily installed root-type spelling.
+pub(crate) fn fn_head_idents(ast: &Ast, f: &FnDef) -> Vec<Sym> {
+    let mut idents = Vec::new();
+    let mut w = Walker { ast, idents: Some(&mut idents), inner: None, quals: None, muted: 0, calls_only: false, bare: Vec::new(), ctxts: Vec::new() };
+    w.fn_head(&mut FxHasher::default(), f, false);
+    idents
+}
+
 /// The body hash and sorted identifier set of one fn. `inner`, when set,
 /// gains the body items inside it.
 /// The content hash (header and bodies) of one top-level item, from its

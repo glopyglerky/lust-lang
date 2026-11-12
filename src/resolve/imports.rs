@@ -298,7 +298,8 @@ pub struct ResolvedTables {
     /// Their declarations and stable DefIds keep the usual flat name;
     /// a resolved path uses this spelling only when that name would be
     /// captured by a nearer binding. The flat indexes contain the same
-    /// DefId for both spellings, before parallel rewrite or body patches.
+    /// DefId for both spellings. Full rewrite creates them on demand;
+    /// a frozen body/item patch may reuse only already installed names.
     pub qualified_adts: FxMap<DefId, Sym>,
     /// The defining module of each flattened fn, in LocalDefId order.
     pub fn_module: Vec<ModuleId>,
