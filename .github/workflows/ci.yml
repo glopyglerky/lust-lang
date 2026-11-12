@@ -99,7 +99,8 @@ jobs:
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
           CARGO_PROFILE_TEST_DEBUG: '0'
-        run: cargo test --locked --bin lust-core resolve::cfg::tests:: -- --test-threads=1 2>&1 | tee "$RUNNER_TEMP/native-cfg-tests.log"
+        run: |
+          cargo test --locked --bin lust-core resolve::cfg::tests:: -- --test-threads=1 2>&1 | tee "$RUNNER_TEMP/native-cfg-tests.log"
       - name: Run the inherited CI gate
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
