@@ -1,8 +1,0 @@
-[package]
-name = "mixed-abi-contract"
-version = "0.0.0"
-edition = "2024"
-publish = false
-
-[lib]
-doctest = false

@@ -1,0 +1,26 @@
+{
+  "schema": "lust.fixture-platforms.v1",
+  "fixtures": [
+    {
+      "file": "tests/pass/io_is_terminal_file_ext.rs",
+      "sha256": "f880ba5cafa066e227e5539e91446c3fb0e89f8313238157330bcebecf14d762",
+      "target_os": ["linux"],
+      "requires": "std::os::linux::net::SocketAddrExt",
+      "reason": "Exercises Linux abstract Unix socket addresses."
+    },
+    {
+      "file": "tests/pass/std_bytestr_debug_forms.rs",
+      "sha256": "270aa0c986541c76760a0399ab7e263d5138e384d11dccbe9b5697cfa67ec39f",
+      "target_os": ["linux"],
+      "requires": "std::os::linux::net::SocketAddrExt",
+      "reason": "Formats Linux abstract Unix socket addresses."
+    },
+    {
+      "file": "tests/pass/std_unix_net.rs",
+      "sha256": "9d05e9fdf431d1827d3c0b00e66908e2d545606912c4eddba1ec624c39648bd7",
+      "target_os": ["linux"],
+      "requires": "std::os::linux::net::SocketAddrExt",
+      "reason": "Binds and connects Linux abstract Unix sockets."
+    }
+  ]
+}

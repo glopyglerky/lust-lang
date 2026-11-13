@@ -1,4 +1,0 @@
-[workspace]
-members = ["app", "contract", "provider"]
-default-members = ["app"]
-resolver = "3"

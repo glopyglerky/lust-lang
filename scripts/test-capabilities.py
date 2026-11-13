@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""Keeps `lust capabilities` true: runs the probes in tests/capabilities/.
+
+Each probe names the capability lines it shows, then what lust must do:
+
+    // capability: <section>: <line text, exactly as `lust capabilities --json` prints it>
+    // expect: ok | L####
+    // command: test        (optional; default `run` for ok, `check` for a code)
+
+`ok` means the command exits 0 (the supported probes assert their own results and
+print them, so a sweep can compare them with rustc). `L####` means lust reports that
+code; for a rejected line it must be the line's own code. The test fails when:
+  - a probe names a line the list does not have (the line changed or went away),
+  - a supported probe does not run or a rejected probe is not rejected with its code,
+  - a line in a checked section has no probe and is not in UNPROBED.
+
+Usage: scripts/test-capabilities.py [lust binary]   (default target/release/lust)
+"""
+import json
+import os
+import pathlib
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from concurrent.futures import ThreadPoolExecutor
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+PROBES = ROOT / "tests" / "capabilities"
+SECTIONS = ["items", "types", "attributes", "derives", "control_flow", "patterns", "expressions", "rejected"]
+
+# Rejected lines with no single-file probe, and why. Keep this list short.
+UNPROBED = {
+    "moving a field out of a struct or enum (a fallback that no known program reaches)":
+        "borrowck fallback; scripts/agentkit-test.sh needs the unsupported(..) text listed",
+    "the `BTreeMap` or `Arc` type where the resolver has no rule for it (a fallback that no known program reaches)":
+        "resolver fallback; scripts/agentkit-test.sh needs the names listed",
+    "dependency crates with no lust adapter or shim yet (named in the message)":
+        "needs a Cargo project: tests/crates/adapter-missing covers it",
+}
+
+
+def lines_of(cap):
+    out = {}
+    for s in SECTIONS:
+        out[s] = {r["feature"]: r["code"] for r in cap[s]} if s == "rejected" else {l: None for l in cap[s]}
+    return out
+
+
+def parse(path):
+    caps, expect, command = [], None, None
+    for line in path.read_text().splitlines():
+        if not line.startswith("//"):
+            break
+        if m := re.match(r"// capability: (\w+): (.*)$", line):
+            caps.append((m.group(1), m.group(2)))
+        elif m := re.match(r"// expect: (ok|L\d{4})$", line):
+            expect = m.group(1)
+        elif m := re.match(r"// command: (\w+)$", line):
+            command = m.group(1)
+    return caps, expect, command
+
+
+def run_probe(lust, work, path, expect, command):
+    """Runs one probe from `work`, a copy of tests/capabilities: `lust run` can leave a
+    binary next to the source, and that must not land in the tree."""
+    command = command or ("run" if expect == "ok" else "check")
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            p = subprocess.run([lust, command, path.name], cwd=work, env=dict(os.environ, LUST_NO_DAEMON="1", TMPDIR=tmp),
+                               capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            return "timed out"
+    err = p.stderr + p.stdout
+    if expect == "ok":
+        return None if p.returncode == 0 else f"`lust {command}` exited {p.returncode}: {first_error(err)}"
+    if p.returncode == 0:
+        return f"`lust {command}` accepted it (expected {expect})"
+    if f"[{expect}]" not in err:
+        return f"expected {expect}, got: {first_error(err)}"
+    return None
+
+
+def first_error(text):
+    for line in text.splitlines():
+        if "error" in line:
+            return line.strip()
+    return text.strip().splitlines()[0] if text.strip() else "(no output)"
+
+
+def main():
+    lust = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "target" / "release" / "lust")
+    lust = str(pathlib.Path(shutil.which(lust) or lust).resolve())
+    cap = json.loads(subprocess.run([lust, "capabilities", "--json"], capture_output=True, text=True, check=True).stdout)
+    lines = lines_of(cap)
+    fails = []
+    covered = set()
+    jobs = []
+    for path in sorted(PROBES.glob("*.rs")):
+        caps, expect, command = parse(path)
+        if not caps or expect is None:
+            fails.append(f"{path.name}: needs `// capability:` and `// expect:` header lines")
+            continue
+        for section, text in caps:
+            if section not in lines:
+                fails.append(f"{path.name}: unknown section `{section}`")
+            elif text not in lines[section]:
+                fails.append(f"{path.name}: `lust capabilities` has no {section} line `{text}`")
+            elif section == "rejected" and lines[section][text] != expect:
+                fails.append(f"{path.name}: the rejected line has code {lines[section][text]}, the probe expects {expect}")
+            elif (section == "rejected") != (expect != "ok"):
+                fails.append(f"{path.name}: a {section} line needs expect {'a code' if section == 'rejected' else 'ok'}")
+            else:
+                covered.add((section, text))
+        jobs.append((path, expect, command))
+    for text in UNPROBED:
+        if text not in lines["rejected"]:
+            fails.append(f"UNPROBED names a line the rejected list does not have: `{text}`")
+        covered.add(("rejected", text))
+    for section in SECTIONS:
+        for text in lines[section]:
+            if (section, text) not in covered:
+                fails.append(f"{section} line has no probe in tests/capabilities/: `{text}`")
+    with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(max_workers=min(16, os.cpu_count() or 4)) as pool:
+        work = pathlib.Path(tmp) / "capabilities"
+        shutil.copytree(PROBES, work)
+        results = pool.map(lambda j: (j[0], run_probe(lust, work, *j)), jobs)
+        fails += [f"{path.name}: {why}" for path, why in results if why]
+    for f in fails:
+        print(f"FAIL {f}")
+    print(f"test-capabilities: {len(jobs)} probes, {len(covered)} lines, {len(fails)} failed")
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

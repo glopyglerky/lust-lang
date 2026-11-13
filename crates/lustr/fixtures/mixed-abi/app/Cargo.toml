@@ -1,9 +1,0 @@
-[package]
-name = "mixed-abi-app"
-version = "0.0.0"
-edition = "2024"
-publish = false
-
-[dependencies]
-mixed-abi-contract = { path = "../contract" }
-mixed-abi-provider = { path = "../provider" }
