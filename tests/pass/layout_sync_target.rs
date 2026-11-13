@@ -29,14 +29,13 @@ const BARRIER: usize = 48;
 #[cfg(not(target_os = "macos"))]
 const BARRIER: usize = 40;
 
-enum Empty {}
 struct Buffer {
     bytes: [u8; size_of::<Condvar>()],
 }
 
 fn mutex_bytes() -> [u8; size_of::<Mutex<()>>()] { [0; MUTEX] }
 fn rwlock_bytes() -> [u8; size_of::<RwLock<()>>()] { [0; RWLOCK] }
-fn once_bytes() -> [u8; size_of::<OnceLock<Empty>>()] { [0; ONCE] }
+fn once_bytes() -> [u8; size_of::<OnceLock<()>>()] { [0; ONCE] }
 fn alignment_bytes() -> [u8; align_of::<RwLock<()>>()] { [0; ALIGN] }
 fn barrier_bytes() -> [u8; size_of::<Barrier>()] { [0; BARRIER] }
 

@@ -105,6 +105,7 @@ jobs:
           cargo test --locked --bin lust-core resolve::worklist::tests::root_adt_aliases_are_demand_driven -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
           cargo test --locked --bin lust-core ty::tests::sync_layout_follows_the_type_pool_target -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
       - name: Build the native compiler
+        id: native_build
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
         run: cargo build --release --locked -j1 -vv 2>&1 | tee "$RUNNER_TEMP/native-build.log"
@@ -126,12 +127,18 @@ jobs:
             ${{ runner.temp }}/native-build/*.tar.gz.sha256
           if-no-files-found: error
       - name: Check target-dependent sync layouts
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
-          for target in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu x86_64-apple-darwin aarch64-apple-darwin; do
-            printf 'Checking target %s\n' "$target"
-            target/release/lust check tests/pass/layout_sync_target.rs --target "$target"
-          done 2>&1 | tee "$RUNNER_TEMP/native-target-layouts.log"
+          {
+            failed=0
+            for target in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu x86_64-apple-darwin aarch64-apple-darwin; do
+              printf 'Checking target %s\n' "$target"
+              target/release/lust check tests/pass/layout_sync_target.rs --target "$target" || failed=1
+            done
+            test "$failed" -eq 0
+          } 2>&1 | tee "$RUNNER_TEMP/native-target-layouts.log"
       - name: Check retained root type identity
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         env:
           LUST_CHECK_RESOLVE: '1'
           LUST_CHECK_ITEMPATCH: '1'
@@ -152,7 +159,7 @@ jobs:
                       raise SystemExit(f'{scenario}: no retained {prefix} checks recorded')
           PY
       - name: Check macOS regression cases
-        if: runner.os == 'macOS'
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' && runner.os == 'macOS' }}
         env:
           DIFFTEST_RUSTC_CACHE: 'off'
         run: |
@@ -169,12 +176,17 @@ jobs:
               raise SystemExit('compiler main stack differs from the worker stack budget')
           print('compiler main stack: 256 MiB')
           PY
-          for fixture in builtin_std_layouts layout_cells_locks uninhabited_cell_layouts layout_sync_host deep_chain_one_fn deep_const_chain deep_method_chain fs_permissions_ext std_fs_file std_hash_eq_clone_forms std_process_command std_unix_process_ext unix_command_arg0_fd; do
-            printf 'Checking %s\n' "$fixture"
-            bash scripts/difftest.sh "$fixture"
-          done 2>&1 | tee "$RUNNER_TEMP/native-macos-regressions.log"
+          {
+            failed=0
+            for fixture in builtin_std_layouts layout_cells_locks uninhabited_cell_layouts layout_sync_host deep_chain_one_fn deep_const_chain deep_method_chain fs_permissions_ext std_fs_file std_hash_eq_clone_forms std_process_command std_unix_process_ext unix_command_arg0_fd; do
+              printf 'Checking %s\n' "$fixture"
+              bash scripts/difftest.sh "$fixture" || failed=1
+            done
+            test "$failed" -eq 0
+          } 2>&1 | tee "$RUNNER_TEMP/native-macos-regressions.log"
       - name: Run the inherited CI gate
         id: native_gate
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
         run: bash scripts/ci.sh 2>&1 | tee "$RUNNER_TEMP/native-gate.log"
@@ -187,10 +199,13 @@ jobs:
         run: |
           PS4='+${EPOCHREALTIME} ' bash -x scripts/difftest.sh unicode_props_hash 2>&1 | tee "$RUNNER_TEMP/native-unicode-sanitizer.log"
       - name: Check the capability declarations
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: python3 scripts/test-capabilities.py target/release/lust 2>&1 | tee "$RUNNER_TEMP/native-capabilities.log"
       - name: Compare native test results with Rust
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: bash scripts/testtest.sh 2>&1 | tee "$RUNNER_TEMP/native-test-command.log"
       - name: Exercise macros through the native compiler
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         env:
           LUST: ${{ github.workspace }}/target/release/lust
           LUST_STRICT: '1'

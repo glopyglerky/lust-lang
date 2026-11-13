@@ -1574,6 +1574,22 @@ generic args, inline `const { ... }` blocks, and
 of them. It is bounded, and anything outside the bound is
 `L0630`. A general const interpreter stays out of scope.
 
+Array lengths in signatures resolve before user ADT field shapes are
+available. When scalar evaluation cannot resolve a direct `core::mem`
+or `std::mem` `size_of::<T>()` or `align_of::<T>()` call, including a
+resolved import or rename, the early fallback accepts unit, scalar
+types, arrays, tuples and references or raw pointers whose components
+all belong to this recursively Sized grammar. Its additional closed
+types are `Condvar`, `Barrier`, `Mutex<()>`, `RwLock<()>` and
+`OnceLock<()>`. The exact answer comes from the shared target-aware
+layout engine. A checked conservative size bound rejects aggregates
+that might overflow before layout; the current native model is 64-bit.
+The walk memoizes types and permits at most 4,096 visits and 128 nested
+edges. User ADTs, other builtins, unsized pointees, generic-dependent
+queries, arithmetic around the call and queries beyond these bounds
+retain the original `L0110` rejection. This early grammar does not
+change the later evaluator's layout coverage.
+
 Supported forms, which are the forms ts-rust uses:
 
 - Literals, arithmetic and comparisons on ints, bools, and

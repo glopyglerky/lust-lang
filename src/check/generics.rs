@@ -2783,6 +2783,166 @@ pub(crate) fn resolve_const_arg(
     }
 }
 
+/// A direct layout query in an array signature, after scalar evaluation
+/// has failed. Resolved std imports have canonical paths; a bare name
+/// could name a user function and does not enter this fallback.
+#[cold]
+#[inline(never)]
+fn resolve_layout_array_len(
+    ast: &Ast,
+    interner: &Interner,
+    known: &Known,
+    cx: &ResolveCx,
+    tys: &mut impl TyIntern,
+    scope: &Scope,
+    e: ast::ExprId,
+) -> Option<ConstId> {
+    let ast::Expr::Call { callee, args } = ast.expr(e) else { return None };
+    if !args.is_empty() {
+        return None;
+    }
+    let ast::Expr::Path(segs) = ast.expr(*callee) else { return None };
+    let [root, module, item] = segs.as_slice() else { return None };
+    if !matches!(interner.get(root.name), "std" | "core")
+        || interner.get(module.name) != "mem"
+        || root.has_args()
+        || module.has_args()
+    {
+        return None;
+    }
+    let align = match interner.get(item.name) {
+        "size_of" => false,
+        "align_of" => true,
+        _ => return None,
+    };
+    let GenericArgs::Angle(args) = &item.args else { return None };
+    let [AstArg::Type(written)] = args.as_slice() else { return None };
+    // A partial path through a type named `std` or `core` can retain
+    // three segments. It does not name the standard library.
+    if cx.type_names.contains_key(&root.name)
+        || cx.aliases.contains_key(&root.name)
+        || cx.generic_aliases.contains_key(&root.name)
+        || cx.trait_names.contains_key(&root.name)
+        || scope.local_types.iter().any(|x| x.0 == root.name)
+        || scope.local_aliases.iter().any(|x| x.0 == root.name)
+        || scope.local_traits.iter().any(|x| x.0 == root.name)
+    {
+        return None;
+    }
+    // Generic const operations stay rejected even when a monomorphic
+    // body scope already substitutes the written parameter's value.
+    let mut params: Vec<Sym> = scope.type_params.iter().map(|x| x.0)
+        .chain(scope.param_tys.iter().map(|x| x.0))
+        .chain(scope.const_params.iter().map(|x| x.0))
+        .chain(scope.const_values.iter().map(|x| x.0))
+        .chain(scope.outer_params.iter().copied())
+        .collect();
+    if scope.self_ty.is_some() && scope.self_name.is_none() {
+        params.push(known.self_type);
+    }
+    if crate::check::collect::expr_names_param(ast, e, &params)
+        || names_lifetime_beyond_static_refs(ast, interner, *written)
+    {
+        return None;
+    }
+    let t = resolve_scoped(ast, interner, known, cx, tys, *written, scope).ok()?;
+    let flags = tys.flags(t);
+    if flags.contains_param() || flags.contains_projection() || flags.contains_infer() {
+        return None;
+    }
+    // User shapes and general builtin well-formedness are not available
+    // here. Admit only recursively Sized structural types and the closed
+    // sync types below. In particular, a pointer does not hide an
+    // unsupported or unsized pointee from this early grammar.
+    #[derive(Clone, Copy)]
+    struct Bound {
+        bytes: u64,
+        align: u64,
+        height: usize,
+    }
+    // Prove a conservative size bound before entering the shared layout
+    // engine: its tuple placement assumes that field sums cannot overflow.
+    // This is not a second layout algorithm; field ordering and the exact
+    // result still come from that engine. Aliases can form a shared DAG,
+    // so memoize types and bound both visits and recursion.
+    fn bounded(
+        tys: &impl TyIntern,
+        t: Ty,
+        seen: &mut FxMap<Ty, Option<Bound>>,
+        left: &mut usize,
+        depth: usize,
+        limit: u64,
+    ) -> Option<Bound> {
+        if *left == 0 || depth > 128 {
+            return None;
+        }
+        *left -= 1;
+        if let Some(&b) = seen.get(&t) {
+            // A shallow visit must not allow the same subtree to pass
+            // when a later path places it beyond the recursion bound.
+            return b.filter(|b| depth + b.height <= 128);
+        }
+        // A cycle is outside this early grammar too.
+        seen.insert(t, None);
+        let leaf = || {
+            let l = crate::check::collect::layout_without_adt_fields(tys, t)?;
+            Some(Bound { bytes: l.size, align: l.align, height: 0 })
+        };
+        let b = match tys.kind(t) {
+            TyKind::Unit | TyKind::Bool | TyKind::Char | TyKind::Int(_) | TyKind::Float(_) => leaf()?,
+            TyKind::Ref(_, _, e) | TyKind::RawPtr(_, e) => {
+                let e = bounded(tys, e, seen, left, depth + 1, limit)?;
+                Bound { height: e.height + 1, ..leaf()? }
+            }
+            TyKind::Array(e, n) => {
+                let e = bounded(tys, e, seen, left, depth + 1, limit)?;
+                let ConstKind::Int(n) = tys.const_kind(n) else { return None };
+                let n = u64::try_from(n).ok()?;
+                Bound { bytes: e.bytes.checked_mul(n)?, align: e.align, height: e.height + 1 }
+            }
+            TyKind::Tuple(ts) => {
+                let mut bytes = 0u64;
+                let mut align = 1;
+                let mut height = 0;
+                for &e in tys.tys_of(ts) {
+                    let e = bounded(tys, e, seen, left, depth + 1, limit)?;
+                    // Every ordering adds at most align-1 bytes before
+                    // a field, and at most max_align-1 after the last.
+                    bytes = bytes.checked_add(e.bytes)?.checked_add(e.align - 1)?;
+                    if bytes > limit {
+                        return None;
+                    }
+                    align = align.max(e.align);
+                    height = height.max(e.height + 1);
+                }
+                Bound { bytes: bytes.checked_add(align - 1)?, align, height }
+            }
+            TyKind::Adt(_, args) => {
+                use crate::ty::sync::SyncTy;
+                match tys.builtin_of(t) {
+                    Some(BuiltinTy::Sync(SyncTy::Condvar | SyncTy::Barrier)) if tys.args(args).is_empty() => leaf()?,
+                    Some(BuiltinTy::Sync(SyncTy::Mutex | SyncTy::RwLock | SyncTy::OnceLock))
+                        if matches!(tys.args(args), [GenericArg::Ty(e)] if *e == UNIT) => leaf()?,
+                    _ => return None,
+                }
+            }
+            _ => return None,
+        };
+        if b.bytes > limit || depth + b.height > 128 {
+            return None;
+        }
+        seen.insert(t, Some(b));
+        Some(b)
+    }
+    // Use the shared engine's isize model, not the compiler host's usize.
+    // Native layout support currently covers 64-bit targets.
+    let max_size = (1u64 << (IntTy::Isize.bits() - 1)) - 1;
+    bounded(tys, t, &mut FxMap::default(), &mut 4096, 0, max_size)?;
+    let layout = crate::check::collect::layout_without_adt_fields(tys, t)?;
+    let value = if align { layout.align } else { layout.size };
+    Some(tys.intern_const(ConstKind::Int(value as u128)))
+}
+
 /// The type of a const generic value or of an array length: an
 /// integer type, `bool`, or `char` (rustc allows no other const
 /// param type).
@@ -3540,7 +3700,8 @@ pub fn resolve_scoped(
         }
         TyExpr::Array { inner, len } => {
             let e = resolve_scoped(ast, interner, known, cx, tys, *inner, scope)?;
-            let n = resolve_const_arg(ast, interner, known, tys, scope, *len, span)?;
+            let n = resolve_const_arg(ast, interner, known, tys, scope, *len, span)
+                .or_else(|d| resolve_layout_array_len(ast, interner, known, cx, tys, scope, *len).ok_or(d))?;
             check_const_expr_ty(ast, interner, known, cx, tys, scope, *len, n, ConstScalar::Int(IntTy::Usize), span, "this array length")?;
             Ok(tys.intern(TyKind::Array(e, n)))
         }

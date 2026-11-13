@@ -1933,14 +1933,21 @@ fn eval_len_layout_query(
         return None;
     }
     let t = resolve_ty(ast, interner, known, type_names, aliases, tys, targs[0], None).ok()?;
+    let l = layout_without_adt_fields(tys, t)?;
+    Some(if name == "align_of" { l.align as u128 } else { l.size as u128 })
+}
+
+/// The early layout grammar, before user Adt field shapes are collected.
+/// Builtin types, tuples, and arrays use the same target-aware engine as
+/// later layout queries. A query needing a user Adt shape still rejects.
+pub(super) fn layout_without_adt_fields(tys: &impl TyIntern, t: Ty) -> Option<crate::ty::layout::Layout> {
     struct NoShapes;
     impl crate::ty::layout::AdtShapes for NoShapes {
         fn adt_shape(&self, _id: AdtId) -> Option<crate::ty::layout::AdtShape> {
             None
         }
     }
-    let l = crate::ty::layout::layout_of_ty(tys, &NoShapes, t).ok()?;
-    Some(if name == "align_of" { l.align as u128 } else { l.size as u128 })
+    crate::ty::layout::layout_of_ty(tys, &NoShapes, t).ok()
 }
 
 pub fn parse_float_literal(text: &str) -> Option<(u64, Option<FloatTy>)> {
@@ -6109,7 +6116,7 @@ enum PendingState {
 /// associated item (`T::V`), or `Self::X`. A missed shape only
 /// keeps the eager evaluation (and its reject), never a wrong
 /// value.
-fn expr_names_param(ast: &Ast, e: ast::ExprId, names: &[Sym]) -> bool {
+pub(super) fn expr_names_param(ast: &Ast, e: ast::ExprId, names: &[Sym]) -> bool {
     use ast::Expr;
     let go = |x: ast::ExprId| expr_names_param(ast, x, names);
     match ast.expr(e) {
