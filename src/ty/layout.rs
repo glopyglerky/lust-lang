@@ -14,7 +14,7 @@ use super::iter::IterKind;
 use super::sync::SyncTy;
 use super::{AdtId, BuiltinTy, FloatTy, IntTy, Ty, TyIntern, TyKind};
 
-/// Rust 1.99's sync backing fields on Linux and Darwin.
+/// Rust 1.99's sync backing fields on Linux, Darwin and Windows.
 /// Other targets retain the existing futex layout assumptions.
 /// This follows the compiled program's target, not the compiler host.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
@@ -22,17 +22,19 @@ pub enum SyncLayout {
     #[default]
     Futex,
     Darwin,
+    Windows,
 }
 
 impl SyncLayout {
     pub fn host() -> Self {
-        if cfg!(target_os = "macos") { Self::Darwin } else { Self::Futex }
+        if cfg!(target_os = "macos") { Self::Darwin } else if cfg!(target_os = "windows") { Self::Windows } else { Self::Futex }
     }
 
     pub fn for_target(triple: &str) -> Self {
         match triple {
             "" => Self::host(),
             "x86_64-apple-darwin" | "aarch64-apple-darwin" => Self::Darwin,
+            "x86_64-pc-windows-msvc" | "aarch64-pc-windows-msvc" | "x86_64-pc-windows-gnu" => Self::Windows,
             _ => Self::Futex,
         }
     }
@@ -208,8 +210,24 @@ pub fn disc_kind_code(it: IntTy) -> u8 {
     }
 }
 
-fn align_up(v: u64, align: u64) -> u64 {
-    if align <= 1 { v } else { v.div_ceil(align) * align }
+/// Exclusive object-size bound for the current 64-bit target model.
+/// Rust 1.99's TargetDataLayout::obj_size_bound reserves three bits
+/// because LLVM also represents object sizes in bits.
+pub const OBJECT_SIZE_BOUND: u64 = 1 << 61;
+
+fn object_size(size: u64) -> Result<u64, ()> {
+    if size < OBJECT_SIZE_BOUND { Ok(size) } else { Err(()) }
+}
+
+fn add_size(a: u64, b: u64) -> Result<u64, ()> {
+    object_size(a.checked_add(b).ok_or(())?)
+}
+
+fn align_up(v: u64, align: u64) -> Result<u64, ()> {
+    if align == 0 || !align.is_power_of_two() {
+        return Err(());
+    }
+    object_size(v.checked_add(align - 1).ok_or(())? & !(align - 1))
 }
 
 /// The layout of an integer scalar.
@@ -294,7 +312,7 @@ pub fn nonzero_layout(t: IntTy) -> Layout {
 /// The layout of `[elem; len]`. A non-empty array keeps the element niche
 /// at offset 0, as rustc does: the first element sits there.
 pub fn array_layout(elem: &Layout, len: u64) -> Result<Layout, ()> {
-    let size = elem.size.checked_mul(len).ok_or(())?;
+    let size = object_size(elem.size.checked_mul(len).ok_or(())?)?;
     let niche = if len > 0 { elem.niche } else { None };
     let mut l = Layout::simple(size, elem.align, niche);
     l.uninhabited = len > 0 && elem.uninhabited;
@@ -303,31 +321,31 @@ pub fn array_layout(elem: &Layout, len: u64) -> Result<Layout, ()> {
 
 /// Places fields in the given order with normal padding. Returns size before
 /// the final round-up and the offsets in placement order.
-fn place_in_order(fields: &[Layout], order: &[usize]) -> (u64, Vec<u64>) {
+fn place_in_order(fields: &[Layout], order: &[usize]) -> Result<(u64, Vec<u64>), ()> {
     let mut offsets = vec![0u64; fields.len()];
     let mut cur = 0u64;
     for &i in order {
-        cur = align_up(cur, fields[i].align);
+        cur = align_up(cur, fields[i].align)?;
         offsets[i] = cur;
-        cur += fields[i].size;
+        cur = add_size(cur, fields[i].size)?;
     }
-    (cur, offsets)
+    Ok((cur, offsets))
 }
 
 /// The niche a struct-like aggregate reports: the field niche with the most
 /// free values, at that field's offset; ties go to the first field in layout
 /// (placement) order.
-fn best_niche(fields: &[Layout], offsets: &[u64], order: &[usize]) -> Option<Niche> {
+fn best_niche(fields: &[Layout], offsets: &[u64], order: &[usize]) -> Result<Option<Niche>, ()> {
     let mut best: Option<Niche> = None;
     for &i in order {
         if let Some(n) = fields[i].niche {
-            let cand = Niche { offset: offsets[i] + n.offset, ..n };
+            let cand = Niche { offset: add_size(offsets[i], n.offset)?, ..n };
             if best.is_none_or(|b| cand.free > b.free) {
                 best = Some(cand);
             }
         }
     }
-    best
+    Ok(best)
 }
 
 /// Which end of a univariant layout its largest niche is biased toward
@@ -394,7 +412,7 @@ fn univariant_biased(fields: &[Layout], repr: Repr, kind: UnivKind, bias: NicheB
             (std::cmp::Reverse(alignment_group_key(f, max_field_align, largest_niche_free, bias, repr.pack.is_some())), niche_key, inner_key)
         });
     }
-    let (end_off, offsets) = place_in_order(fields, &order);
+    let (end_off, offsets) = place_in_order(fields, &order)?;
     let align = fields.iter().map(|f| f.align).max().unwrap_or(1);
     // The largest niche, in placement order; the End bias takes the last
     // of equally large niches, the Start bias the first.
@@ -406,11 +424,11 @@ fn univariant_biased(fields: &[Layout], repr: Repr, kind: UnivKind, bias: NicheB
                 NicheBias::End => best.is_none_or(|b| n.free >= b.free),
             };
             if prefer {
-                best = Some(Niche { offset: offsets[i] + n.offset, ..n });
+                best = Some(Niche { offset: add_size(offsets[i], n.offset)?, ..n });
             }
         }
     }
-    let mut out = Layout::simple(align_up(end_off, align), align, best);
+    let mut out = Layout::simple(align_up(end_off, align)?, align, best);
     out.field_offsets = offsets;
     out.uninhabited = fields.iter().any(|f| f.uninhabited);
     finish(out, repr)
@@ -424,7 +442,7 @@ fn univariant_layout(fields: &[Layout], repr: Repr, kind: UnivKind) -> Result<La
     if kind != UnivKind::MaybeUnsized && fields.len() > 1 {
         if let Some(n) = start.niche {
             let head = n.offset;
-            let tail = start.size.saturating_sub(head + n.scalar_size);
+            let tail = start.size.saturating_sub(add_size(head, n.scalar_size)?);
             if head != 0 && tail > 0 {
                 let alt = univariant_biased(fields, repr, kind, NicheBias::End)?;
                 if let Some(an) = alt.niche
@@ -481,10 +499,10 @@ pub fn struct_layout(fields: &[Layout], repr: Repr) -> Result<Layout, ()> {
         }
         ReprKind::C => {
             let order: Vec<usize> = (0..fields.len()).collect();
-            let (end, offsets) = place_in_order(fields, &order);
+            let (end, offsets) = place_in_order(fields, &order)?;
             let align = fields.iter().map(|f| f.align).max().unwrap_or(1);
-            let niche = best_niche(fields, &offsets, &order);
-            let mut out = Layout::simple(align_up(end, align), align, niche);
+            let niche = best_niche(fields, &offsets, &order)?;
+            let mut out = Layout::simple(align_up(end, align)?, align, niche);
             out.field_offsets = offsets;
             out.uninhabited = fields.iter().any(|f| f.uninhabited);
             return finish(out, repr);
@@ -569,7 +587,7 @@ fn tag_niche(width: u64, discs: &[i128]) -> Option<Niche> {
 /// One variant laid out as a struct that starts with a tag of `tag_w` bytes:
 /// tag first, then fields by smallest alignment first, ties in declaration
 /// order (the tagged-enum rule of 4.4). Returns (end, align, field offsets).
-fn tagged_variant(fields: &[Layout], tag_w: u64) -> (u64, u64, Vec<u64>) {
+fn tagged_variant(fields: &[Layout], tag_w: u64) -> Result<(u64, u64, Vec<u64>), ()> {
     let mut order: Vec<usize> = (0..fields.len()).collect();
     order.sort_by(|&a, &b| fields[a].align.cmp(&fields[b].align).then(a.cmp(&b)));
     let mut offsets = vec![0u64; fields.len()];
@@ -577,11 +595,11 @@ fn tagged_variant(fields: &[Layout], tag_w: u64) -> (u64, u64, Vec<u64>) {
     let mut align = tag_w.max(1);
     for &i in &order {
         align = align.max(fields[i].align);
-        cur = align_up(cur, fields[i].align);
+        cur = align_up(cur, fields[i].align)?;
         offsets[i] = cur;
-        cur += fields[i].size;
+        cur = add_size(cur, fields[i].size)?;
     }
-    (cur, align, offsets)
+    Ok((cur, align, offsets))
 }
 
 
@@ -710,7 +728,7 @@ fn tagged_enum_layout_inner(variants: &[Vec<Layout>], discs: &[i128], repr: Repr
             let mut offs = Vec::new();
             for f in v {
                 offs.push(cur);
-                cur += f.size;
+                cur = add_size(cur, f.size)?;
             }
             size = size.max(cur);
             variant_offsets.push(offs);
@@ -735,18 +753,18 @@ fn tagged_enum_layout_inner(variants: &[Vec<Layout>], discs: &[i128], repr: Repr
             union_align = union_align.max(pl.align);
             payloads.push(pl);
         }
-        let payload_off = align_up(tag_w, union_align);
+        let payload_off = align_up(tag_w, union_align)?;
         let align = tag_w.max(1).max(union_align);
-        let size = align_up(payload_off + union_size, align);
+        let size = align_up(add_size(payload_off, union_size)?, align)?;
         let variant_offsets: Vec<Vec<u64>> =
-            payloads.iter().map(|pl| pl.field_offsets.iter().map(|&o| payload_off + o).collect()).collect();
+            payloads.iter().map(|pl| pl.field_offsets.iter().map(|&o| add_size(payload_off, o)).collect()).collect::<Result<_, ()>>()?;
         let mut l = Layout::simple(size, align, tag_niche(tag_w, discs));
         l.variant_offsets = variant_offsets;
         l.enum_tag = Some(EnumTag::Explicit { size: tag_w, signed });
         return finish(l, repr);
     }
     let fixed = repr.int.is_some();
-    let layout_with = |tag_w: u64| -> (u64, u64, Vec<Vec<u64>>) {
+    let layout_with = |tag_w: u64| -> Result<(u64, u64, Vec<Vec<u64>>), ()> {
         let mut size = 0u64;
         let mut align = tag_w.max(1);
         let mut variant_offsets = Vec::new();
@@ -758,21 +776,21 @@ fn tagged_enum_layout_inner(variants: &[Vec<Layout>], discs: &[i128], repr: Repr
                 let mut a = tag_w.max(1);
                 for (i, f) in v.iter().enumerate() {
                     a = a.max(f.align);
-                    cur = align_up(cur, f.align);
+                    cur = align_up(cur, f.align)?;
                     offs[i] = cur;
-                    cur += f.size;
+                    cur = add_size(cur, f.size)?;
                 }
                 (cur, a, offs)
             } else {
-                tagged_variant(v, tag_w)
+                tagged_variant(v, tag_w)?
             };
             align = align.max(a);
-            size = size.max(align_up(end, a));
+            size = size.max(align_up(end, a)?);
             variant_offsets.push(offs);
         }
-        (align_up(size, align), align, variant_offsets)
+        Ok((align_up(size, align)?, align, variant_offsets))
     };
-    let (size, align, mut variant_offsets) = layout_with(tag_w);
+    let (size, align, mut variant_offsets) = layout_with(tag_w)?;
     if repr.int.is_none() && repr.kind == ReprKind::Default {
         // rustc widens the tag to the smallest alignment among the
         // variants' first fields (by offset) that are not 1-ZSTs, when
@@ -791,7 +809,7 @@ fn tagged_enum_layout_inner(variants: &[Vec<Layout>], discs: &[i128], repr: Repr
             && a <= 16
         {
             tag_w = a;
-            let (_, _, offs) = layout_with(tag_w);
+            let (_, _, offs) = layout_with(tag_w)?;
             variant_offsets = offs;
         }
     }
@@ -834,17 +852,17 @@ fn niche_enum_layout(variants: &[Vec<Layout>], discs: &[i128], repr: Repr) -> Op
     // (a u128 payload next to an align-8 niche variant): the enum then
     // takes that alignment, and its size is rounded up to it.
     let eff_align = layouts.iter().map(|l| l.align).max().unwrap_or(1);
-    let eff_size = align_up(base.size, eff_align);
+    let eff_size = align_up(base.size, eff_align).ok()?;
     let mut variant_offsets: Vec<Vec<u64>> = Vec::with_capacity(variants.len());
     for (i, l) in layouts.iter().enumerate() {
         if i == vi || l.size <= niche.offset {
             variant_offsets.push(l.field_offsets.clone());
         } else {
-            let shift = align_up(niche.offset + niche.scalar_size, l.align);
-            if shift + l.size > eff_size {
+            let shift = align_up(add_size(niche.offset, niche.scalar_size).ok()?, l.align).ok()?;
+            if add_size(shift, l.size).ok()? > eff_size {
                 return None;
             }
-            variant_offsets.push(l.field_offsets.iter().map(|&o| o + shift).collect());
+            variant_offsets.push(l.field_offsets.iter().map(|&o| add_size(o, shift)).collect::<Result<_, ()>>().ok()?);
         }
     }
     let mut l = Layout::simple(eff_size, eff_align, left);
@@ -875,9 +893,10 @@ fn finish(mut l: Layout, repr: Repr) -> Result<Layout, ()> {
         }
         if a > l.align {
             l.align = a;
-            l.size = align_up(l.size, a);
+            l.size = align_up(l.size, a)?;
         }
     }
+    object_size(l.size)?;
     Ok(l)
 }
 
@@ -960,6 +979,55 @@ fn const_len(tys: &impl TyIntern, mut c: super::ConstId, mut env: Option<usize>,
     }
 }
 
+/// Tuple DST metadata is not part of the pointer ABI yet. Only accept
+/// a thin tuple pointer when its tail is known to be Sized. Ordinary
+/// well-formedness checks own the non-final fields. Early collection
+/// has no Adt field shapes, so an unclassified Adt is not a Sized proof.
+#[cold]
+fn sized_tuple_pointee(tys: &impl TyIntern, mut t: Ty, mut env: Option<usize>, frames: &[Frame]) -> Result<(), ()> {
+    // Bound both structural and parameter-frame steps without recursion.
+    for _ in 0..128 {
+        match tys.kind(t) {
+            TyKind::Tuple(ts) => match tys.tys_of(ts).last() {
+                Some(&tail) => t = tail,
+                None => return Ok(()),
+            },
+            TyKind::Array(e, _) => t = e,
+            TyKind::Param(p) => {
+                let f = env.and_then(|i| frames.get(i)).ok_or(())?;
+                let &(arg, aenv) = f.get(p.0 as usize).ok_or(())?;
+                t = arg.as_ty().ok_or(())?;
+                env = aenv;
+            }
+            TyKind::Adt(d, _) => {
+                if tys.unsized_field(d).is_some() {
+                    return Err(());
+                }
+                match tys.builtin_of(t) {
+                    Some(BuiltinTy::Cell | BuiltinTy::RefCell | BuiltinTy::Sync(SyncTy::Mutex | SyncTy::RwLock)) => {
+                        t = tys.adt_first_ty_arg(t).ok_or(())?;
+                    }
+                    Some(_) => return Ok(()),
+                    None => return Err(()),
+                }
+            }
+            TyKind::Unit
+            | TyKind::Never
+            | TyKind::Bool
+            | TyKind::Char
+            | TyKind::Int(_)
+            | TyKind::Float(_)
+            | TyKind::Ref(..)
+            | TyKind::RawPtr(..)
+            | TyKind::FnPtr(_)
+            | TyKind::FnDef(..)
+            | TyKind::Closure(..) => return Ok(()),
+            _ => return Err(()),
+        }
+    }
+    Err(())
+}
+
 fn go(
     tys: &impl TyIntern,
     shapes: &impl AdtShapes,
@@ -1013,15 +1081,31 @@ fn compute(
         TyKind::Char => Ok(char_layout()),
         TyKind::Int(i) => Ok(int_layout(i)),
         TyKind::Float(f) => Ok(float_layout(f)),
-        TyKind::Ref(_, _, e) => match tys.kind(peel_param(tys, e, env, frames).0) {
-            TyKind::Slice(_) | TyKind::Str | TyKind::Dyn(..) => Ok(fat_ptr_layout()),
-            _ => Ok(ptr_layout()),
-        },
-        TyKind::RawPtr(_, e) => match tys.kind(peel_param(tys, e, env, frames).0) {
-            TyKind::Slice(_) | TyKind::Str => Ok(fat_raw_ptr_layout()),
-            TyKind::Dyn(..) => Ok(dyn_raw_ptr_layout()),
-            _ => Ok(raw_ptr_layout()),
-        },
+        TyKind::Ref(_, _, e) => {
+            let (e, env) = peel_param(tys, e, env, frames);
+            match tys.kind(e) {
+                TyKind::Slice(_) | TyKind::Str | TyKind::Dyn(..) => Ok(fat_ptr_layout()),
+                TyKind::Tuple(_) => {
+                    sized_tuple_pointee(tys, e, env, frames)?;
+                    Ok(ptr_layout())
+                }
+                TyKind::Adt(d, _) if tys.unsized_field(d).is_some() => Err(()),
+                _ => Ok(ptr_layout()),
+            }
+        }
+        TyKind::RawPtr(_, e) => {
+            let (e, env) = peel_param(tys, e, env, frames);
+            match tys.kind(e) {
+                TyKind::Slice(_) | TyKind::Str => Ok(fat_raw_ptr_layout()),
+                TyKind::Dyn(..) => Ok(dyn_raw_ptr_layout()),
+                TyKind::Tuple(_) => {
+                    sized_tuple_pointee(tys, e, env, frames)?;
+                    Ok(raw_ptr_layout())
+                }
+                TyKind::Adt(d, _) if tys.unsized_field(d).is_some() => Err(()),
+                _ => Ok(raw_ptr_layout()),
+            }
+        }
         TyKind::FnPtr(_) => Ok(ptr_layout()),
         TyKind::FnDef(..) => Ok(zst_layout(1)),
         TyKind::Array(e, c) => {
@@ -1051,36 +1135,36 @@ fn compute(
             tuple_layout(&fields)
         }
         TyKind::Adt(..) => match tys.builtin_of(t) {
-            // String and Vec are (ptr, len, cap) words in this order for layout.
-            // `Box<dyn Tr>` and `Rc<dyn Tr>` are fat pointers (ARCH 2.8).
-            Some(BuiltinTy::Boxed) | Some(BuiltinTy::Rc)
-                if tys.adt_first_ty_arg(t).is_some_and(|e| matches!(tys.kind(e), TyKind::Dyn(..))) =>
-            {
-                Ok(fat_ptr_layout())
+            // Owning and weak pointers keep their non-null data niche.
+            // Direct slice/str/dyn metadata is modeled; a tuple pointee
+            // must pass the same thin-pointer proof as a reference.
+            // A registered unsized newtype needs unmodeled metadata too;
+            // absence of that marker is not a general Sized proof.
+            Some(BuiltinTy::Boxed | BuiltinTy::Rc | BuiltinTy::Weak | BuiltinTy::Sync(SyncTy::Arc | SyncTy::ArcWeak)) => {
+                let e = tys.adt_first_ty_arg(t).ok_or(())?;
+                let (e, env) = peel_param(tys, e, env, frames);
+                match tys.kind(e) {
+                    TyKind::Slice(_) | TyKind::Str | TyKind::Dyn(..) => Ok(fat_ptr_layout()),
+                    TyKind::Tuple(_) => {
+                        sized_tuple_pointee(tys, e, env, frames)?;
+                        Ok(ptr_layout())
+                    }
+                    TyKind::Adt(d, _) if tys.unsized_field(d).is_some() => Err(()),
+                    _ => Ok(ptr_layout()),
+                }
             }
-            // `Box<[T]>` is a fat pointer, like `&[T]`.
-            Some(BuiltinTy::Boxed) if tys.boxed_slice_elem(t).is_some() => Ok(fat_ptr_layout()),
-            // An owned fat pointer to a slice or str (`Box<str>`,
-            // `Rc<[T]>`), as above.
-            Some(BuiltinTy::Boxed) | Some(BuiltinTy::Rc)
-                if tys.adt_first_ty_arg(t).is_some_and(|e| matches!(tys.kind(e), TyKind::Slice(_) | TyKind::Str)) =>
-            {
-                Ok(fat_ptr_layout())
-            }
-            Some(BuiltinTy::Boxed) | Some(BuiltinTy::Rc) => Ok(ptr_layout()),
-            // `rc::Weak<T>`: one `NonNull` pointer (null is its niche;
-            // `Weak::new` dangles at usize::MAX), fat for an unsized `T`.
-            Some(BuiltinTy::Weak) => match tys.adt_first_ty_arg(t).map(|e| tys.kind(peel_param(tys, e, env, frames).0)) {
-                Some(TyKind::Slice(_) | TyKind::Str | TyKind::Dyn(..)) => Ok(fat_ptr_layout()),
-                Some(_) => Ok(ptr_layout()),
-                None => Err(()),
-            },
             // `Ref<T>` and `RefMut<T>` are `{ value: NonNull<T>, borrow: &Cell<isize> }`
             // (RefMut adds a PhantomData): two pointers, the first fat for an unsized `T`.
             Some(BuiltinTy::RefGuard | BuiltinTy::RefMutGuard) => {
                 let e = tys.adt_first_ty_arg(t).ok_or(())?;
-                let value = match tys.kind(peel_param(tys, e, env, frames).0) {
+                let (e, env) = peel_param(tys, e, env, frames);
+                let value = match tys.kind(e) {
                     TyKind::Slice(_) | TyKind::Str | TyKind::Dyn(..) => fat_ptr_layout(),
+                    TyKind::Tuple(_) => {
+                        sized_tuple_pointee(tys, e, env, frames)?;
+                        ptr_layout()
+                    }
+                    TyKind::Adt(d, _) if tys.unsized_field(d).is_some() => return Err(()),
                     _ => ptr_layout(),
                 };
                 let mut l = struct_layout(&[value, ptr_layout()], Repr::default())?;
@@ -1109,14 +1193,6 @@ fn compute(
             // An atomic: its value's size and alignment, with no niche
             // (`UnsafeCell`), as std lays out `Atomic<T>` (W-THREADS).
             Some(BuiltinTy::Sync(k)) if let Some(v) = k.atomic_value() => Ok(Layout::simple(v.bytes() as u64, v.bytes() as u64, None)),
-            // `Arc<T>` and `sync::Weak<T>`: one non-null pointer, or a
-            // fat one for an unsized `T`.
-            Some(BuiltinTy::Sync(crate::ty::sync::SyncTy::Arc | crate::ty::sync::SyncTy::ArcWeak))
-                if tys.adt_first_ty_arg(t).is_some_and(|e| matches!(tys.kind(e), TyKind::Slice(_) | TyKind::Str | TyKind::Dyn(..))) =>
-            {
-                Ok(fat_ptr_layout())
-            }
-            Some(BuiltinTy::Sync(crate::ty::sync::SyncTy::Arc | crate::ty::sync::SyncTy::ArcWeak)) => Ok(ptr_layout()),
             // `Cell<T>` is `UnsafeCell<T>`: T's size and alignment, its
             // niche hidden.
             Some(BuiltinTy::Cell) => Ok(no_niche(go(tys, shapes, tys.adt_first_ty_arg(t).ok_or(())?, env, frames, memo, active)?)),
@@ -1126,10 +1202,12 @@ fn compute(
                 let v = no_niche(go(tys, shapes, tys.adt_first_ty_arg(t).ok_or(())?, env, frames, memo, active)?);
                 struct_layout(&[int_layout(IntTy::Isize), v], Repr::default())
             }
-            // Rust 1.99's host lock state: Linux uses a u32 futex (`RwLock`
-            // has two). On macOS `Mutex` holds an atomic OnceBox pointer,
+            // Rust 1.99's target lock state: Linux uses a u32 futex (`RwLock`
+            // has two). Windows uses a u8 SmallFutex for `Mutex`; its other
+            // futex-backed sync types still use u32. On macOS `Mutex` holds
+            // an atomic OnceBox pointer,
             // while `RwLock` and `Once` each hold a pointer-width queue state.
-            // The atomic fields have no niche on either host.
+            // The atomic fields have no niche on these targets.
             // `OnceLock<T>`: `{ once: Once, value: UnsafeCell<MaybeUninit<T>> }`.
             Some(BuiltinTy::Sync(crate::ty::sync::SyncTy::OnceLock)) => {
                 // The value is a `MaybeUninit<T>`: inhabited for any `T`.
@@ -1141,6 +1219,8 @@ fn compute(
                 let v = no_niche(go(tys, shapes, tys.adt_first_ty_arg(t).ok_or(())?, env, frames, memo, active)?);
                 let state = if tys.sync_layout() == SyncLayout::Darwin {
                     raw_ptr_layout()
+                } else if tys.sync_layout() == SyncLayout::Windows && k == crate::ty::sync::SyncTy::Mutex {
+                    Layout::simple(1, 1, None)
                 } else {
                     Layout::simple(if k == crate::ty::sync::SyncTy::Mutex { 4 } else { 8 }, 4, None)
                 };
@@ -1270,6 +1350,36 @@ mod tests {
         assert_eq!(sz(&float_layout(FloatTy::F64)), (8, 8));
         assert_eq!(sz(&ptr_layout()), (8, 8));
         assert_eq!(sz(&fat_ptr_layout()), (16, 8));
+    }
+
+    #[test]
+    fn object_size_bound_and_aggregate_rounding() {
+        let byte = int_layout(IntTy::U8);
+        let word = int_layout(IntTy::U64);
+        let last = array_layout(&byte, OBJECT_SIZE_BOUND - 1).unwrap();
+        assert_eq!(last.size, OBJECT_SIZE_BOUND - 1);
+        assert!(array_layout(&byte, OBJECT_SIZE_BOUND).is_err());
+        assert_eq!(array_layout(&word, OBJECT_SIZE_BOUND / 8 - 1).unwrap().size, OBJECT_SIZE_BOUND - 8);
+        assert!(array_layout(&word, OBJECT_SIZE_BOUND / 8).is_err());
+        assert!(array_layout(&word, u64::MAX).is_err());
+        assert_eq!(array_layout(&zst_layout(1), u64::MAX).unwrap().size, 0);
+
+        let below = array_layout(&byte, OBJECT_SIZE_BOUND - 16).unwrap();
+        assert_eq!(tuple_layout(&[below, word.clone()]).unwrap().size, OBJECT_SIZE_BOUND - 8);
+        let at = array_layout(&byte, OBJECT_SIZE_BOUND - 8).unwrap();
+        assert!(tuple_layout(&[at.clone(), word.clone()]).is_err());
+        assert!(tuple_layout(&[last.clone(), zst_layout(8)]).is_err());
+        assert_eq!(tuple_layout(&[at, zst_layout(8)]).unwrap().size, OBJECT_SIZE_BOUND - 8);
+        assert!(struct_layout(&[last.clone()], Repr { align: Some(8), ..Repr::default() }).is_err());
+
+        // Field sums and enum tags cannot wrap into a small accepted layout.
+        let wide = Layout::simple(u64::MAX, 1, None);
+        assert!(tuple_layout(&[wide.clone(), byte.clone()]).is_err());
+        for repr in [Repr::default(), Repr { kind: ReprKind::C, ..Repr::default() }, Repr { int: Some((8, false)), ..Repr::default() }] {
+            assert!(enum_layout(&[vec![], vec![last.clone()]], &[0, 1], repr).is_err());
+            assert!(enum_layout(&[vec![], vec![wide.clone()]], &[0, 1], repr).is_err());
+        }
+        assert!(struct_layout(&[last, byte], Repr { kind: ReprKind::C, ..Repr::default() }).is_err());
     }
 
     #[test]
@@ -1584,5 +1694,202 @@ mod tests {
         // TypeReference-like: a plain struct of a thin and a fat pointer.
         let reference = struct_layout(&[ptr_layout(), fat_ptr_layout()], Repr::default()).unwrap();
         assert_eq!(reference.size, 24);
+    }
+
+    mod tuple_pointers {
+        use super::*;
+        use crate::ty::{AutoTraits, ConstKind, DynBounds, GenericArg, GlobalTys, Mut, ParamId, Region, I32, STR};
+
+        struct NoShapes;
+        impl AdtShapes for NoShapes {
+            fn adt_shape(&self, _: AdtId) -> Option<AdtShape> {
+                None
+            }
+        }
+
+        fn tuple(tys: &mut GlobalTys, tail: Ty) -> Ty {
+            let fields = tys.intern_tys(&[I32, tail]);
+            tys.intern(TyKind::Tuple(fields))
+        }
+
+        fn owning_defs(tys: &GlobalTys) -> [(crate::def::DefId, bool); 7] {
+            let b = tys.builtins();
+            [
+                (b.boxed, false), (b.rc, false), (b.weak, false),
+                (b.sync_tys[SyncTy::Arc as usize], false), (b.sync_tys[SyncTy::ArcWeak as usize], false),
+                (b.ref_guard, true), (b.ref_mut_guard, true),
+            ]
+        }
+
+        fn check(tys: &mut GlobalTys, pointee: Ty, expected: Option<(Layout, Layout)>) {
+            for mutable in [false, true] {
+                let reference = tys.mk_ref(mutable, pointee);
+                let raw = tys.intern(TyKind::RawPtr(Mut::from_bool(mutable), pointee));
+                let (r, p) = (layout_of_ty(tys, &NoShapes, reference), layout_of_ty(tys, &NoShapes, raw));
+                if let Some((er, ep)) = &expected {
+                    let (r, p) = (r.unwrap(), p.unwrap());
+                    assert_eq!((sz(&r), r.niche), (sz(er), er.niche));
+                    assert_eq!((sz(&p), p.niche), (sz(ep), ep.niche));
+                } else {
+                    assert!(r.is_err());
+                    assert!(p.is_err());
+                }
+            }
+            for (def, guard) in owning_defs(tys) {
+                let owned = tys.mk_adt(def, &[GenericArg::Ty(pointee)]);
+                let result = layout_of_ty(tys, &NoShapes, owned);
+                if let Some((value, _)) = &expected {
+                    let result = result.unwrap();
+                    assert_eq!(sz(&result), (value.size + if guard { 8 } else { 0 }, value.align));
+                    assert_eq!(result.niche, value.niche, "the non-null value niche stays visible");
+                    let option = tys.mk_option(owned);
+                    assert_eq!(sz(&layout_of_ty(tys, &NoShapes, option).unwrap()), sz(&result));
+                } else {
+                    assert!(result.is_err(), "unmodeled metadata cannot become a thin owning pointer");
+                }
+            }
+        }
+
+        #[test]
+        fn known_sized_tails_and_direct_metadata() {
+            let mut tys = GlobalTys::new();
+            let fields = tys.intern_tys(&[]);
+            let empty = tys.intern(TyKind::Tuple(fields));
+            check(&mut tys, empty, Some((ptr_layout(), raw_ptr_layout())));
+            let slice = tys.intern(TyKind::Slice(I32));
+            let bounds = tys.intern_dyn_bounds(DynBounds {
+                principal: None,
+                supertraits: Box::new([]),
+                auto: AutoTraits { send: true, ..AutoTraits::default() },
+            });
+            let dynamic = tys.intern(TyKind::Dyn(bounds, Region::Static));
+            for tail in [STR, slice, dynamic] {
+                let direct_raw = if tail == dynamic { dyn_raw_ptr_layout() } else { fat_raw_ptr_layout() };
+                check(&mut tys, tail, Some((fat_ptr_layout(), direct_raw)));
+                let inner = tuple(&mut tys, tail);
+                let outer = tuple(&mut tys, inner);
+                check(&mut tys, inner, None);
+                check(&mut tys, outer, None);
+                // A pointer field is Sized even when its own pointee is not.
+                let reference = tys.mk_ref(false, inner);
+                let raw = tys.intern(TyKind::RawPtr(Mut::Shared, inner));
+                for indirect in [reference, raw] {
+                    let outer = tuple(&mut tys, indirect);
+                    check(&mut tys, outer, Some((ptr_layout(), raw_ptr_layout())));
+                }
+            }
+            let builtins = *tys.builtins();
+            for def in [builtins.cell, builtins.refcell, builtins.sync_tys[SyncTy::Mutex as usize], builtins.sync_tys[SyncTy::RwLock as usize]] {
+                for (tail, sized) in [(I32, true), (STR, false)] {
+                    let wrapper = tys.mk_adt(def, &[GenericArg::Ty(tail)]);
+                    let outer = tuple(&mut tys, wrapper);
+                    check(&mut tys, outer, sized.then(|| (ptr_layout(), raw_ptr_layout())));
+                }
+            }
+            let zero = tys.intern_const(ConstKind::Int(0));
+            for (tail, sized) in [(I32, true), (STR, false)] {
+                let array = tys.intern(TyKind::Array(tail, zero));
+                let outer = tuple(&mut tys, array);
+                check(&mut tys, outer, sized.then(|| (ptr_layout(), raw_ptr_layout())));
+            }
+            let boxed = tys.mk_adt(builtins.boxed, &[GenericArg::Ty(STR)]);
+            let outer = tuple(&mut tys, boxed);
+            check(&mut tys, outer, Some((ptr_layout(), raw_ptr_layout())));
+            let def = crate::def::DefId { krate: crate::def::LOCAL_CRATE, hash: crate::def::DefPathHash(42) };
+            let unknown = tys.mk_adt(def, &[]);
+            let outer = tuple(&mut tys, unknown);
+            check(&mut tys, outer, None);
+            // An unclassified direct Adt stays outside the tuple proof.
+            check(&mut tys, unknown, Some((ptr_layout(), raw_ptr_layout())));
+            tys.register_unsized_adt(def, STR);
+            check(&mut tys, outer, None);
+            check(&mut tys, unknown, None);
+            // Generic unsized newtypes carry the template marker too.
+            let args = tys.intern_args(&[GenericArg::Ty(I32)]);
+            let instance = tys.intern(TyKind::Adt(def, args));
+            tys.register_unsized_inst(def, args, STR);
+            check(&mut tys, instance, None);
+        }
+
+        #[test]
+        fn generic_frames_and_walk_bound() {
+            let mut tys = GlobalTys::new();
+            let param = tys.intern(TyKind::Param(ParamId(0)));
+            let outer = tuple(&mut tys, param);
+            check(&mut tys, outer, None);
+            // The pointee parameter peels to a tuple in a different frame.
+            // Its final parameter must read that frame, not the outer one.
+            let pointee = tys.intern(TyKind::Param(ParamId(1)));
+            for (tail, sized) in [(I32, true), (STR, false)] {
+                let mut pointers = vec![tys.mk_ref(false, pointee), tys.intern(TyKind::RawPtr(Mut::Shared, pointee))];
+                for (def, _) in owning_defs(&tys) {
+                    pointers.push(tys.mk_adt(def, &[GenericArg::Ty(pointee)]));
+                }
+                for pointer in pointers {
+                    let other = if sized { STR } else { I32 };
+                    let mut frames = vec![
+                        vec![(GenericArg::Ty(tail), None)],
+                        vec![(GenericArg::Ty(other), None), (GenericArg::Ty(outer), Some(0))],
+                    ];
+                    let result = go(&tys, &NoShapes, pointer, Some(1), &mut frames, &mut Vec::new(), &mut Vec::new());
+                    assert_eq!(result.is_ok(), sized);
+                }
+            }
+            // Every parameter hop consumes budget, including a malformed cycle.
+            let pointer = tys.mk_ref(false, outer);
+            let mut frames = vec![vec![(GenericArg::Ty(param), Some(0))]];
+            assert!(go(&tys, &NoShapes, pointer, Some(0), &mut frames, &mut Vec::new(), &mut Vec::new()).is_err());
+            let mut deep = I32;
+            for _ in 0..127 {
+                deep = tuple(&mut tys, deep);
+            }
+            check(&mut tys, deep, Some((ptr_layout(), raw_ptr_layout())));
+            deep = tuple(&mut tys, deep);
+            check(&mut tys, deep, None);
+            let cell = tys.builtins().cell;
+            let mut deep = I32;
+            for _ in 0..127 {
+                deep = tys.mk_adt(cell, &[GenericArg::Ty(deep)]);
+            }
+            deep = tuple(&mut tys, deep);
+            check(&mut tys, deep, None);
+        }
+
+        #[test]
+        fn owning_pointers_in_original_adt_fields() {
+            struct Shapes(Vec<Vec<Ty>>);
+            impl AdtShapes for Shapes {
+                fn adt_shape(&self, id: AdtId) -> Option<AdtShape> {
+                    Some(AdtShape {
+                        repr: Repr::default(), is_enum: false, variants: vec![self.0.get(id.0 as usize)?.clone()],
+                        discs: vec![0], hide_niche: false,
+                    })
+                }
+            }
+            let mut tys = GlobalTys::new();
+            for i in 0..2 {
+                let def = crate::def::DefId { krate: crate::def::LOCAL_CRATE, hash: crate::def::DefPathHash(90 + i as u64) };
+                tys.register_adt(def, AdtId(i));
+            }
+            let inner = tys.adt_ty(AdtId(0));
+            let outer = tys.adt_ty(AdtId(1));
+            let count = tys.intern_const(ConstKind::Int(65));
+            let array = tys.intern(TyKind::Array(inner, count));
+            for (def, guard) in owning_defs(&tys) {
+                for (tail, sized) in [(I32, true), (STR, false)] {
+                    let pointee = tuple(&mut tys, tail);
+                    let field = tys.mk_adt(def, &[GenericArg::Ty(pointee)]);
+                    // Original semantic fields, not reconstructed C types:
+                    // Outer { values: [Inner { pointer: Owner<_> }; 65] }.
+                    let shapes = Shapes(vec![vec![field], vec![array]]);
+                    let answer = layout_of_ty(&tys, &shapes, outer);
+                    if sized {
+                        assert_eq!(sz(&answer.unwrap()), (if guard { 1040 } else { 520 }, 8));
+                    } else {
+                        assert!(answer.is_err(), "an original ADT must not hide unsupported pointer metadata");
+                    }
+                }
+            }
+        }
     }
 }

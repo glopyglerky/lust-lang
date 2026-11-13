@@ -2253,7 +2253,7 @@ mod tests {
 
     #[test]
     fn sync_layout_follows_the_type_pool_target() {
-        use layout::SyncLayout::{Darwin, Futex};
+        use layout::SyncLayout::{Darwin, Futex, Windows};
         let interner = std::sync::Arc::new(crate::intern::Interner::default());
         let stable = crate::def::StableCrateHash(42);
         let pool = |target| {
@@ -2261,15 +2261,44 @@ mod tests {
             tys.sync_layout = target;
             TypePool { tys, krate: LOCAL_CRATE, stable, interner: std::sync::Arc::as_ptr(&interner) as usize }
         };
-        let same = pool(Darwin).take(LOCAL_CRATE, stable, &interner, Darwin).expect("same target");
-        assert_eq!(same.sync_layout(), Darwin);
-        assert_eq!(Tys::new(&same).sync_layout(), Darwin, "body overlays preserve the target");
-        assert!(pool(Darwin).take(LOCAL_CRATE, stable, &interner, Futex).is_none());
-        assert!(pool(Futex).take(LOCAL_CRATE, stable, &interner, Darwin).is_none());
+        for target in [Futex, Darwin, Windows] {
+            let same = pool(target).take(LOCAL_CRATE, stable, &interner, target).expect("same target");
+            assert_eq!(same.sync_layout(), target);
+            assert_eq!(Tys::new(&same).sync_layout(), target, "body overlays preserve the target");
+            for other in [Futex, Darwin, Windows] {
+                if target != other {
+                    assert!(pool(target).take(LOCAL_CRATE, stable, &interner, other).is_none());
+                }
+            }
+        }
         assert_eq!(layout::SyncLayout::for_target("x86_64-apple-darwin"), Darwin);
         assert_eq!(layout::SyncLayout::for_target("aarch64-apple-darwin"), Darwin);
         assert_eq!(layout::SyncLayout::for_target("x86_64-unknown-linux-gnu"), Futex);
         assert_eq!(layout::SyncLayout::for_target("aarch64-unknown-linux-musl"), Futex);
+        for triple in ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc", "x86_64-pc-windows-gnu"] {
+            assert_eq!(layout::SyncLayout::for_target(triple), Windows);
+        }
+
+        struct NoShapes;
+        impl layout::AdtShapes for NoShapes {
+            fn adt_shape(&self, _: AdtId) -> Option<layout::AdtShape> { None }
+        }
+        // Rust 1.99 uses a one-byte SmallFutex only for Windows Mutex.
+        // These payload cases need no user field shapes. The signature
+        // fallback admits Mutex<()>; the body evaluator also covers u8/u32.
+        for (target, expected) in [
+            (Futex, [(8, 4), (8, 4), (12, 4)]),
+            (Darwin, [(16, 8), (16, 8), (16, 8)]),
+            (Windows, [(2, 1), (3, 1), (8, 4)]),
+        ] {
+            let mut tys = GlobalTys::new();
+            tys.sync_layout = target;
+            for (payload, shape) in [UNIT, int(IntTy::U8), int(IntTy::U32)].into_iter().zip(expected) {
+                let t = sync::sync_ty(&mut tys, sync::SyncTy::Mutex, &[payload]);
+                let l = layout::layout_of_ty(&tys, &NoShapes, t).expect("closed mutex layout");
+                assert_eq!((l.size, l.align), shape, "{target:?}: {payload:?}");
+            }
+        }
     }
 
     /// The pre-interned constants still name the same types, now as Adt applications

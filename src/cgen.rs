@@ -25,6 +25,7 @@ mod own;
 pub mod record;
 mod slices;
 mod kconst;
+mod vec_policy;
 pub mod ll;
 use unwind::Unw;
 
@@ -6914,11 +6915,12 @@ impl FnGen<'_, '_> {
                     let CTy::Ref(v) = &tys[1] else { unreachable!("clone_into target is a &mut Vec") };
                     let CTy::Vec(e) = &**v else { unreachable!("clone_into target is a &mut Vec") };
                     let et = ctype(e);
+                    let min = vec_policy::min_capacity(self.p, e);
                     let (_, sptr, slen) = slice_like(&tys[0], &vals[0]);
                     let (sp, sn, i) = (self.tmp(), self.tmp(), self.tmp());
                     let _ = writeln!(
                         self.out,
-                        "    {et} *{sp} = {sptr};\n    uint64_t {sn} = {slen};\n    {dst}->len = 0;\n    lust_vec_reserve({dst}, {sn}, sizeof({et}), _Alignof({et}));\n    for (uint64_t {i} = 0; {i} < {sn}; {i}++) (({et}*){dst}->ptr)[{dst}->len++] = {sp}[{i}];"
+                        "    {et} *{sp} = {sptr};\n    uint64_t {sn} = {slen};\n    {dst}->len = 0;\n    lust_vec_reserve_min({dst}, {sn}, sizeof({et}), _Alignof({et}), {min});\n    for (uint64_t {i} = 0; {i} < {sn}; {i}++) (({et}*){dst}->ptr)[{dst}->len++] = {sp}[{i}];"
                     );
                 }
                 "((lust_Unit){})".into()
@@ -7010,6 +7012,7 @@ impl FnGen<'_, '_> {
                 let CTy::Ref(v) = &tys[0] else { unreachable!() };
                 let CTy::Vec(e) = &**v else { unreachable!() };
                 let et = ctype(e);
+                let min = vec_policy::min_capacity(self.p, e);
                 // The value must be read before `lust_vec_push_slot` can reallocate the
                 // buffer: `v.push(v[0])` in one C assignment could read the freed buffer.
                 // A whole local or a constant is never in that buffer: it goes straight
@@ -7021,7 +7024,7 @@ impl FnGen<'_, '_> {
                     let _ = writeln!(self.out, "    {et} {t} = {};", vals[1]);
                     t
                 };
-                let _ = writeln!(self.out, "    *({et}*)lust_vec_push_slot({}, sizeof({et}), _Alignof({et})) = {src};", vals[0]);
+                let _ = writeln!(self.out, "    *({et}*)lust_vec_push_slot_min({}, sizeof({et}), _Alignof({et}), {min}) = {src};", vals[0]);
                 "((lust_Unit){})".into()
             }
             B::Clone => {
@@ -8029,6 +8032,7 @@ impl FnGen<'_, '_> {
                 let CTy::Ref(v) = &tys[0] else { unreachable!() };
                 let CTy::Vec(e) = &**v else { unreachable!() };
                 let et = ctype(e);
+                let min = vec_policy::min_capacity(self.p, e);
                 let (ti, tx) = (self.tmp(), self.tmp());
                 let (vv, i, x) = (&vals[0], &vals[1], &vals[2]);
                 // Read the index and the value before the shift: both can
@@ -8040,7 +8044,7 @@ impl FnGen<'_, '_> {
                     let (gd, gdis) = self.zc_guard(&tx, e);
                     let _ = writeln!(
                         self.out,
-                        "    {{{gd}\n    lust_vec_insert_at({vv}, {ti}, sizeof({et}), _Alignof({et}), {loc});{gdis} }}\n    (({et}*){vv}->ptr)[{ti}] = {tx};"
+                        "    {{{gd}\n    lust_vec_insert_at_min({vv}, {ti}, sizeof({et}), _Alignof({et}), {min}, {loc});{gdis} }}\n    (({et}*){vv}->ptr)[{ti}] = {tx};"
                     );
                     return "((lust_Unit){})".into();
                 }
@@ -8048,9 +8052,9 @@ impl FnGen<'_, '_> {
                     // A bad index panics with the value still owned by
                     // `insert`, which drops it as it unwinds.
                     let drop_x = self.unw_cleanup_drop(&tx, e);
-                    let _ = writeln!(self.out, "    if ({ti} > {vv}->len) {{ (void)(lust_vec_insert_at({vv}, {ti}, sizeof({et}), _Alignof({et}), {loc}), 0);{drop_x} }} else {{");
+                    let _ = writeln!(self.out, "    if ({ti} > {vv}->len) {{ (void)(lust_vec_insert_at_min({vv}, {ti}, sizeof({et}), _Alignof({et}), {min}, {loc}), 0);{drop_x} }} else {{");
                 }
-                let _ = writeln!(self.out, "    lust_vec_insert_at({vv}, {ti}, sizeof({et}), _Alignof({et}), {loc});\n    (({et}*){vv}->ptr)[{ti}] = {tx};");
+                let _ = writeln!(self.out, "    lust_vec_insert_at_min({vv}, {ti}, sizeof({et}), _Alignof({et}), {min}, {loc});\n    (({et}*){vv}->ptr)[{ti}] = {tx};");
                 if self.p.unwind {
                     let _ = writeln!(self.out, "    }}");
                 }
@@ -8078,7 +8082,7 @@ impl FnGen<'_, '_> {
                 let et = ctype(e);
                 let vv = &vals[0];
                 let call = match b {
-                    B::VecReserve => format!("lust_vec_reserve({vv}, {}, sizeof({et}), _Alignof({et}))", vals[1]),
+                    B::VecReserve => format!("lust_vec_reserve_min({vv}, {}, sizeof({et}), _Alignof({et}), {})", vals[1], vec_policy::min_capacity(self.p, e)),
                     B::VecReserveExact => format!("lust_vec_reserve_exact({vv}, {}, sizeof({et}), _Alignof({et}))", vals[1]),
                     B::VecShrinkToFit => format!("lust_vec_shrink_to({vv}, 0, sizeof({et}), _Alignof({et}))"),
                     _ => format!("lust_vec_shrink_to({vv}, {}, sizeof({et}), _Alignof({et}))", vals[1]),
@@ -8102,13 +8106,14 @@ impl FnGen<'_, '_> {
                 let CTy::Ref(v) = &tys[0] else { unreachable!() };
                 let CTy::Vec(e) = &**v else { unreachable!() };
                 let et = ctype(e);
+                let min = vec_policy::min_capacity(self.p, e);
                 let (vv, o) = (&vals[0], &vals[1]);
                 let n = self.tmp();
                 // Elements move bitwise; the source keeps its
                 // buffer and capacity with length 0, as in Rust.
                 let _ = writeln!(
                     self.out,
-                    "    uint64_t {n} = {o}->len;\n    lust_vec_reserve({vv}, {n}, sizeof({et}), _Alignof({et}));\n    memcpy(({et}*){vv}->ptr + {vv}->len, {o}->ptr, {n} * sizeof({et}));\n    {vv}->len += {n};\n    {o}->len = 0;"
+                    "    uint64_t {n} = {o}->len;\n    lust_vec_reserve_min({vv}, {n}, sizeof({et}), _Alignof({et}), {min});\n    memcpy(({et}*){vv}->ptr + {vv}->len, {o}->ptr, {n} * sizeof({et}));\n    {vv}->len += {n};\n    {o}->len = 0;"
                 );
                 "((lust_Unit){})".into()
             }
@@ -8116,6 +8121,7 @@ impl FnGen<'_, '_> {
                 let CTy::Ref(v) = &tys[0] else { unreachable!() };
                 let CTy::Vec(e) = &**v else { unreachable!() };
                 let et = ctype(e);
+                let min = vec_policy::min_capacity(self.p, e);
                 let (_, sptr, slen) = slice_like(&tys[1], &vals[1]);
                 let (sp, sn, i) = (self.tmp(), self.tmp(), self.tmp());
                 let vv = &vals[0];
@@ -8125,7 +8131,7 @@ impl FnGen<'_, '_> {
                 // but the operand text may name the same locals).
                 let _ = writeln!(
                     self.out,
-                    "    {et} *{sp} = {sptr};\n    uint64_t {sn} = {slen};\n    lust_vec_reserve({vv}, {sn}, sizeof({et}), _Alignof({et}));"
+                    "    {et} *{sp} = {sptr};\n    uint64_t {sn} = {slen};\n    lust_vec_reserve_min({vv}, {sn}, sizeof({et}), _Alignof({et}), {min});"
                 );
                 if is_copy_c(self.p, e) {
                     // A trivial Clone is a byte copy (std's TrivialClone path),
@@ -8152,6 +8158,7 @@ impl FnGen<'_, '_> {
                 let CTy::Ref(v) = &tys[0] else { unreachable!() };
                 let CTy::Vec(e) = &**v else { unreachable!() };
                 let et = ctype(e);
+                let min = vec_policy::min_capacity(self.p, e);
                 let (vv, n) = (&vals[0], &vals[1]);
                 let (tv, i) = (self.tmp(), self.tmp());
                 // The value is read first: it may come from the
@@ -8171,16 +8178,16 @@ impl FnGen<'_, '_> {
                 if self.p.unwind_tables {
                     // A capacity overflow panic never returns: a guard drops the value.
                     let (gd, gdis) = self.zc_guard(&tv, e);
-                    let _ = writeln!(self.out, "      {{{gd} lust_vec_reserve({vv}, {n} - {vv}->len, sizeof({et}), _Alignof({et}));{gdis} }}");
+                    let _ = writeln!(self.out, "      {{{gd} lust_vec_reserve_min({vv}, {n} - {vv}->len, sizeof({et}), _Alignof({et}), {min});{gdis} }}");
                 } else if self.p.unwind {
                     // After a capacity overflow panic (panic=unwind) the Vec is
                     // unchanged and the value is dropped; `(void)` keeps
                     // `wrap_calls` from unwinding before that drop (the
                     // statement's own check unwinds after it).
-                    let _ = writeln!(self.out, "      (void)lust_vec_reserve({vv}, {n} - {vv}->len, sizeof({et}), _Alignof({et}));");
+                    let _ = writeln!(self.out, "      (void)lust_vec_reserve_min({vv}, {n} - {vv}->len, sizeof({et}), _Alignof({et}), {min});");
                     let _ = writeln!(self.out, "      if ({} >= {n}) {{", vec_cap(&et, vv));
                 } else {
-                    let _ = writeln!(self.out, "      lust_vec_reserve({vv}, {n} - {vv}->len, sizeof({et}), _Alignof({et}));");
+                    let _ = writeln!(self.out, "      lust_vec_reserve_min({vv}, {n} - {vv}->len, sizeof({et}), _Alignof({et}), {min});");
                 }
                 if is_copy_c(self.p, e) {
                     let _ = writeln!(self.out, "      while ({vv}->len < {n}) (({et}*){vv}->ptr)[{vv}->len++] = {tv};");

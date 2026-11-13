@@ -2,7 +2,7 @@
 # Client tests: daemon autostart, the whole-request disk cache, and the release
 # handoff to Cargo/rustc. Run after `cargo build --release`.
 #   autostart: fresh dir, first build cold and standalone, second build served
-#              by the daemon (its binary loads libbase.so). Plus LUST_NO_DAEMON,
+#              by the daemon (its binary loads a base library). Plus LUST_NO_DAEMON,
 #              a 4-way start race, a held daemon lock (no second daemon), and the
 #              idle timeout.
 #   temp:      the daemon temp dir dies with the daemon (SIGTERM, SIGINT, socket
@@ -23,6 +23,15 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 lust=$root/target/release/lust
 if [ ! -x "$lust" ]; then
   echo "error: $lust not built. Run cargo build --release first."
+  exit 2
+fi
+case $(uname -s) in
+  Darwin) dependency_tool=(otool -L) ;;
+  Linux) dependency_tool=(ldd) ;;
+  *) echo "error: no native dependency inspector for this host"; exit 2 ;;
+esac
+if ! command -v "${dependency_tool[0]}" >/dev/null 2>&1; then
+  echo "error: required native dependency inspector ${dependency_tool[0]} is unavailable"
   exit 2
 fi
 unset LUST_DAEMON_SOCKET LUST_CACHE_DIR LUST_NO_DAEMON LUST_NO_CACHE \
@@ -72,10 +81,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# loads_base <exe> : true when <exe> loads libbase.so, so a daemon built it. ldd output is
-# captured first: `ldd | grep -q` under pipefail fails when grep exits at the match and ldd
-# takes SIGPIPE on its next line (the `race` flake: the binary was right, the check was not).
-loads_base() { local out; out=$(ldd "$1" 2>/dev/null) && [[ $out == *libbase* ]]; }
+# loads_base <exe> : true when the native load commands name a base library,
+# so a daemon built it. Capture the complete output before matching: a pipeline
+# with an early-exiting grep can give the inspector SIGPIPE under pipefail.
+loads_base() {
+  local out
+  out=$("${dependency_tool[@]}" "$1" 2>/dev/null) || return
+  # otool begins with the executable's own path, which is not a dependency.
+  if [ "${dependency_tool[0]}" = otool ]; then out=${out#*$'\n'}; fi
+  [[ $out == *libbase* ]]
+}
 wait_socket() { # wait_socket <dir> : true when the daemon socket appears
   local i
   for i in $(seq 1 100); do [ -S "$(sock "$1")" ] && return 0; sleep 0.05; done
@@ -98,7 +113,7 @@ d=$(fresh autostart); daemon_dirs+=("$d")
 (cd "$d" && "$lust" build hello.rs -o h1) >/dev/null 2>&1
 check "autostart: first build ok" test -x "$d/h1"
 if loads_base "$d/h1"; then
-  bad "autostart: first build is standalone" "loads libbase.so, so a daemon built it"
+  bad "autostart: first build is standalone" "loads a base library, so a daemon built it"
 else
   ok "autostart: first build is standalone (cold)"
 fi
@@ -108,7 +123,7 @@ check "autostart: daemon socket appears" wait_socket "$d"
 if loads_base "$d/h2"; then
   ok "autostart: second build served by the daemon"
 else
-  bad "autostart: second build served by the daemon" "no libbase.so in ldd output"
+  bad "autostart: second build served by the daemon" "no base library in native load commands"
 fi
 check "autostart: second build runs" test "$("$d/h2")" = "hello 42"
 check "autostart: log file in cache dir" test -s "$d/.lust-cache/daemon.log"
@@ -135,7 +150,7 @@ out2=$(cd "$d" && "$lust" run hello.rs 2>&1)
 check "warmedit: warm v2 sees new line and included file" test "$out2" = "3 two"
 (cd "$d" && LUST_NO_DAEMON=1 "$lust" build hello.rs -o hnd) >/dev/null 2>&1
 if loads_base "$d/hnd"; then
-  bad "LUST_NO_DAEMON: live daemon not used" "loads libbase.so, so the daemon built it"
+  bad "LUST_NO_DAEMON: live daemon not used" "loads a base library, so the daemon built it"
 else
   ok "LUST_NO_DAEMON: live daemon not used"
 fi
@@ -149,7 +164,7 @@ for p in "${pids[@]}"; do wait "$p" || race_rc=1; done
 check "race: 4 concurrent first commands pass" test $race_rc -eq 0
 check "race: one daemon socket serves after" wait_socket "$d"
 (cd "$d" && "$lust" build hello.rs -o h) >/dev/null 2>&1
-if loads_base "$d/h"; then ok "race: warm build after the race"; else bad "race: warm build after the race" "no libbase.so"; fi
+if loads_base "$d/h"; then ok "race: warm build after the race"; else bad "race: warm build after the race" "no base library in native load commands"; fi
 stop_daemon "$d"; sleep 0.3
 
 # The lock file is the single-daemon guarantee: whoever holds its flock owns the socket.

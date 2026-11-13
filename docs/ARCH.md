@@ -1590,6 +1590,14 @@ queries, arithmetic around the call and queries beyond these bounds
 retain the original `L0110` rejection. This early grammar does not
 change the later evaluator's layout coverage.
 
+For Rust 1.99's named Windows release targets, the mutex state is a
+one-byte `SmallFutex`; the Linux state is four bytes. Other futex-backed
+sync types still use four-byte futex fields on Windows. This distinction is
+part of the type pool's target layout identity and applies to both early
+signature queries and later body queries. The field definitions are in
+[the Windows futex module](https://github.com/rust-lang/rust/blob/1.99.0/library/std/src/sys/sync/futex/windows.rs)
+and [the shared mutex implementation](https://github.com/rust-lang/rust/blob/1.99.0/library/std/src/sys/sync/mutex/futex.rs).
+
 Supported forms, which are the forms ts-rust uses:
 
 - Literals, arithmetic and comparisons on ints, bools, and
@@ -2597,10 +2605,54 @@ deep-chain cleverness.
 
 ### 4.4 Layout
 
+Typed vector growth separates Rust's capacity policy from the backend's
+storage layout. `cgen::vec_policy` asks the existing semantic layout
+engine on demand for modeled scalar, pointer, array, enum and sync
+forms, and for user ADTs through `UserLayout`. The resulting minimum
+capacity (1, 4 or 8) is a compile-time argument to the typed amortized
+growth helpers. Allocation, copying, element stride and deallocation
+still use the physical C size and alignment. This distinction matters
+when a compact runtime lock crosses a different size boundary than the
+Rust type on the selected target. Every generated typed amortized route
+uses the policy, including collect, push, reserve, insert, append,
+extend, resize, clone-from and splice. Exact reserve is unchanged.
+
+This is a staged capacity correction, not complete layout coverage.
+Body-independent C types erase some original Rust identities. Erased
+tuples may be iterator or closure storage; erased `u64` may be a
+`LocalKey` with a pointer niche. Those nested representations, unknown
+iterator/Fmt/guard forms, approximate std or adapter source shims, and
+nested pointers whose thin shape cannot be proved retain the previous
+physical-size capacity policy. They remain unqualified for exact Rust
+capacity behavior. A known user ADT retains its original field types,
+so its modeled tuple fields still use the semantic engine. Original-ADT
+queries remain subject to that engine's existing supported-shape boundary;
+this change does not qualify additional unsized-pointee ABI forms. No new
+semantic size is inferred from a legacy C layout and no source type
+check is bypassed. Internal C byte-buffer callers retain their existing
+wrapper because their physical and semantic element sizes agree.
+
+Policy queries do no work at runtime. Common leaf classes allocate
+nothing during code generation. Other answers may be cached only within
+one frozen codegen phase, whose Program includes the target. While a
+dependency recorder is open, the helper bypasses that cache and records
+every queried ADT layout in dev and release modes, since a policy literal
+can change after a type edit. The sufficient-capacity inline branch is
+unchanged in shape; no new inline allocation body is added.
+
 Layout is observable in safe Rust. `size_of`, `align_of`,
 and `offset_of!` can print, and a const assert on a size
 is a compile error when the size differs. So layout is a
 strict contract, not a performance choice:
+
+The current 64-bit layout engine uses Rust 1.99's exclusive object-size
+bound of `1 << 61` bytes. Array multiplication, aggregate field addition
+and alignment rounding must stay below it without wrapping. The same
+bound applies to early signature queries and the older alias and body
+evaluators; the early evaluator's narrower type grammar does not restrict
+the other evaluators. Zero-sized arrays still have size zero regardless
+of their element count. This bound follows
+[`TargetDataLayout::obj_size_bound`](https://github.com/rust-lang/rust/blob/1.99.0/compiler/rustc_abi/src/lib.rs).
 
 - For every type lust accepts, `size_of` and `align_of`
   equal rustc 1.99 on the same target. The algorithm
@@ -2796,6 +2848,21 @@ shipped with a wrong size.
   (ptr, vtable) for `dyn`. A struct with an unsized
   last field stores the fat metadata in the pointer
   to the struct, not in the struct.
+  Tuple-pointee metadata is not implemented. References, raw pointers,
+  owning and weak pointers, and the value pointer in `Ref`/`RefMut`
+  therefore require a known `Sized` tuple tail. A cold
+  walk follows final tuple fields, array elements, and the inline
+  value of `Cell`, `RefCell`, `Mutex`, and `RwLock`; primitives,
+  pointers, function types, closures, and the other builtin Adts
+  terminate as `Sized`. Unsized or unresolved tails, unclassified
+  Adts, and walks exceeding 128 structural or parameter-frame steps
+  reject. Early collection has no user Adt field shapes, so even a
+  sized user Adt in the tuple's tail remains unsupported in these
+  queries. Ordinary well-formedness checks still validate all other
+  tuple fields. Direct pointers to slices, `str`, and `dyn` retain
+  their existing layouts. Registered unsized-newtype pointees also
+  reject in these queries. An absent marker does not establish support
+  for other named or composite DSTs; this guard does not add their ABI.
 - ZSTs: size 0, align from fields (1 if none). Vec of
   ZST never allocates; the erased core handles
   size 0. `PhantomData` is a ZST field that still

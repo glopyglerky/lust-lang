@@ -104,6 +104,8 @@ jobs:
           cargo test --locked --bin lust-core resolve::cfg::tests:: -- --test-threads=1 2>&1 | tee "$RUNNER_TEMP/native-cfg-tests.log"
           cargo test --locked --bin lust-core resolve::worklist::tests::root_adt_aliases_are_demand_driven -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
           cargo test --locked --bin lust-core ty::tests::sync_layout_follows_the_type_pool_target -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
+          cargo test --locked --bin lust-core ty::layout::tests:: -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
+          cargo test --locked --bin lust-core cgen::vec_policy::tests:: -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
       - name: Build the native compiler
         id: native_build
         env:
@@ -126,6 +128,29 @@ jobs:
             ${{ runner.temp }}/native-build/*.tar.gz
             ${{ runner.temp }}/native-build/*.tar.gz.sha256
           if-no-files-found: error
+      - name: Check native base identity and owner liveness
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
+        env:
+          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
+          CARGO_PROFILE_TEST_DEBUG: '0'
+        run: |
+          {
+            failed=0
+            for case in darwin_base_names_cover_inputs_and_owner base_owner_liveness sweep_bases_keeps_live_owners; do
+              name="driver::compile::tests::$case"
+              log="$RUNNER_TEMP/native-base-unit-$case.log"
+              cargo test --locked --bin lust-core "$name" -- --exact --test-threads=1 2>&1 | tee "$log" || failed=1
+              grep -Fqx "test $name ... ok" "$log" || failed=1
+            done
+            test "$failed" -eq 0
+          } 2>&1 | tee "$RUNNER_TEMP/native-base-unit-tests.log"
+      - name: Compare Windows layout constants with Rust metadata
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' && matrix.target == 'x86_64-unknown-linux-gnu' }}
+        run: |
+          {
+            rustup target add --toolchain 1.99.0 x86_64-pc-windows-gnu x86_64-pc-windows-msvc aarch64-pc-windows-msvc
+            python3 scripts/check-windows-layouts.py target/release/lust
+          } 2>&1 | tee "$RUNNER_TEMP/native-windows-layout.log"
       - name: Check target-dependent sync layouts
         if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: |
@@ -143,21 +168,38 @@ jobs:
           LUST_CHECK_RESOLVE: '1'
           LUST_CHECK_ITEMPATCH: '1'
         run: |
-          for scenario in crate_root_body_alias crate_root_item_alias; do
-            LUST_ITEMPATCH_LOG="$RUNNER_TEMP/native-root-alias-$scenario-oracles.log" python3 scripts/test-daemon-scenarios.py "$scenario"
-          done 2>&1 | tee "$RUNNER_TEMP/native-root-alias-scenarios.log"
-          python3 - <<'PY'
+          {
+            failed=0
+            for scenario in crate_root_body_alias crate_root_item_alias; do
+              LUST_ITEMPATCH_LOG="$RUNNER_TEMP/native-root-alias-$scenario-oracles.log" python3 scripts/test-daemon-scenarios.py "$scenario" || failed=1
+            done
+            python3 - <<'PY' || failed=1
           import os
           from pathlib import Path
           root = Path(os.environ['RUNNER_TEMP'])
-          for scenario, route in (('crate_root_body_alias', 'patch'), ('crate_root_item_alias', 'item')):
-              lines = (root / f'native-root-alias-{scenario}-oracles.log').read_text().splitlines()
-              for prefix in (f'resolve oracle: ok path={route} ', f'itempatch oracle: ok program path={route} '):
+          failed = False
+          routes = (('crate_root_body_alias', 'patch', 'patch'), ('crate_root_item_alias', 'patch', 'item'))
+          for scenario, resolve_route, item_route in routes:
+              path = root / f'native-root-alias-{scenario}-oracles.log'
+              try:
+                  lines = path.read_text().splitlines()
+              except (OSError, UnicodeError) as error:
+                  print(f'{scenario}: cannot read oracle log: {error}')
+                  lines = []
+                  failed = True
+              for prefix in (f'resolve oracle: ok path={resolve_route} ', f'itempatch oracle: ok program path={item_route} '):
                   count = sum(line.startswith(prefix) for line in lines)
                   print(f'{scenario}: {prefix}: {count} checks')
                   if count == 0:
-                      raise SystemExit(f'{scenario}: no retained {prefix} checks recorded')
+                      print(f'{scenario}: no retained {prefix} checks recorded')
+                      failed = True
+          raise SystemExit(1 if failed else 0)
           PY
+            test "$failed" -eq 0
+          } 2>&1 | tee "$RUNNER_TEMP/native-root-alias-scenarios.log"
+      - name: Check native base-library lifetime
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
+        run: python3 scripts/test-base-lifetime.py target/release/lust 2>&1 | tee "$RUNNER_TEMP/native-base-lifetime.log"
       - name: Check macOS regression cases
         if: ${{ !cancelled() && steps.native_build.outcome == 'success' && runner.os == 'macOS' }}
         env:
@@ -184,6 +226,20 @@ jobs:
             done
             test "$failed" -eq 0
           } 2>&1 | tee "$RUNNER_TEMP/native-macos-regressions.log"
+      - name: Retain focused qualification logs
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
+        with:
+          name: native-focused-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/native-target-layouts.log
+            ${{ runner.temp }}/native-windows-layout.log
+            ${{ runner.temp }}/native-root-alias-*.log
+            ${{ runner.temp }}/native-base-unit-tests.log
+            ${{ runner.temp }}/native-base-lifetime.log
+            ${{ runner.temp }}/native-main-stack.log
+            ${{ runner.temp }}/native-macos-regressions.log
+          if-no-files-found: error
       - name: Run the inherited CI gate
         id: native_gate
         if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
@@ -197,7 +253,7 @@ jobs:
           DIFFTEST_RUSTC_CACHE: 'off'
           SANITIZE: '1'
         run: |
-          PS4='+${EPOCHREALTIME} ' bash -x scripts/difftest.sh unicode_props_hash 2>&1 | tee "$RUNNER_TEMP/native-unicode-sanitizer.log"
+          BASH_XTRACEFD=3 PS4='+${EPOCHREALTIME} ' bash -x scripts/difftest.sh unicode_props_hash 3>"$RUNNER_TEMP/native-unicode-sanitizer-trace.log" 2>&1 | tee "$RUNNER_TEMP/native-unicode-sanitizer.log"
       - name: Check the capability declarations
         if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         run: python3 scripts/test-capabilities.py target/release/lust 2>&1 | tee "$RUNNER_TEMP/native-capabilities.log"
@@ -219,10 +275,14 @@ jobs:
             ${{ runner.temp }}/native-build.log
             ${{ runner.temp }}/native-cfg-tests.log
             ${{ runner.temp }}/native-target-layouts.log
+            ${{ runner.temp }}/native-windows-layout.log
             ${{ runner.temp }}/native-root-alias-*.log
+            ${{ runner.temp }}/native-base-unit-tests.log
+            ${{ runner.temp }}/native-base-lifetime.log
             ${{ runner.temp }}/native-main-stack.log
             ${{ runner.temp }}/native-macos-regressions.log
             ${{ runner.temp }}/native-unicode-sanitizer.log
+            ${{ runner.temp }}/native-unicode-sanitizer-trace.log
             ${{ runner.temp }}/native-gate.log
             ${{ runner.temp }}/native-capabilities.log
             ${{ runner.temp }}/native-test-command.log

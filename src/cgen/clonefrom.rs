@@ -113,6 +113,7 @@ pub(super) fn clonefrom_glue(
             }
             CTy::Vec(e) => {
                 let et = ctype(e);
+                let min = vec_policy::min_capacity(p, e);
                 if needs_drop_c(p, e) {
                     need(Glue::Drop, e);
                     let dm = mangle(e);
@@ -128,7 +129,7 @@ pub(super) fn clonefrom_glue(
                 let _ = writeln!(body, "  for (uint64_t i = 0; i < d->len; i++) {cf}");
                 let _ = writeln!(
                     body,
-                    "  if (s->len > d->len) {{ lust_vec_reserve(d, s->len - d->len, sizeof({et}), _Alignof({et})); for (uint64_t i = d->len; i < s->len; i++) (({et}*)d->ptr)[i] = {c}; d->len = s->len; }}"
+                    "  if (s->len > d->len) {{ lust_vec_reserve_min(d, s->len - d->len, sizeof({et}), _Alignof({et}), {min}); for (uint64_t i = d->len; i < s->len; i++) (({et}*)d->ptr)[i] = {c}; d->len = s->len; }}"
                 );
             }
             CTy::Boxed(e) => {

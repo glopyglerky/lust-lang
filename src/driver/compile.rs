@@ -559,6 +559,43 @@ fn base_tmp_seq() -> u64 {
     SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
 }
 
+/// Mach-O embeds its final install name while linking, so a Darwin base
+/// is named from the ordered link inputs before the single link. The
+/// object dir preserves per-session ownership, as in the ELF bytes key.
+/// All other identities are stable for the same build inputs; output and
+/// temporary paths, timestamps, and generation counters are not keyed.
+/// This adds one object-byte hash pass on a Darwin base rebuild only.
+fn darwin_base_name(
+    objs: &[PathBuf],
+    obj_dir: &Path,
+    compiler_id: (u64, u64),
+    session: &str,
+    target: &str,
+    debug: bool,
+) -> Result<String, String> {
+    use crate::driver::cache::hash128;
+    let (mut a, mut b) = hash128(
+        &[
+            b"darwin-base-v1:@rpath",
+            &compiler_id.0.to_le_bytes(),
+            &compiler_id.1.to_le_bytes(),
+            &[debug as u8],
+            target.as_bytes(),
+            session.as_bytes(),
+            obj_dir.as_os_str().as_encoded_bytes(),
+            &(objs.len() as u64).to_le_bytes(),
+        ],
+        41,
+    );
+    // Fold in link order, holding at most one object's bytes at a time.
+    // Both lanes remain part of the next step's state.
+    for obj in objs {
+        let bytes = std::fs::read(obj).map_err(|e| format!("cannot read {}: {e}", obj.display()))?;
+        (a, b) = hash128(&[&a.to_le_bytes(), &b.to_le_bytes(), &bytes], 41);
+    }
+    Ok(format!("base-{}-{a:016x}{b:016x}", std::process::id()))
+}
+
 /// True if `out` exists and still names `soname` (an overwritten output names its newer base instead).
 fn output_names_base(out: &Path, soname: &str) -> bool {
     std::fs::read(out).is_ok_and(|bytes| bytes.windows(soname.len()).any(|w| w == soname.as_bytes()))
@@ -647,7 +684,7 @@ fn record_base_user(base_dir: &Path, soname: &str, out: &Path) {
     }
 }
 
-/// The pid in a base file name (`libbase-<pid>-<hash>.so`): the process
+/// The pid in a base file name (`libbase-<pid>-<hash>.so` or `.dylib`): the process
 /// that built it. Base files are also unique per session instance (the
 /// session's object dir is mixed into the hash), so one session never
 /// links against, and must never delete, another live session's file.
@@ -655,6 +692,36 @@ fn base_owner_pid(soname: &str) -> Option<u32> {
     let rest = soname.strip_prefix("libbase-")?;
     let pid = rest.split('-').next()?;
     if !pid.is_empty() && pid.bytes().all(|b| b.is_ascii_digit()) { pid.parse().ok() } else { None }
+}
+
+/// A base belongs to a process, never a process group. Darwin has no
+/// /proc: signal 0 probes a checked positive pid without sending a
+/// signal. Only ESRCH proves the owner gone; permission or other errors
+/// conservatively keep its files. Linux retains its /proc probe.
+fn base_owner_alive(pid: u32) -> bool {
+    if pid == std::process::id() {
+        return true;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let Ok(pid) = i32::try_from(pid) else { return false };
+        if pid <= 0 {
+            return false;
+        }
+        unsafe extern "C" {
+            fn kill(pid: i32, sig: i32) -> i32;
+        }
+        // SAFETY: positive pid, signal 0 only tests process existence.
+        if unsafe { kill(pid, 0) } == 0 {
+            return true;
+        }
+        const ESRCH: i32 = 3;
+        std::io::Error::last_os_error().raw_os_error() != Some(ESRCH)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        Path::new(&format!("/proc/{pid}")).exists()
+    }
 }
 
 /// Deletes base files in `base_dir` that the manifest proves dead: every
@@ -667,20 +734,19 @@ fn base_owner_pid(soname: &str) -> Option<u32> {
 /// entry are kept (an entry is appended right after its executable
 /// links, so an unrecorded file may be in use by a concurrent build).
 /// Also deletes half-written rebuild temp files
-/// (`libbase-tmp-<pid>-*.so`) whose pid is gone. The manifest is
+/// (`libbase-tmp-<pid>-*` with the native suffix) whose pid is gone. The manifest is
 /// rewritten with only the kept, deduplicated entries. Called on a
 /// session's first base build and on daemon exit.
 pub fn sweep_bases(base_dir: &Path, exiting_pid: u32) {
-    // Half-written temp bases from crashed builds. /proc presence is
-    // the liveness probe (Linux hosts only; elsewhere the file stays).
+    // Half-written temp bases from crashed builds. A live native owner
+    // may still be writing its temporary file.
     if let Ok(rd) = std::fs::read_dir(base_dir) {
         for e in rd.flatten() {
             let name = e.file_name().to_string_lossy().into_owned();
             if let Some(rest) = name.strip_prefix("libbase-tmp-")
                 && let Some(pid) = rest.split('-').next()
-                && pid.parse::<u32>().is_ok()
-                && pid != std::process::id().to_string()
-                && !Path::new(&format!("/proc/{pid}")).exists()
+                && let Ok(pid) = pid.parse::<u32>()
+                && !base_owner_alive(pid)
             {
                 let _ = std::fs::remove_file(e.path());
             }
@@ -707,7 +773,7 @@ pub fn sweep_bases(base_dir: &Path, exiting_pid: u32) {
     }
     let owner_alive = |soname: &str| match base_owner_pid(soname) {
         Some(pid) if pid == exiting_pid => false,
-        Some(pid) => pid == std::process::id() || Path::new(&format!("/proc/{pid}")).exists(),
+        Some(pid) => base_owner_alive(pid),
         None => false,
     };
     let mut kept = String::new();
@@ -5940,18 +6006,31 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
         }
         let base = if rebuild_base {
             caches.base_gen += 1;
-            let tmp = base_dir.join(format!("libbase-tmp-{}-{}-{}.so", std::process::id(), caches.base_gen, base_tmp_seq()));
+            let tmp = base_dir.join(format!(
+                "libbase-tmp-{}-{}-{}{}",
+                std::process::id(), caches.base_gen, base_tmp_seq(), crate::tcc::SHARED_LIBRARY_SUFFIX
+            ));
             let built = std::fs::create_dir_all(&base_dir)
                 .map_err(|e| format!("cannot create {}: {e}", base_dir.display()))
-                .and_then(|_| crate::tcc::link_shared(&all_base, &tmp, req.debug))
                 .and_then(|_| {
-                    let bytes = std::fs::read(&tmp).map_err(|e| format!("cannot read {}: {e}", tmp.display()))?;
-                    // The object dir in the hash makes the name unique to this
-                    // session instance, and the pid names the owning process:
-                    // see `base_owner_pid`.
-                    let (a, b) = crate::driver::cache::hash128(&[&bytes, caches.obj_dir.to_string_lossy().as_bytes()], 41);
-                    caches.base_name = format!("base-{}-{a:016x}{b:016x}", std::process::id());
-                    let soname = format!("lib{}.so", caches.base_name);
+                    let install_name = if cfg!(target_os = "macos") {
+                        let compiler_id = disk_cache.as_ref().map_or_else(crate::driver::cache::compiler_id, |cache| cache.compiler_id());
+                        caches.base_name = darwin_base_name(
+                            &all_base, &caches.obj_dir, compiler_id, &req.session.describe(), crate::protocol::host_triple(), req.debug,
+                        )?;
+                        Some(caches.base_name.as_str())
+                    } else {
+                        None
+                    };
+                    crate::tcc::link_shared(&all_base, &tmp, req.debug, install_name)?;
+                    if !cfg!(target_os = "macos") {
+                        let bytes = std::fs::read(&tmp).map_err(|e| format!("cannot read {}: {e}", tmp.display()))?;
+                        // Keep the ELF identity on the linked bytes plus this
+                        // session's object dir. The pid names the owner.
+                        let (a, b) = crate::driver::cache::hash128(&[&bytes, caches.obj_dir.to_string_lossy().as_bytes()], 41);
+                        caches.base_name = format!("base-{}-{a:016x}{b:016x}", std::process::id());
+                    }
+                    let soname = crate::tcc::shared_library_filename(&caches.base_name);
                     install_base(&tmp, &base_dir.join(&soname))?;
                     if !caches.base_files.contains(&soname) {
                         caches.base_files.push_back(soname);
@@ -5961,24 +6040,25 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
             if built.is_err() {
                 let _ = std::fs::remove_file(&tmp);
             }
-            t.lap("link libbase.so");
+            t.lap(if cfg!(target_os = "macos") { "link base library" } else { "link libbase.so" });
             built
-        } else if !caches.base_name.is_empty() && !base_dir.join(format!("lib{}.so", caches.base_name)).exists() {
+        } else if !caches.base_name.is_empty() && !base_dir.join(crate::tcc::shared_library_filename(&caches.base_name)).exists() {
             // The base file vanished under a live session. The bases dir
             // is in `.lust-cache`, state outside tools may delete as a
             // cache (the edit fuzzer rewrites the crate tree every edit).
             // The base objects still live in the session object dir, so
             // relink the same base under the same name.
-            let dest = base_dir.join(format!("lib{}.so", caches.base_name));
-            let tmp = base_dir.join(format!("libbase-tmp-{}-relink-{}.so", std::process::id(), base_tmp_seq()));
+            let dest = base_dir.join(crate::tcc::shared_library_filename(&caches.base_name));
+            let tmp = base_dir.join(format!("libbase-tmp-{}-relink-{}{}", std::process::id(), base_tmp_seq(), crate::tcc::SHARED_LIBRARY_SUFFIX));
+            let install_name = cfg!(target_os = "macos").then_some(caches.base_name.as_str());
             let built = std::fs::create_dir_all(&base_dir)
                 .map_err(|e| format!("cannot create {}: {e}", base_dir.display()))
-                .and_then(|_| crate::tcc::link_shared(&all_base, &tmp, req.debug))
+                .and_then(|_| crate::tcc::link_shared(&all_base, &tmp, req.debug, install_name))
                 .and_then(|_| install_base(&tmp, &dest));
             if built.is_err() {
                 let _ = std::fs::remove_file(&tmp);
             }
-            t.lap("link libbase.so");
+            t.lap(if cfg!(target_os = "macos") { "link base library" } else { "link libbase.so" });
             built
         } else {
             Ok(())
@@ -5998,7 +6078,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
     // kept keeps its base; one that was overwritten or deleted does not. A running program
     // keeps its mapped copy after unlink.
     if caches.persistent && !caches.base_name.is_empty() {
-        let soname = format!("lib{}.so", caches.base_name);
+        let soname = crate::tcc::shared_library_filename(&caches.base_name);
         if let Some(base_dir) = caches.base_dir.clone() {
             record_base_user(&base_dir, &soname, &req.out);
         }
@@ -6095,6 +6175,66 @@ mod tests {
             }
         }
         panic!("{}: still busy", bin.display())
+    }
+
+    #[test]
+    fn darwin_base_names_cover_inputs_and_owner() {
+        let dir = std::env::temp_dir().join(format!("lust-base-key-test-{}-{}", std::process::id(), base_tmp_seq()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let objs = vec![dir.join("one.o"), dir.join("two.o")];
+        std::fs::write(&objs[0], b"one").unwrap();
+        std::fs::write(&objs[1], b"two").unwrap();
+        let key = || darwin_base_name(&objs, &dir, (1, 2), "session", "target", false).unwrap();
+        let original = key();
+        assert_eq!(key(), original, "identical inputs retain their immutable name");
+        assert!(original.starts_with(&format!("base-{}-", std::process::id())), "the pid names the owner");
+        assert_ne!(darwin_base_name(&[objs[1].clone(), objs[0].clone()], &dir, (1, 2), "session", "target", false).unwrap(), original);
+        assert_ne!(darwin_base_name(&objs[..1], &dir, (1, 2), "session", "target", false).unwrap(), original);
+        std::fs::write(&objs[0], b"changed").unwrap();
+        assert_ne!(key(), original, "changed bytes cannot replace an older base in place");
+        std::fs::write(&objs[0], b"one").unwrap();
+        assert_eq!(key(), original);
+        for different in [
+            darwin_base_name(&objs, &dir.join("another-session"), (1, 2), "session", "target", false),
+            darwin_base_name(&objs, &dir, (3, 2), "session", "target", false),
+            darwin_base_name(&objs, &dir, (1, 3), "session", "target", false),
+            darwin_base_name(&objs, &dir, (1, 2), "another-session", "target", false),
+            darwin_base_name(&objs, &dir, (1, 2), "session", "another-target", false),
+            darwin_base_name(&objs, &dir, (1, 2), "session", "target", true),
+        ] {
+            assert_ne!(different.unwrap(), original);
+        }
+        std::fs::remove_file(&objs[0]).unwrap();
+        assert!(darwin_base_name(&objs, &dir, (1, 2), "session", "target", false).is_err(), "a missing input cannot acquire a name");
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    fn base_owner_liveness() {
+        unsafe extern "C" {
+            fn getppid() -> i32;
+        }
+        // SAFETY: getppid has no arguments or memory preconditions.
+        let parent = u32::try_from(unsafe { getppid() }).unwrap();
+        assert!(parent > 0);
+        assert!(base_owner_alive(parent), "another live native process is protected");
+        assert!(base_owner_alive(std::process::id()));
+        assert!(!base_owner_alive(0), "zero must not probe the process group");
+        assert!(!base_owner_alive(u32::MAX), "an overflowing pid must not become -1");
+        let dir = std::env::temp_dir().join(format!("lust-base-owner-test-{}-{}", std::process::id(), base_tmp_seq()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let base = crate::tcc::shared_library_filename(&format!("base-{parent}-aaaa"));
+        let tmp = crate::tcc::shared_library_filename(&format!("base-tmp-{parent}-1"));
+        std::fs::write(dir.join(&base), b"base").unwrap();
+        std::fs::write(dir.join(&tmp), b"in progress").unwrap();
+        std::fs::write(dir.join("manifest"), format!("{base}\t{}\n", dir.join("gone.bin").display())).unwrap();
+        sweep_bases(&dir, 0);
+        assert!(dir.join(&base).exists(), "another live owner's unreferenced base stays");
+        assert!(dir.join(&tmp).exists(), "another live owner's unfinished link stays");
+        sweep_bases(&dir, parent);
+        assert!(!dir.join(&base).exists(), "an exiting owner's unreferenced base is swept");
+        std::fs::remove_dir_all(dir).unwrap();
     }
 
     /// The base sweep never deletes a live owner's base (it may be a live

@@ -298,13 +298,35 @@ fn link_executable(tcc: &Tcc, objs: &[PathBuf], out: &Path) -> Result<(), String
     linked
 }
 
-/// Links object files into a shared library at `out`.
-pub fn link_shared(objs: &[PathBuf], out: &Path, debug: bool) -> Result<(), String> {
+/// The native library suffix used by tcc's library search.
+pub const SHARED_LIBRARY_SUFFIX: &str = if cfg!(target_os = "macos") { ".dylib" } else { ".so" };
+
+pub fn shared_library_filename(base: &str) -> String {
+    format!("lib{base}{SHARED_LIBRARY_SUFFIX}")
+}
+
+/// Links object files into a shared library at `out`. On Darwin `base`
+/// is the final immutable library name, even though `out` is a temporary
+/// path: the Mach-O install name must survive the final atomic rename.
+pub fn link_shared(objs: &[PathBuf], out: &Path, debug: bool, base: Option<&str>) -> Result<(), String> {
     let tcc = Tcc::new(TCC_OUTPUT_DLL, debug)?;
+    if cfg!(target_os = "macos") {
+        let base = base.ok_or_else(|| "a Darwin base library needs its final install name".to_string())?;
+        let name = format!("@rpath/{}", shared_library_filename(base)).replace('\\', "\\\\").replace('"', "\\\"");
+        // The top-level option sets Mach-O's LC_ID_DYLIB. The linker
+        // option -Wl,install_name= sets the ELF soname instead in tcc.
+        // link_with_base emits the matching LC_RPATH on the executable.
+        let opts = CString::new(format!("-install_name \"{name}\"")).unwrap();
+        // SAFETY: valid state and a NUL-terminated string that outlives the call.
+        if unsafe { tcc_set_options(tcc.s, opts.as_ptr()) } != 0 {
+            return Err(tcc.fail("set the base library install name"));
+        }
+    }
     link_objects(&tcc, objs, out)
 }
 
-/// Links an executable from `objs` plus `<dir>/lib<base>.so`, which it loads at run time.
+/// Links an executable from `objs` plus `<dir>/lib<base>` with the native
+/// library suffix, which it loads at run time.
 /// The base name is versioned (for example `base-3`), so a rebuilt base never changes what an
 /// executable built earlier loads.
 pub fn link_with_base(objs: &[PathBuf], dir: &Path, base: &str, out: &Path, debug: bool) -> Result<(), String> {
@@ -320,7 +342,7 @@ pub fn link_with_base(objs: &[PathBuf], dir: &Path, base: &str, out: &Path, debu
         tcc_set_options(tcc.s, rpath.as_ptr());
         tcc_add_library_path(tcc.s, cstr(dir).as_ptr());
         if tcc_add_library(tcc.s, base.as_ptr()) != 0 {
-            return Err(tcc.fail("load libbase.so"));
+            return Err(tcc.fail("load the base library"));
         }
     }
     link_executable(&tcc, objs, out)

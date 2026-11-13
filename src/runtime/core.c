@@ -367,16 +367,23 @@ void lust_vec_set_zst(lust_Vec *v, uint64_t align) LUST_BODY({
     v->cap = 0;
 })
 
-void lust_vec_reserve(lust_Vec *v, uint64_t extra, uint64_t elem, uint64_t align) LUST_BODY({
+/* The typed caller supplies RawVec's Rust-size minimum independently
+   of the physical C element size used for allocation and stride. */
+void lust_vec_reserve_min(lust_Vec *v, uint64_t extra, uint64_t elem, uint64_t align, uint64_t min_cap) LUST_BODY({
     if (!elem) { lust_vec_set_zst(v, align); if (extra > 18446744073709551615ull - v->len) lust_vec_capacity_overflow(); return; }
     if (v->cap - v->len >= extra) return;
     uint64_t needed = v->len + extra;
     if (needed < v->len) { lust_vec_capacity_overflow(); return; }
     uint64_t cap = v->cap * 2;
     if (cap < needed) cap = needed;
-    uint64_t min_cap = elem == 1 ? 8 : elem <= 1024 ? 4 : 1;
     if (cap < min_cap) cap = min_cap;
     lust_vec_grow_to(v, cap, elem, align);
+})
+
+/* Untyped runtime callers use byte buffers, whose C and Rust sizes
+   agree. Keep their interface and physical-size policy unchanged. */
+void lust_vec_reserve(lust_Vec *v, uint64_t extra, uint64_t elem, uint64_t align) LUST_BODY({
+    lust_vec_reserve_min(v, extra, elem, align, elem == 1 ? 8 : elem <= 1024 ? 4 : 1);
 })
 
 void lust_vec_reserve_exact(lust_Vec *v, uint64_t extra, uint64_t elem, uint64_t align) LUST_BODY({
@@ -428,6 +435,11 @@ void lust_vec_shrink_to(lust_Vec *v, uint64_t min_cap, uint64_t elem, uint64_t a
 
 void *lust_vec_push_slot(lust_Vec *v, uint64_t elem, uint64_t align) LUST_BODY({
     lust_vec_reserve(v, 1, elem, align);
+    return (char *)v->ptr + (v->len++) * elem;
+})
+
+void *lust_vec_push_slot_min(lust_Vec *v, uint64_t elem, uint64_t align, uint64_t min_cap) LUST_BODY({
+    lust_vec_reserve_min(v, 1, elem, align, min_cap);
     return (char *)v->ptr + (v->len++) * elem;
 })
 
@@ -1604,7 +1616,7 @@ void lust_str_trunc_chars(lust_String *s, uint32_t chars) LUST_BODY({
 
 /* ---------- Vec insert/remove ---------- */
 
-void lust_vec_insert_at(lust_Vec *v, uint64_t i, uint64_t elem, uint64_t align, lust_loc loc) LUST_BODY({
+void lust_vec_insert_at_min(lust_Vec *v, uint64_t i, uint64_t elem, uint64_t align, uint64_t min_cap, lust_loc loc) LUST_BODY({
     if (i > v->len) {
         lust_String s = lust_string_new();
         lust_string_push_cstr(&s, "insertion index (is ");
@@ -1615,9 +1627,13 @@ void lust_vec_insert_at(lust_Vec *v, uint64_t i, uint64_t elem, uint64_t align, 
         lust_panic_dyn(&s, loc);
         return;
     }
-    lust_vec_reserve(v, 1, elem, align);
+    lust_vec_reserve_min(v, 1, elem, align, min_cap);
     lust_copy_small((char *)v->ptr + (i + 1) * elem, (char *)v->ptr + i * elem, (v->len - i) * elem);
     v->len++;
+})
+
+void lust_vec_insert_at(lust_Vec *v, uint64_t i, uint64_t elem, uint64_t align, lust_loc loc) LUST_BODY({
+    lust_vec_insert_at_min(v, i, elem, align, elem == 1 ? 8 : elem <= 1024 ? 4 : 1, loc);
 })
 
 void lust_vec_check_remove(lust_Vec *v, uint64_t i, lust_loc loc) LUST_BODY({

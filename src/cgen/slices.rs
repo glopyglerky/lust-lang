@@ -224,11 +224,12 @@ impl FnGen<'_, '_> {
                 // `SetLenOnDrop` keeps it).
                 let e = vec_elem(&tys[0]);
                 let et = ctype(&e);
+                let min = vec_policy::min_capacity(self.p, &e);
                 let vv = &vals[0];
                 let (s, en, i) = (self.tmp(), self.tmp(), self.tmp());
                 let _ = writeln!(
                     self.out,
-                    "    uint64_t {s}, {en};\n    lust_range_check({vv}->len, {}, {}, {}, {}, &{s}, &{en});\n    lust_vec_reserve({vv}, {en} - {s}, sizeof({et}), _Alignof({et}));",
+                    "    uint64_t {s}, {en};\n    lust_range_check({vv}->len, {}, {}, {}, {}, &{s}, &{en});\n    lust_vec_reserve_min({vv}, {en} - {s}, sizeof({et}), _Alignof({et}), {min});",
                     vals[1], vals[2], vals[3], vals[4]
                 );
                 if is_copy_c(self.p, &e) {
@@ -383,7 +384,8 @@ impl FnGen<'_, '_> {
                         format!("{p}->tail_len")
                     }
                     B::SpliceReserve => {
-                        let _ = writeln!(self.out, "    lust_vec_reserve({dv}, {}, sizeof({et}), _Alignof({et}));", vals[1]);
+                        let min = vec_policy::min_capacity(self.p, e);
+                        let _ = writeln!(self.out, "    lust_vec_reserve_min({dv}, {}, sizeof({et}), _Alignof({et}), {min});", vals[1]);
                         "((lust_Unit){})".into()
                     }
                     B::SpliceGap => format!("({p}->start < {p}->tail_start)"),
@@ -395,9 +397,10 @@ impl FnGen<'_, '_> {
                         // `move_tail(n)`: `buf.reserve(tail_start + tail_len, n)`,
                         // then the tail moves up by n.
                         let (old, n) = (self.tmp(), &vals[1]);
+                        let min = vec_policy::min_capacity(self.p, e);
                         let _ = writeln!(
                             self.out,
-                            "    uint64_t {old} = {dv}->len; {dv}->len = {p}->tail_start + {p}->tail_len;\n    lust_vec_reserve({dv}, {n}, sizeof({et}), _Alignof({et})); {dv}->len = {old};\n    lust_memmove((({et}*){dv}->ptr) + {p}->tail_start + {n}, (({et}*){dv}->ptr) + {p}->tail_start, {p}->tail_len * sizeof({et})); {p}->tail_start += {n};"
+                            "    uint64_t {old} = {dv}->len; {dv}->len = {p}->tail_start + {p}->tail_len;\n    lust_vec_reserve_min({dv}, {n}, sizeof({et}), _Alignof({et}), {min}); {dv}->len = {old};\n    lust_memmove((({et}*){dv}->ptr) + {p}->tail_start + {n}, (({et}*){dv}->ptr) + {p}->tail_start, {p}->tail_len * sizeof({et})); {p}->tail_start += {n};"
                         );
                         "((lust_Unit){})".into()
                     }

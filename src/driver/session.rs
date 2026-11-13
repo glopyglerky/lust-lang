@@ -368,11 +368,12 @@ pub(crate) struct Caches {
     /// groups at the end, so one edit dirties only its own unit
     /// even though grouping is by bytes. A fresh base regroups all.
     pub(crate) groups: Vec<std::ops::Range<usize>>,
-    /// Slot capacity of `lust_fns` in libbase.so, and how many function units it has.
+    /// Slot capacity of `lust_fns` in the base library, and how many function units it has.
     pub(crate) table_cap: usize,
     pub(crate) base_units: usize,
     /// Bumped on every base rebuild; used only for the rebuild's temp file name.
-    /// Each finished base is renamed to an owner+content name (`libbase-<pid>-<hash>.so`)
+    /// Each finished base is renamed to an owner+content name (`libbase-<pid>-<hash>`
+    /// with the native `.so` or `.dylib` suffix)
     /// in `base_dir`, a persistent directory (the disk cache's `bases/`
     /// subdir), never in `obj_dir`: executables load the base by absolute
     /// rpath at run time, so it must outlive the daemon that built it,
@@ -395,7 +396,7 @@ pub(crate) struct Caches {
     pub(crate) obj_dir: PathBuf,
     /// Units compiled into `obj_dir` with the current layout, and with which debug setting.
     pub(crate) objects: Option<bool>,
-    /// A daemon session builds against libbase.so; a one-shot session links statically.
+    /// A daemon session builds against a base library; a one-shot session links statically.
     pub(crate) persistent: bool,
     /// The process exits right after this session's request (`lust check` and `lust test`
     /// one-shots set it): compile leaks the program and IR instead of freeing them. A
@@ -416,7 +417,7 @@ pub(crate) struct Caches {
     /// id, so cached C is reusable only while every id names the same
     /// instance (`compile::inst_adt_ids`).
     pub(crate) inst_ids: FxMap<u32, u64>,
-    /// Units whose current code is in an overlay object, not in libbase.so.
+    /// Units whose current code is in an overlay object, not in the base library.
     pub(crate) overlays: std::collections::BTreeSet<usize>,
 }
 

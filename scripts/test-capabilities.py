@@ -91,6 +91,7 @@ def first_error(text):
 
 def main():
     lust = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "target" / "release" / "lust")
+    lust = str(pathlib.Path(shutil.which(lust) or lust).resolve())
     cap = json.loads(subprocess.run([lust, "capabilities", "--json"], capture_output=True, text=True, check=True).stdout)
     lines = lines_of(cap)
     fails = []

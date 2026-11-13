@@ -7605,9 +7605,9 @@ impl Ex<'_, '_> {
         } else {
             // First item, then `max(MIN_NON_ZERO_CAP, lower + 1)`, then
             // `extend_desugared`: reserve `lower + 1` whenever full. The
-            // amortized reserve of an empty Vec is that capacity (the
-            // runtime knows the element size, which the Rust layout of a
-            // std source type such as `Cell<T>` does not give here).
+            // typed amortized reserve of an empty Vec is that capacity.
+            // Codegen supplies the modeled Rust-size minimum separately
+            // from the physical C element size used for storage.
             let (_, n, first, _) = self.pull(&itp, ty)?;
             let (lo, _) = self.hint(itp.clone(), ty)?;
             let l1 = self.local(USIZE);

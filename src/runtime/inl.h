@@ -109,6 +109,24 @@
             lust_vec_reserve(lust_v_, lust_x_, lust_e_, (align));                                      \
         (void)0;                                                                                       \
     })
+/* Typed growth retains the same cheap sufficient-capacity branch. The
+   minimum is a compile-time policy value, not a runtime layout query. */
+#define lust_vec_push_slot_min(v, elem, align, min_cap)                                                \
+    __extension__({                                                                                    \
+        lust_Vec *lust_v_ = (v);                                                                       \
+        uint64_t lust_e_ = (elem);                                                                     \
+        __builtin_expect(lust_e_ != 0 && lust_v_->len < lust_v_->cap, 1)                              \
+            ? (void *)((char *)lust_v_->ptr + (lust_v_->len++) * lust_e_)                              \
+            : lust_vec_push_slot_min(lust_v_, lust_e_, (align), (min_cap));                            \
+    })
+#define lust_vec_reserve_min(v, extra, elem, align, min_cap)                                           \
+    __extension__({                                                                                    \
+        lust_Vec *lust_v_ = (v);                                                                       \
+        uint64_t lust_x_ = (extra), lust_e_ = (elem);                                                  \
+        if (!__builtin_expect(lust_e_ != 0 && lust_v_->cap - lust_v_->len >= lust_x_, 1))             \
+            lust_vec_reserve_min(lust_v_, lust_x_, lust_e_, (align), (min_cap));                       \
+        (void)0;                                                                                       \
+    })
 /* Atomic stores, swaps, compare-exchanges and fetch ops: the orders that panic take
    the function, as the narrow loads above. */
 #define lust_inl_mo_cas_(s, f) (((f) == 4) ? __ATOMIC_SEQ_CST : ((f) == 2 && ((s) == 0 || (s) == 1)) ? ((s) == 0 ? __ATOMIC_ACQUIRE : __ATOMIC_ACQ_REL) : lust_inl_mo_(s))

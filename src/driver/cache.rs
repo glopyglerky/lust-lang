@@ -131,7 +131,7 @@ fn tcc_hash() -> (u64, u64) {
 }
 
 /// The compiler id for cache keys. See the module docs.
-fn compiler_id() -> (u64, u64) {
+pub(crate) fn compiler_id() -> (u64, u64) {
     let tcc = tcc_hash();
     let extra = std::env::var("LUST_CACHE_COMPILER_ID").unwrap_or_default();
     hash128(&[env!("LUST_BUILD_HASH").as_bytes(), &tcc.0.to_le_bytes(), &tcc.1.to_le_bytes(), extra.as_bytes()], 7)
@@ -245,6 +245,11 @@ fn src_reads_outside(src: &[u8]) -> bool {
 }
 
 impl Cache {
+    /// The compiler identity already read when this cache was opened.
+    pub(crate) fn compiler_id(&self) -> (u64, u64) {
+        self.id
+    }
+
     /// Opens the cache for `src_file`. None when turned off or the dir cannot be made.
     pub fn open(src_file: &Path) -> Option<Cache> {
         // A std or adapter source override: the compiler id does not cover that tree.

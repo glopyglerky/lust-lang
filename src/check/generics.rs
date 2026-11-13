@@ -2861,10 +2861,10 @@ fn resolve_layout_array_len(
         height: usize,
     }
     // Prove a conservative size bound before entering the shared layout
-    // engine: its tuple placement assumes that field sums cannot overflow.
-    // This is not a second layout algorithm; field ordering and the exact
-    // result still come from that engine. Aliases can form a shared DAG,
-    // so memoize types and bound both visits and recursion.
+    // engine. This is not a second layout algorithm; field ordering, the
+    // exact result and checked placement still come from that engine.
+    // Aliases can form a shared DAG, so memoize types and bound both
+    // visits and recursion.
     fn bounded(
         tys: &impl TyIntern,
         t: Ty,
@@ -2934,9 +2934,9 @@ fn resolve_layout_array_len(
         seen.insert(t, Some(b));
         Some(b)
     }
-    // Use the shared engine's isize model, not the compiler host's usize.
-    // Native layout support currently covers 64-bit targets.
-    let max_size = (1u64 << (IntTy::Isize.bits() - 1)) - 1;
+    // Share the layout engine's exclusive 64-bit object-size bound,
+    // not isize::MAX or the compiler host's usize.
+    let max_size = crate::ty::layout::OBJECT_SIZE_BOUND - 1;
     bounded(tys, t, &mut FxMap::default(), &mut 4096, 0, max_size)?;
     let layout = crate::check::collect::layout_without_adt_fields(tys, t)?;
     let value = if align { layout.align } else { layout.size };

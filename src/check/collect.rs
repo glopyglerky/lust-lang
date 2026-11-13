@@ -3440,6 +3440,8 @@ pub fn collect_with_order_resolved(
     let sync_layout = resolved.as_ref().and_then(|tables| tables.crate_cfgs.get(&crate::ty::defs::ROOT_MODULE))
         .map(|(env, _)| if env.pairs.iter().any(|(name, value)| name == "target_os" && value == "macos") {
             crate::ty::layout::SyncLayout::Darwin
+        } else if env.pairs.iter().any(|(name, value)| name == "target_os" && value == "windows") {
+            crate::ty::layout::SyncLayout::Windows
         } else {
             crate::ty::layout::SyncLayout::Futex
         }).unwrap_or_else(crate::ty::layout::SyncLayout::host);
