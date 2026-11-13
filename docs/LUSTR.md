@@ -66,3 +66,20 @@ coverage nor a universal no-regression claim is established by a finite suite.
 The existing upstream release command can invoke Cargo/rustc when no native
 foreign-target release path is selected. Such runs remain reference or hosted
 compatibility results and cannot qualify native Lustr coverage.
+
+## Native build artifacts
+
+CI retains the exact native compiler binaries and their install-relative
+library and TinyCC inputs for each native Linux and macOS host, on x86_64 and
+AArch64. Artifacts named `native-build-<target>-<revision>` contain a tar archive
+and its SHA256 checksum. After extraction, invoke `<target>/bin/lust`; keep the
+sibling `lib/lust` directory with it. `build/identity.json` records the source
+tree, bootstrap compiler, release profile, TinyCC revision and binary hashes.
+`SHA256SUMS` records every packaged input. Packaging does not rebuild or strip
+the compiler.
+
+An artifact records a build, not a passing qualification. Read the same
+revision's native gate and matched performance results before relying on it.
+Foreign-target layout checks exercise the front end only; they do not establish
+cross-linking or execution on that target. Native host gates execute the
+generated programs and retain their comparison logs.

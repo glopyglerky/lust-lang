@@ -1379,6 +1379,9 @@ pub const INTRINSICS: &[IntrinsicDef] = &[
     // symlink(2) for `std::os::unix::fs::symlink` (TRIAGE T5):
     // 0, errno, or -1 for a path with a NUL byte (sys.h).
     IntrinsicDef { name: "sys_symlink", c_symbol: "lust_sys_symlink", params: &[S::Bytes, S::Bytes], ret: S::I32, allowed: ONLY_STD, implemented: true },
+    // Darwin F_GETPATH: appends an open descriptor's path; 0 or errno.
+    // The std call is target-gated, including for release cross builds.
+    IntrinsicDef { name: "sys_fd_path", c_symbol: "lust_sys_fd_path", params: &[S::I32, S::VecU8Mut], ret: S::I32, allowed: ONLY_STD, implemented: true },
 ];
 
 /// The intrinsic with this `core::intrinsics` name: its registry id.

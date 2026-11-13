@@ -76,6 +76,12 @@ fn main() {
         println!("cargo:rustc-link-lib=dylib=pthread");
         println!("cargo:rustc-link-lib=dylib=m");
     }
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
+        // Darwin caps the main stack's setrlimit growth. Reserve the same
+        // 256 MiB as pool::STACK_SIZE in the Mach-O entry point, so accepted
+        // deep expressions also fit on the compiler's main thread.
+        println!("cargo:rustc-link-arg-bin=lust-core=-Wl,-stack_size,0x10000000");
+    }
     println!("cargo:rustc-env=LUST_TCC_LIB_PATH={}", lib.join("tcc").display());
     println!("cargo:rustc-env=LUST_TCC_BIN={}", tcc.join("bin/tcc").display());
     println!("cargo:rerun-if-env-changed=LUST_TCC_HOME");

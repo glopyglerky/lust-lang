@@ -29,7 +29,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
           - runner: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-          - runner: macos-15
+          - runner: macos-26
             target: aarch64-apple-darwin
           - runner: macos-15-intel
             target: x86_64-apple-darwin
@@ -103,10 +103,89 @@ jobs:
         run: |
           cargo test --locked --bin lust-core resolve::cfg::tests:: -- --test-threads=1 2>&1 | tee "$RUNNER_TEMP/native-cfg-tests.log"
           cargo test --locked --bin lust-core resolve::worklist::tests::root_adt_aliases_are_demand_driven -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
+          cargo test --locked --bin lust-core ty::tests::sync_layout_follows_the_type_pool_target -- --test-threads=1 2>&1 | tee -a "$RUNNER_TEMP/native-cfg-tests.log"
+      - name: Build the native compiler
+        env:
+          LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
+        run: cargo build --release --locked -j1 -vv 2>&1 | tee "$RUNNER_TEMP/native-build.log"
+      - name: Package the exact native build
+        run: |
+          python3 scripts/package-native-build.py \
+            --source "$GITHUB_WORKSPACE" \
+            --binary-dir "$GITHUB_WORKSPACE/target/release" \
+            --tcc-home "$GITHUB_WORKSPACE/third_party/tcc" \
+            --tcc-source "$GITHUB_WORKSPACE/third_party/tinycc" \
+            --build-log "$RUNNER_TEMP/native-build.log" \
+            --output "$RUNNER_TEMP/native-build/${{ matrix.target }}"
+      - name: Retain the native compiler package
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-build-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/native-build/*.tar.gz
+            ${{ runner.temp }}/native-build/*.tar.gz.sha256
+          if-no-files-found: error
+      - name: Check target-dependent sync layouts
+        run: |
+          for target in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu x86_64-apple-darwin aarch64-apple-darwin; do
+            printf 'Checking target %s\n' "$target"
+            target/release/lust check tests/pass/layout_sync_target.rs --target "$target"
+          done 2>&1 | tee "$RUNNER_TEMP/native-target-layouts.log"
+      - name: Check retained root type identity
+        env:
+          LUST_CHECK_RESOLVE: '1'
+          LUST_CHECK_ITEMPATCH: '1'
+        run: |
+          for scenario in crate_root_body_alias crate_root_item_alias; do
+            LUST_ITEMPATCH_LOG="$RUNNER_TEMP/native-root-alias-$scenario-oracles.log" python3 scripts/test-daemon-scenarios.py "$scenario"
+          done 2>&1 | tee "$RUNNER_TEMP/native-root-alias-scenarios.log"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP'])
+          for scenario, route in (('crate_root_body_alias', 'patch'), ('crate_root_item_alias', 'item')):
+              lines = (root / f'native-root-alias-{scenario}-oracles.log').read_text().splitlines()
+              for prefix in (f'resolve oracle: ok path={route} ', f'itempatch oracle: ok program path={route} '):
+                  count = sum(line.startswith(prefix) for line in lines)
+                  print(f'{scenario}: {prefix}: {count} checks')
+                  if count == 0:
+                      raise SystemExit(f'{scenario}: no retained {prefix} checks recorded')
+          PY
+      - name: Check macOS regression cases
+        if: runner.os == 'macOS'
+        env:
+          DIFFTEST_RUSTC_CACHE: 'off'
+        run: |
+          otool -l target/release/lust-core > "$RUNNER_TEMP/native-main-stack.log"
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          text = (Path(os.environ['RUNNER_TEMP']) / 'native-main-stack.log').read_text()
+          commands = re.findall(r'\bcmd LC_MAIN\b(.*?)(?=\nLoad command|\Z)', text, re.S)
+          if len(commands) != 1:
+              raise SystemExit('expected one Mach-O LC_MAIN command')
+          size = re.search(r'\bstacksize\s+(\S+)', commands[0])
+          if size is None or int(size.group(1), 0) != 256 * 1024 * 1024:
+              raise SystemExit('compiler main stack differs from the worker stack budget')
+          print('compiler main stack: 256 MiB')
+          PY
+          for fixture in builtin_std_layouts layout_cells_locks uninhabited_cell_layouts layout_sync_host deep_chain_one_fn deep_const_chain deep_method_chain fs_permissions_ext std_fs_file std_hash_eq_clone_forms std_process_command std_unix_process_ext unix_command_arg0_fd; do
+            printf 'Checking %s\n' "$fixture"
+            bash scripts/difftest.sh "$fixture"
+          done 2>&1 | tee "$RUNNER_TEMP/native-macos-regressions.log"
       - name: Run the inherited CI gate
+        id: native_gate
         env:
           LUST_TCC_HOME: ${{ github.workspace }}/third_party/tcc
         run: bash scripts/ci.sh 2>&1 | tee "$RUNNER_TEMP/native-gate.log"
+      - name: Diagnose the AArch64 Unicode sanitizer timeout
+        if: failure() && matrix.target == 'aarch64-unknown-linux-gnu' && steps.native_gate.conclusion == 'failure'
+        env:
+          DIFFTEST_JOBS: '1'
+          DIFFTEST_RUSTC_CACHE: 'off'
+          SANITIZE: '1'
+        run: |
+          PS4='+${EPOCHREALTIME} ' bash -x scripts/difftest.sh unicode_props_hash 2>&1 | tee "$RUNNER_TEMP/native-unicode-sanitizer.log"
       - name: Check the capability declarations
         run: python3 scripts/test-capabilities.py target/release/lust 2>&1 | tee "$RUNNER_TEMP/native-capabilities.log"
       - name: Compare native test results with Rust
@@ -122,7 +201,13 @@ jobs:
           name: native-gate-${{ matrix.target }}-${{ github.sha }}
           path: |
             ${{ runner.temp }}/native-platforms.log
+            ${{ runner.temp }}/native-build.log
             ${{ runner.temp }}/native-cfg-tests.log
+            ${{ runner.temp }}/native-target-layouts.log
+            ${{ runner.temp }}/native-root-alias-*.log
+            ${{ runner.temp }}/native-main-stack.log
+            ${{ runner.temp }}/native-macos-regressions.log
+            ${{ runner.temp }}/native-unicode-sanitizer.log
             ${{ runner.temp }}/native-gate.log
             ${{ runner.temp }}/native-capabilities.log
             ${{ runner.temp }}/native-test-command.log

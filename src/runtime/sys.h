@@ -57,6 +57,11 @@ int32_t lust_sys_getcwd(lust_Vec *out);
 int32_t lust_sys_chdir(const uint8_t *p, uint64_t len);
 int32_t lust_sys_symlink(const uint8_t *a, uint64_t alen, const uint8_t *b, uint64_t blen);
 int32_t lust_sys_readlink(const uint8_t *p, uint64_t len, lust_Vec *out);
+#ifdef __APPLE__
+/* Darwin F_GETPATH: appends the descriptor's path without its NUL.
+   Returns 0 or errno, leaving out unchanged on error. */
+int32_t lust_sys_fd_path(int32_t fd, lust_Vec *out);
+#endif
 
 /* Files and directories (std::fs): read a whole file into the Vec,
    write (create or truncate, 0666; -2 for a zero-length write), mkdir

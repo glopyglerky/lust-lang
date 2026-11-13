@@ -9,9 +9,9 @@ pub struct Retained;
 mod retained;
 
 mod child {
-    fn inspect<T>(value: crate::Parcel) -> u8 { value.value }
+    fn inspect<Parcel>(value: crate::Parcel) -> u16 { value.value as u16 }
 
-    pub fn answer() -> u8 {
+    pub fn answer() -> u16 {
         inspect::<()>(crate::Parcel { value: 42 })
     }
 }

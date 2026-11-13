@@ -199,7 +199,8 @@ Implemented (codegen emits them): `exit`; the platform crate's
 `sys_fmt_arguments_bytes`, the byte views (`sys_str_as_bytes`,
 `sys_bytes_as_str`, `sys_utf8_*`, `sys_string_from_utf8_unchecked`),
 and the syscalls of env, fs, and process (`sys_getenv`, `sys_environ`,
-`sys_argv`, `sys_getcwd`, `sys_chdir`, `sys_readlink`, `sys_read_file`,
+`sys_argv`, `sys_getcwd`, `sys_chdir`, `sys_readlink`, `sys_fd_path`
+(Darwin descriptor paths), `sys_read_file`,
 `sys_write_file`, `sys_path_op`, `sys_rename`, `sys_stat`,
 `sys_realpath`, `sys_read_dir`, `sys_remove_dir_all`, `sys_getpid`; C in
 src/runtime/sys.c); `clock_now_raw`, `system_time_raw`, and `fmt_align`

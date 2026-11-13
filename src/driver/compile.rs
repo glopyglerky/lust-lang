@@ -2598,6 +2598,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
     // foreign triple: the C then builds with an external compiler
     // (the release cross path; rel-win owns the windows-gnu runtime).
     let triple = &req.session.target_triple;
+    let sync_layout = crate::ty::layout::SyncLayout::for_target(triple);
     let foreign = !triple.is_empty() && triple != crate::protocol::host_triple();
     let foreign_check = matches!(req.cmd, crate::protocol::Cmd::Check) && crate::resolve::cfg::CfgEnv::is_release_target(triple);
     // A release-driver build (cc backend) may name a release triple (or
@@ -3596,6 +3597,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
             &mut caches.gen_reuse,
             &std_routes,
             req.harness,
+            sync_layout,
         )
     };
     // A refused header delta that found the edited signature's own errors
@@ -3622,7 +3624,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
         },
     };
     if pooled && super::item_oracle::pool_on() {
-        super::item_oracle::check_pool(front, crate_ids, req.cmd == Cmd::Build, resolved_tables.clone(), &std_routes, &collected);
+        super::item_oracle::check_pool(front, crate_ids, req.cmd == Cmd::Build, resolved_tables.clone(), &std_routes, &collected, sync_layout);
     }
     if let Ok(p) = &collected {
         front.prev_static_defs = Some(p.static_defs.clone());
@@ -3680,7 +3682,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
             if super::item_oracle::on() {
                 let (build, tables) = (req.cmd == Cmd::Build, resolved_tables.as_ref());
                 let (lines, hashes) = (&fn_lines_all, &body_hashes_all);
-                super::item_oracle::check(front, caches, Err(&ds), &[], fn_count, hashes, lines, visits.path, crate_ids, build, tables);
+                super::item_oracle::check(front, caches, Err(&ds), &[], fn_count, hashes, lines, visits.path, crate_ids, build, tables, sync_layout);
             }
             front.last_visits.clear();
             visits.render(&mut front.last_visits);
@@ -4312,7 +4314,7 @@ pub fn compile(req: &Request, session: &mut Session) -> Response {
     if super::item_oracle::on() {
         let (build, tables) = (req.cmd == Cmd::Build, resolved_tables.as_ref());
         let (lines, hashes) = (&fn_lines_all, &body_hashes_all);
-        super::item_oracle::check(front, caches, Ok(&program), &work, fn_count, hashes, lines, visits.path, crate_ids, build, tables);
+        super::item_oracle::check(front, caches, Ok(&program), &work, fn_count, hashes, lines, visits.path, crate_ids, build, tables, sync_layout);
         t.lap("item oracle");
     }
     let results = par_map(&work, |&i| {

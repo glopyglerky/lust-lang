@@ -9,7 +9,7 @@ pub struct Retained;
 mod retained;
 
 mod child {
-    fn inspect<Parcel>(value: crate::Parcel) -> u8 { value.value }
+    fn inspect<T>(value: crate::Parcel) -> u8 { value.value }
 
     pub fn answer() -> u8 {
         inspect::<()>(crate::Parcel { value: 42 })

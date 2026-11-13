@@ -94,6 +94,7 @@ fn err_keys(ds: &[Diag]) -> Vec<ErrKey> {
 /// The program facts the oracle compares, keyed by stable ids.
 #[derive(Clone, Default, PartialEq, Eq)]
 pub(crate) struct Digest {
+    sync_layout: crate::ty::layout::SyncLayout,
     defs: FxMap<DefId, DefFacts>,
     impl_sets: FxMap<(DefId, Head), Fingerprint>,
     /// Each user Adt's written std and lang trait impls (`LangImpls`).
@@ -110,7 +111,7 @@ impl Digest {
     /// The digest of `p` over its first `fn_count` fns (the AST fns),
     /// its Adts, traits, consts, statics, and user trait impl buckets.
     fn of(p: &Program, fn_count: usize) -> Digest {
-        let mut d = Digest::default();
+        let mut d = Digest { sync_layout: p.tys.sync_layout, ..Digest::default() };
         let sig = |def: DefId| p.read_fingerprint(&ReadKey::Sig(def)).fingerprint;
         let layout = |def: DefId| p.read_fingerprint(&ReadKey::Layout(def)).fingerprint;
         for i in 0..fn_count.min(p.fns.len()) {
@@ -172,6 +173,9 @@ impl Digest {
     fn diff(&self, cold: &Digest) -> Vec<String> {
         let name = |d: &DefId| cold.names.get(d).or_else(|| self.names.get(d)).cloned().unwrap_or_else(|| format!("{d:?}"));
         let mut out = Vec::new();
+        if self.sync_layout != cold.sync_layout {
+            out.push(format!("sync layout target: warm {:?}, cold {:?}", self.sync_layout, cold.sync_layout));
+        }
         for (d, c) in &cold.defs {
             match self.defs.get(d) {
                 None => out.push(format!("{} only in cold", name(d))),
@@ -251,6 +255,7 @@ pub(super) fn check(
     crate_ids: crate::def::CrateIds,
     build: bool,
     tables: Option<&Arc<ResolvedTables>>,
+    sync_layout: crate::ty::layout::SyncLayout,
 ) {
     let warm_digest = warm.ok().map(|p| Digest::of(p, fn_count));
     let patched = matches!(path, "patch" | "item");
@@ -364,6 +369,7 @@ pub(super) fn check(
         &mut reuse,
         &std_routes,
         false,
+        sync_layout,
     );
     let mut cold_p = match (warm, collected) {
         (Err(w), Err(c)) => {
@@ -487,6 +493,7 @@ pub(super) fn check_pool(
     tables: Option<Arc<ResolvedTables>>,
     std_routes: &[&'static crate::ty::lang::StdFnDef],
     pooled: &Result<Program, Vec<Diag>>,
+    sync_layout: crate::ty::layout::SyncLayout,
 ) {
     let o = &front.def_order;
     let mut order = crate::check::collect::DefOrder { adts: o.adts.clone(), statics: o.statics.clone(), instances: o.instances.clone() };
@@ -502,6 +509,7 @@ pub(super) fn check_pool(
         &mut reuse,
         std_routes,
         false,
+        sync_layout,
     );
     let _ = super::laps::take();
     match (pooled, &fresh) {

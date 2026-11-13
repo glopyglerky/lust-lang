@@ -3430,7 +3430,13 @@ pub fn collect_with_order_resolved(
     def_order: &mut DefOrder,
     resolved: Option<std::sync::Arc<crate::resolve::imports::ResolvedTables>>,
 ) -> Result<Program, Vec<Diag>> {
-    collect_reuse(ast, interner, known, crate_ids, walk_instances, def_order, resolved, &mut Default::default(), &[], false)
+    let sync_layout = resolved.as_ref().and_then(|tables| tables.crate_cfgs.get(&crate::ty::defs::ROOT_MODULE))
+        .map(|(env, _)| if env.pairs.iter().any(|(name, value)| name == "target_os" && value == "macos") {
+            crate::ty::layout::SyncLayout::Darwin
+        } else {
+            crate::ty::layout::SyncLayout::Futex
+        }).unwrap_or_else(crate::ty::layout::SyncLayout::host);
+    collect_reuse(ast, interner, known, crate_ids, walk_instances, def_order, resolved, &mut Default::default(), &[], false, sync_layout)
 }
 
 /// `collect_with_order_resolved` with the driver session's generic
@@ -3450,12 +3456,15 @@ pub fn collect_reuse(
     reuse: &mut crate::driver::gen_reuse::GenReuse,
     std_routes: &[&'static crate::ty::lang::StdFnDef],
     test_harness: bool,
+    sync_layout: crate::ty::layout::SyncLayout,
 ) -> Result<Program, Vec<Diag>> {
+    let mut tys = reuse.type_pool.take().and_then(|pool| pool.take(crate_ids.local, crate_ids.stable, &interner, sync_layout)).unwrap_or_else(GlobalTys::new);
+    tys.sync_layout = sync_layout;
     let mut p = Program {
         ast: ast.clone(),
         interner: interner.clone(),
         known: known.clone(),
-        tys: reuse.type_pool.take().and_then(|pool| pool.take(crate_ids.local, crate_ids.stable, &interner)).unwrap_or_else(GlobalTys::new),
+        tys,
         defs: Defs::new(),
         adts: Vec::new(),
         fns: Vec::new(),

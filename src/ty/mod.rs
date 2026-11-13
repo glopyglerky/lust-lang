@@ -840,6 +840,9 @@ impl TyFlags {
 /// methods are the compat helpers the builtin code paths use; new code should prefer
 /// the general `TyKind` forms and reach a builtin only through them.
 pub trait TyIntern {
+    /// The program target's sync layout, shared by early const queries,
+    /// body overlays, and code generation.
+    fn sync_layout(&self) -> layout::SyncLayout;
     fn intern(&mut self, k: TyKind) -> Ty;
     fn kind(&self, t: Ty) -> TyKind;
     /// The already-interned `Ty` for a kind, if any. Never interns.
@@ -1436,8 +1439,9 @@ impl TypePool {
         (total <= 2 * members.max(1)).then(|| TypePool { tys, krate, stable, interner: std::sync::Arc::as_ptr(interner) as usize })
     }
     /// The store for a new collect of crate `krate`/`stable` with `interner`, or None.
-    pub fn take(self, krate: crate::def::CrateId, stable: crate::def::StableCrateHash, interner: &std::sync::Arc<crate::intern::Interner>) -> Option<GlobalTys> {
-        let same = self.krate == krate && self.stable == stable && self.interner == std::sync::Arc::as_ptr(interner) as usize;
+    pub fn take(self, krate: crate::def::CrateId, stable: crate::def::StableCrateHash, interner: &std::sync::Arc<crate::intern::Interner>, sync_layout: layout::SyncLayout) -> Option<GlobalTys> {
+        let same = self.krate == krate && self.stable == stable && self.interner == std::sync::Arc::as_ptr(interner) as usize
+            && self.tys.sync_layout == sync_layout;
         same.then(|| {
             let mut tys = self.tys;
             tys.begin_collect();
@@ -1448,6 +1452,7 @@ impl TypePool {
 
 /// The frozen signature store of one crate session, built during collection.
 pub struct GlobalTys {
+    pub(crate) sync_layout: layout::SyncLayout,
     kinds: Arena<TyKind, Ty>,
     flags: Vec<TyFlags>,
     args_a: Arena<Box<[GenericArg]>, ArgsId>,
@@ -1509,6 +1514,7 @@ impl GlobalTys {
             hash_tys: hash::HashTy::ALL.map(hash::hash_def),
         };
         let mut g = GlobalTys {
+            sync_layout: layout::SyncLayout::host(),
             kinds: Arena::default(),
             flags: Vec::new(),
             args_a: Arena::default(),
@@ -1581,6 +1587,7 @@ impl GlobalTys {
         self.bounds.next_epoch();
         self.bindings_a.next_epoch();
         let GlobalTys {
+            sync_layout: _,
             kinds: _,
             flags: _,
             args_a: _,
@@ -1744,6 +1751,9 @@ impl GlobalTys {
 }
 
 impl TyIntern for GlobalTys {
+    fn sync_layout(&self) -> layout::SyncLayout {
+        self.sync_layout
+    }
     fn intern(&mut self, k: TyKind) -> Ty {
         if let Some(t) = self.kinds.get_id(&k) {
             return t;
@@ -1915,6 +1925,9 @@ impl<'g> Tys<'g> {
 }
 
 impl TyIntern for Tys<'_> {
+    fn sync_layout(&self) -> layout::SyncLayout {
+        self.global.sync_layout
+    }
     fn intern(&mut self, k: TyKind) -> Ty {
         if let Some(t) = self.global.kinds.get_id(&k) {
             return t;
@@ -2236,6 +2249,27 @@ mod tests {
 
     fn fake_def(hash: u64) -> DefId {
         DefId { krate: LOCAL_CRATE, hash: DefPathHash(hash) }
+    }
+
+    #[test]
+    fn sync_layout_follows_the_type_pool_target() {
+        use layout::SyncLayout::{Darwin, Futex};
+        let interner = std::sync::Arc::new(crate::intern::Interner::default());
+        let stable = crate::def::StableCrateHash(42);
+        let pool = |target| {
+            let mut tys = GlobalTys::new();
+            tys.sync_layout = target;
+            TypePool { tys, krate: LOCAL_CRATE, stable, interner: std::sync::Arc::as_ptr(&interner) as usize }
+        };
+        let same = pool(Darwin).take(LOCAL_CRATE, stable, &interner, Darwin).expect("same target");
+        assert_eq!(same.sync_layout(), Darwin);
+        assert_eq!(Tys::new(&same).sync_layout(), Darwin, "body overlays preserve the target");
+        assert!(pool(Darwin).take(LOCAL_CRATE, stable, &interner, Futex).is_none());
+        assert!(pool(Futex).take(LOCAL_CRATE, stable, &interner, Darwin).is_none());
+        assert_eq!(layout::SyncLayout::for_target("x86_64-apple-darwin"), Darwin);
+        assert_eq!(layout::SyncLayout::for_target("aarch64-apple-darwin"), Darwin);
+        assert_eq!(layout::SyncLayout::for_target("x86_64-unknown-linux-gnu"), Futex);
+        assert_eq!(layout::SyncLayout::for_target("aarch64-unknown-linux-musl"), Futex);
     }
 
     /// The pre-interned constants still name the same types, now as Adt applications

@@ -11,7 +11,7 @@ mod retained;
 mod child {
     pub fn answer() -> u32 {
         let Mark = 1u32;
-        let _ = crate::Mark;
+        let _: crate::Mark = crate::Mark;
         Mark + 41
     }
 }

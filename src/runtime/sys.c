@@ -7,6 +7,9 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#ifdef __APPLE__
+#include <limits.h>
+#endif
 #ifdef __linux__
 #include <sys/syscall.h>
 #endif
@@ -247,6 +250,21 @@ int32_t lust_sys_readlink(const uint8_t *p, uint64_t len, lust_Vec *out) {
         cap *= 2;
     }
 }
+
+#ifdef __APPLE__
+int32_t lust_sys_fd_path(int32_t fd, lust_Vec *out) {
+    /* F_GETPATH's buffer contract is PATH_MAX, unlike readlink. */
+    char path[PATH_MAX] = {0};
+    if (fcntl(fd, F_GETPATH, path) == -1) return errno;
+    size_t n = strnlen(path, sizeof(path));
+    if (n == sizeof(path)) return ENAMETOOLONG;
+    if (n == 0) return 0;
+    lust_vec_reserve(out, (uint64_t)n, 1, 1);
+    memcpy((uint8_t *)out->ptr + out->len, path, n);
+    out->len += (uint64_t)n;
+    return 0;
+}
+#endif
 
 /* Appends `n` bytes to a Vec<u8>. */
 static void lust_sys_push(lust_Vec *out, const void *p, uint64_t n) {

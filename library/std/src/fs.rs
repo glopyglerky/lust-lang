@@ -278,6 +278,7 @@ impl Drop for File {
     }
 }
 
+#[cfg(not(target_os = "macos"))]
 impl fmt::Debug for File {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let link = format!("/proc/self/fd/{}", self.fd);
@@ -287,6 +288,22 @@ impl fmt::Debug for File {
             .field("fd", &self.fd)
             .field("path", &PathBuf::from_os_string(OsString::__from_vec(raw)))
             .field("read", &self.read)
+            .field("write", &self.write)
+            .finish()
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl fmt::Debug for File {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut raw: Vec<u8> = Vec::new();
+        let path_status = core::intrinsics::sys_fd_path(self.fd, &mut raw);
+        let mut fields = f.debug_struct("File");
+        fields.field("fd", &self.fd);
+        if path_status == 0 {
+            fields.field("path", &PathBuf::from_os_string(OsString::__from_vec(raw)));
+        }
+        fields.field("read", &self.read)
             .field("write", &self.write)
             .finish()
     }
@@ -557,7 +574,7 @@ impl PartialEq for FileType {
     }
 }
 
-/// Std hashes the type bits as a `mode_t` (`u32` on Linux).
+/// Std hashes the type bits as a `mode_t` (`u32` on Linux, `u16` on Darwin).
 impl core::hash::Hash for FileType {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.masked().hash(state);
@@ -566,8 +583,14 @@ impl core::hash::Hash for FileType {
 
 impl FileType {
     /// The type bits of the mode, as std's `masked` (a `mode_t`).
+    #[cfg(not(target_os = "macos"))]
     fn masked(&self) -> u32 {
         (self.mode & S_IFMT) as u32
+    }
+
+    #[cfg(target_os = "macos")]
+    fn masked(&self) -> u16 {
+        (self.mode & S_IFMT) as u16
     }
 
     /// True for a directory.

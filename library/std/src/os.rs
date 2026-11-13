@@ -409,9 +409,13 @@ pub mod unix {
                 self.mode as u32
             }
             fn set_mode(&mut self, mode: u32) {
+                #[cfg(target_os = "macos")]
+                let mode = mode as u16;
                 self.mode = mode as u64;
             }
             fn from_mode(mode: u32) -> crate::fs::Permissions {
+                #[cfg(target_os = "macos")]
+                let mode = mode as u16;
                 crate::fs::Permissions { mode: mode as u64 }
             }
         }
@@ -575,7 +579,7 @@ pub mod unix {
         }
 
         /// Unix-specific extensions to `process::ExitStatus`: the raw
-        /// wait status and its parts (glibc's `W*` macros).
+        /// wait status and its parts (the host libc's `W*` macros).
         pub trait ExitStatusExt: sealed::Sealed {
             /// The status of a raw wait status.
             fn from_raw(raw: i32) -> Self;
@@ -605,7 +609,7 @@ pub mod unix {
                 self.stopped_raw()
             }
             fn continued(&self) -> bool {
-                self.raw() == 0xffff
+                self.continued_raw()
             }
             fn into_raw(self) -> i32 {
                 self.raw()

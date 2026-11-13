@@ -14,6 +14,30 @@ use super::iter::IterKind;
 use super::sync::SyncTy;
 use super::{AdtId, BuiltinTy, FloatTy, IntTy, Ty, TyIntern, TyKind};
 
+/// Rust 1.99's sync backing fields on Linux and Darwin.
+/// Other targets retain the existing futex layout assumptions.
+/// This follows the compiled program's target, not the compiler host.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum SyncLayout {
+    #[default]
+    Futex,
+    Darwin,
+}
+
+impl SyncLayout {
+    pub fn host() -> Self {
+        if cfg!(target_os = "macos") { Self::Darwin } else { Self::Futex }
+    }
+
+    pub fn for_target(triple: &str) -> Self {
+        match triple {
+            "" => Self::host(),
+            "x86_64-apple-darwin" | "aarch64-apple-darwin" => Self::Darwin,
+            _ => Self::Futex,
+        }
+    }
+}
+
 /// A niche: a scalar range inside a type whose unused values can hold enum tags
 /// of an outer type. `free` counts the usable values; they start at `start`
 /// (the first value in the niche scalar's bit pattern that is not a valid value
@@ -1102,23 +1126,28 @@ fn compute(
                 let v = no_niche(go(tys, shapes, tys.adt_first_ty_arg(t).ok_or(())?, env, frames, memo, active)?);
                 struct_layout(&[int_layout(IntTy::Isize), v], Repr::default())
             }
-            // The futex locks (Linux): `Mutex<T>` is `{ futex: AtomicU32,
-            // poison: AtomicBool, data: UnsafeCell<T> }`, `RwLock<T>` the
-            // same with an 8-byte state (two `AtomicU32`).
-            // `OnceLock<T>`: `{ once: Once (an AtomicU32 futex), value:
-            // UnsafeCell<MaybeUninit<T>> }`.
+            // Rust 1.99's host lock state: Linux uses a u32 futex (`RwLock`
+            // has two). On macOS `Mutex` holds an atomic OnceBox pointer,
+            // while `RwLock` and `Once` each hold a pointer-width queue state.
+            // The atomic fields have no niche on either host.
+            // `OnceLock<T>`: `{ once: Once, value: UnsafeCell<MaybeUninit<T>> }`.
             Some(BuiltinTy::Sync(crate::ty::sync::SyncTy::OnceLock)) => {
                 // The value is a `MaybeUninit<T>`: inhabited for any `T`.
                 let v = Layout { uninhabited: false, ..no_niche(go(tys, shapes, tys.adt_first_ty_arg(t).ok_or(())?, env, frames, memo, active)?) };
-                struct_layout(&[Layout::simple(4, 4, None), v], Repr::default())
+                let state = if tys.sync_layout() == SyncLayout::Darwin { raw_ptr_layout() } else { Layout::simple(4, 4, None) };
+                struct_layout(&[state, v], Repr::default())
             }
             Some(BuiltinTy::Sync(k @ (crate::ty::sync::SyncTy::Mutex | crate::ty::sync::SyncTy::RwLock))) => {
                 let v = no_niche(go(tys, shapes, tys.adt_first_ty_arg(t).ok_or(())?, env, frames, memo, active)?);
-                let state = if k == crate::ty::sync::SyncTy::Mutex { 4 } else { 8 };
-                struct_layout(&[Layout::simple(state, 4, None), Layout::simple(1, 1, None), v], Repr::default())
+                let state = if tys.sync_layout() == SyncLayout::Darwin {
+                    raw_ptr_layout()
+                } else {
+                    Layout::simple(if k == crate::ty::sync::SyncTy::Mutex { 4 } else { 8 }, 4, None)
+                };
+                struct_layout(&[state, Layout::simple(1, 1, None), v], Repr::default())
             }
-            // The std types below as Rust 1.99 lays them out on 64-bit
-            // Linux (checked with size_of and Option niches, tf-build): the
+            // The std types below as Rust 1.99 lays them out on supported
+            // 64-bit hosts (checked with size_of and Option niches): the
             // field lists give rustc's reordering and largest niche.
             Some(b @ (BuiltinTy::Hash(_) | BuiltinTy::Sync(_) | BuiltinTy::Iter(_) | BuiltinTy::Chars | BuiltinTy::ExitCode)) => {
                 let arg = |i: usize| tys.adt_parts(t).and_then(|(_, a)| tys.args(a).get(i).and_then(|g| g.as_ty()));
@@ -1142,9 +1171,12 @@ fn compute(
                     BuiltinTy::Sync(SyncTy::Sender | SyncTy::SyncSender | SyncTy::Receiver) => {
                         return Ok(Layout::simple(16, 8, Some(Niche { offset: 0, scalar_size: 1, free: 253, start: 3 })));
                     }
-                    BuiltinTy::Sync(SyncTy::Condvar) => return Ok(Layout::simple(4, 4, None)),
-                    // { lock: Mutex<BarrierState>, cvar: Condvar, num_threads }.
-                    BuiltinTy::Sync(SyncTy::Barrier) => return Ok(Layout::simple(40, 8, None)),
+                    // macOS: OnceBox<pal::Condvar> and an atomic mutex address;
+                    // Linux: one u32 futex. Neither retains a pointer niche.
+                    BuiltinTy::Sync(SyncTy::Condvar) => return Ok(if tys.sync_layout() == SyncLayout::Darwin { Layout::simple(16, 8, None) } else { Layout::simple(4, 4, None) }),
+                    // { lock: nonpoison::Mutex<BarrierState>, cvar: Condvar,
+                    // num_threads }. The lock is 24 bytes on both hosts.
+                    BuiltinTy::Sync(SyncTy::Barrier) => return Ok(Layout::simple(if tys.sync_layout() == SyncLayout::Darwin { 48 } else { 40 }, 8, None)),
                     BuiltinTy::Sync(SyncTy::BarrierWaitResult) => return Ok(bool_layout()),
                     BuiltinTy::Iter(IterKind::Range) => {
                         let e = go(tys, shapes, arg(0).ok_or(())?, env, frames, memo, active)?;

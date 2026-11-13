@@ -1386,6 +1386,8 @@ pub fn trait_key(p: &Program, impl_traits: &FxMap<usize, (DefId, bool, DefId)>) 
     };
     let mut h = FxHasher::default();
     "trait-system-v3".hash(&mut h);
+    // A generic body's const layout queries depend on the program target.
+    p.tys.sync_layout.hash(&mut h);
     // The crate's `#![recursion_limit]`: every body check reads it with no
     // recorded read (check/where_overflow.rs `recursion_limit`), so a change
     // checks every body again.
